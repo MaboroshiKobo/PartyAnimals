@@ -30,6 +30,10 @@ public final class MessageConfig {
     ) {}
 
     public record PinataMessages(
+        @Comment("Message displayed when a pinata countdown starts.")
+        String startCountdown,
+        @Comment("Message displayed when a pinata is summoned.")
+        String pinataSummoned,
         @Comment("Message displayed when a pinata spawns.")
         String pinataSpawned,
         @Comment("Message displayed when a pinata is hit.")
@@ -41,7 +45,9 @@ public final class MessageConfig {
         @Comment("Boss bar countdown message format.")
         String bossBarCountdown,
         @Comment("Boss bar message format while the pinata is active.")
-        String bossBarActive
+        String bossBarActive,
+        @Comment("Message displayed when a new spawn location is added.")
+        String addedSpawnLocation
     ) {}
 
     @Configuration
@@ -53,12 +59,15 @@ public final class MessageConfig {
             "<red>Failed to reload plugin configuration! Check console for errors.</red>",
             "A new version is available! <gray>(Current: <red>{current_version}</red> | Latest: <green>{latest_version}</green>)</gray>",
             new PinataMessages(
+                "<green>Countdown has been started for a pinata.</green>",
+                "<yellow>Pinata has been summoned!</yellow>",
                 "<green>A pinata has spawned!</green>",
                 "<yellow>You hit the pinata!</yellow>",
                 "<gold>{player} last hit the pinata!</gold>",
                 "<yellow>A pinata has been downed!</yellow>",
                 "Pinata spawning in: {seconds}s",
-                "<green>Pinata Health:</green> {health} <red>❤</red>"
+                "<green>Pinata Health:</green> {health} <red>❤</red>",
+                "<green>Spawn location <white>{location_name}</white> has been added!</green>"
             ));
     }
 }

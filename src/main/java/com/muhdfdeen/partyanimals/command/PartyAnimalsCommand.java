@@ -70,17 +70,17 @@ public class PartyAnimalsCommand {
                                 })
                                 .executes(ctx -> handleSummon(ctx.getSource(),
                                         StringArgumentType.getString(ctx, "location")))))
-                .then(Commands.literal("setlocation")
+                .then(Commands.literal("addlocation")
                         .requires(sender -> sender.getSender().hasPermission("partyanimals.admin"))
-                        .then(Commands.argument("name", StringArgumentType.word())
+                        .then(Commands.argument("Location Name", StringArgumentType.word())
                                 .executes(ctx -> {
                                     CommandSourceStack source = ctx.getSource();
                                     if (!(source.getSender() instanceof Player player)) {
-                                        source.getSender().sendRichMessage("<red>Only players can set locations.");
+                                        source.getSender().sendRichMessage("<red>Only players can add locations.");
                                         return Command.SINGLE_SUCCESS;
                                     }
 
-                                    String locationName = StringArgumentType.getString(ctx, "name");
+                                    String locationName = StringArgumentType.getString(ctx, "Location Name");
                                     Location currentLocation = player.getLocation();
 
                                     MainConfig.SerializableLocation spawnLocation = new MainConfig.SerializableLocation(
@@ -91,8 +91,8 @@ public class PartyAnimalsCommand {
                                     config.save();
 
                                     player.sendRichMessage(config.getMessageConfig().messages.prefix() +
-                                            "<gray>Successfully saved location <white>" + locationName
-                                            + "</white> at your current position!</gray>");
+                                            config.getMessageConfig().messages.pinataMessages()
+                                                    .addedSpawnLocation().replace("{location_name}", locationName));
                                     return Command.SINGLE_SUCCESS;
                                 })))
                 .build();
@@ -105,7 +105,8 @@ public class PartyAnimalsCommand {
 
         plugin.getPinataManager().startCountdown(location);
         source.getSender().sendRichMessage(
-                config.getMessageConfig().messages.prefix() + "<gray>Countdown initiated.</gray>");
+                config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages()
+                        .startCountdown());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -116,7 +117,7 @@ public class PartyAnimalsCommand {
 
         plugin.getPinataManager().spawnPinata(location);
         source.getSender().sendRichMessage(config.getMessageConfig().messages.prefix()
-                + "<gray>Pinata summoned instantly.</gray>");
+                + config.getMessageConfig().messages.pinataMessages().pinataSummoned());
         return Command.SINGLE_SUCCESS;
     }
 
