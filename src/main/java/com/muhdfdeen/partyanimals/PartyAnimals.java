@@ -57,7 +57,8 @@ public final class PartyAnimals extends JavaPlugin {
             if (pinataManager != null) {
                 pinataManager.cleanup();
             }
-            config.load();
+            config.loadConfig();
+            config.loadMessages();
             return true;
         } catch (Exception e) {
             if (log != null) {

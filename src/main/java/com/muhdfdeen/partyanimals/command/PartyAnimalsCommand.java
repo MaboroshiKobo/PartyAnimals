@@ -88,7 +88,7 @@ public class PartyAnimalsCommand {
 
                                     config.getMainConfig().pinata.spawnLocations().put(locationName, spawnLocation);
 
-                                    config.save();
+                                    config.saveConfig();
 
                                     player.sendRichMessage(config.getMessageConfig().messages.prefix() +
                                             config.getMessageConfig().messages.pinataMessages()

@@ -19,17 +19,29 @@ public class ConfigManager {
         this.dataFolder = dataFolder;
     }
 
-    public void load() {
+    public void loadConfig() {
         this.mainConfig = MainConfig.load(dataFolder);
+    }
+
+    public void loadMessages() {
         this.messageConfig = MessageConfig.load(dataFolder);
     }
 
-    public void save() {
+    public void saveConfig() {
         Path path = new File(dataFolder, "config.yml").toPath();
         YamlConfigurations.save(
                 path,
                 MainConfiguration.class,
                 mainConfig,
+                ConfigLib.BUKKIT_DEFAULT_PROPERTIES);
+    }
+
+    public void saveMessages() {
+        Path path = new File(dataFolder, "messages.yml").toPath();
+        YamlConfigurations.save(
+                path,
+                MessageConfiguration.class,
+                messageConfig,
                 ConfigLib.BUKKIT_DEFAULT_PROPERTIES);
     }
 
