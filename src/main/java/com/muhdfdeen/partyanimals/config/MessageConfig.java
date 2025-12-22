@@ -12,8 +12,8 @@ import de.exlll.configlib.YamlConfigurations;
 public final class MessageConfig {
     public static MessageConfiguration load(File dataFolder) {
         YamlConfigurationProperties properties = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder().build();
-        Path configFile = new File(dataFolder, "messages.yml").toPath();
-        return YamlConfigurations.update(configFile, MessageConfiguration.class, properties);
+        Path messagesFile = new File(dataFolder, "messages.yml").toPath();
+        return YamlConfigurations.update(messagesFile, MessageConfiguration.class, properties);
     }
 
     public record MessageSettings(
@@ -38,6 +38,10 @@ public final class MessageConfig {
         String pinataSpawned,
         @Comment("Message displayed when a pinata is hit.")
         String pinataHit,
+        @Comment("Message displayed when a pinata is hit but is on cooldown.")
+        String pinataHitCooldown,
+        @Comment("Message displayed when a player without permission tries to hit the pinata.")
+        String noHitPermission,
         @Comment("Message displayed when a pinata is last hit.")
         String pinataLastHit,
         @Comment("Message displayed when a pinata is downed.")
@@ -49,7 +53,11 @@ public final class MessageConfig {
         @Comment("Boss bar message format while the pinata is active.")
         String bossBarActive,
         @Comment("Message displayed when a new spawn location is added.")
-        String addedSpawnLocation
+        String addedSpawnLocation,
+        @Comment("Message displayed when a spawn location is removed.")
+        String removedSpawnLocation,
+        @Comment("Message displayed when a spawn location is not found.")
+        String unknownSpawnLocation
     ) {}
 
     @Configuration
@@ -65,12 +73,16 @@ public final class MessageConfig {
                 "<yellow>Pinata has been summoned!</yellow>",
                 "<green>A pinata has spawned!</green>",
                 "<yellow>You hit the pinata!</yellow>",
+                "<red>You can't hit the pinata yet! Please wait a moment.</red>",
+                "<red>You don't have permission to hit the pinata!</red>",
                 "<gold>{player} last hit the pinata!</gold>",
                 "<yellow>A pinata has been downed!</yellow>",
                 "<red>The pinata has escaped due to timeout.</red>",
                 "Pinata spawning in: {seconds}s",
                 "<green>Pinata Health:</green> {health} <red>❤</red>",
-                "<green>Spawn location <white>{location_name}</white> has been added!</green>"
+                "<green>Spawn location <white>{location_name}</white> has been added!</green>",
+                "<red>Spawn location <white>{location_name}</white> has been removed!</red>",
+                "<red>Spawn location <white>{location_name}</white> not found!</red>"
             ));
     }
 }

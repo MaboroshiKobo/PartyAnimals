@@ -8,19 +8,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import com.muhdfdeen.partyanimals.config.MainConfig;
+import com.muhdfdeen.partyanimals.config.PinataConfig;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 
 public class CommandUtils {
 
-    public static void process(Player player, Map<String, MainConfig.Reward> rewards, Plugin plugin) {
+    public static void process(Player player, Map<String, PinataConfig.Reward> rewards, Plugin plugin) {
         if (rewards == null || rewards.isEmpty())
             return;
 
-        Map<String, MainConfig.Reward> sortedRewards = new TreeMap<>(rewards);
-
-        for (MainConfig.Reward reward : sortedRewards.values()) {
+        Map<String, PinataConfig.Reward> sortedRewards = new TreeMap<>(rewards);
+        for (PinataConfig.Reward reward : sortedRewards.values()) {
             if (reward.permission != null && !reward.permission.isEmpty()) {
                 if (player != null && !player.hasPermission(reward.permission))
                     continue;

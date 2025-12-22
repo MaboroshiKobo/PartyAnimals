@@ -1,9 +1,5 @@
 package com.muhdfdeen.partyanimals.listener;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -11,7 +7,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 
 import com.muhdfdeen.partyanimals.PartyAnimals;
@@ -28,7 +25,6 @@ public class PinataListener implements Listener {
     private final ConfigManager config;
     private final PinataManager pinataManager;
     private final MiniMessage mm;
-    private final Map<UUID, Long> hitCooldowns = new HashMap<>();
 
     public PinataListener(PartyAnimals plugin) {
         this.plugin = plugin;
@@ -61,78 +57,95 @@ public class PinataListener implements Listener {
             return;
         }
 
-        double cooldownSeconds = config.getMainConfig().pinata.cooldown().duration();
-        boolean perPlayer = config.getMainConfig().pinata.cooldown().perPlayer();
+        String hitPermission = config.getPinataConfig().pinata.hitPermission();
+        if (hitPermission != null && !hitPermission.isEmpty()) {
+            log.debug("Checking hit permission: " + hitPermission + " for player: " + player.getName());
+            if (!player.hasPermission(hitPermission)) {
+                log.debug("Player " + player.getName() + " lacks permission to hit pinata.");
+                String noPermissionMsg = config.getMessageConfig().messages.pinataMessages().noHitPermission();
+                if (noPermissionMsg != null && !noPermissionMsg.isEmpty()) {
+                    player.sendRichMessage(config.getMessageConfig().messages.prefix() + noPermissionMsg);
+                }
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        double cooldownSeconds = config.getPinataConfig().pinata.cooldown().duration();
+        boolean perPlayer = config.getPinataConfig().pinata.cooldown().perPlayer();
         long cooldownMillis = (long) (cooldownSeconds * 1000L);
         long now = System.currentTimeMillis();
 
         if (cooldownMillis > 0) {
-            if (perPlayer) {
-                long nextHit = hitCooldowns.getOrDefault(player.getUniqueId(), 0L);
-                if (now < nextHit) {
-                    log.debug("Player " + player.getName() + " is on hit cooldown for pinata.");
-                    event.setCancelled(true);
-                    return;
+            PersistentDataHolder target = perPlayer ? player : pinata;
+            NamespacedKey key = pinataManager.getCooldownKey();
+
+            long nextHit = target.getPersistentDataContainer().getOrDefault(key, PersistentDataType.LONG, 0L);
+
+            if (now < nextHit) {
+                log.debug((perPlayer ? "Player " : "Pinata ") + "is on hit cooldown. Remaining time: " + (nextHit - now) + " ms");
+                double remaining = (nextHit - now) / 1000.0;
+                String msg = config.getMessageConfig().messages.pinataMessages().pinataHitCooldown();
+                if (msg != null && !msg.isEmpty()) {
+                    var component = mm.deserialize(config.getMessageConfig().messages.prefix() + msg.replace("{seconds}", String.format("%.1f", remaining)));
+                    String displayType = config.getPinataConfig().pinata.cooldown().displayType();
+                    switch (displayType.toLowerCase()) {
+                        case "action_bar", "actionbar" -> player.sendActionBar(component);
+                        case "chat" -> player.sendMessage(component);
+                        default -> player.sendMessage(component);
+                    }
                 }
-                hitCooldowns.put(player.getUniqueId(), now + cooldownMillis);
-            } else {
-                long nextHit = pinata.getPersistentDataContainer().getOrDefault(
-                        pinataManager.getCooldownKey(), PersistentDataType.LONG, 0L);
-                if (now < nextHit) {
-                    log.debug("Pinata " + pinata + " is on hit cooldown.");
-                    event.setCancelled(true);
-                    return;
-                }
-                pinata.getPersistentDataContainer().set(
-                        pinataManager.getCooldownKey(), PersistentDataType.LONG, now + cooldownMillis);
+                event.setCancelled(true);
+                return;
             }
+            log.debug("Cooldown passed. Setting new cooldown for " + (perPlayer ? "player " + player.getName() : "pinata"));
+            target.getPersistentDataContainer().set(key, PersistentDataType.LONG, now + cooldownMillis);
         }
 
         event.setCancelled(true);
-
-        int currentHits = pinata.getPersistentDataContainer().getOrDefault(pinataManager.getHealthKey(),
-                PersistentDataType.INTEGER, 1);
+        int currentHits = pinata.getPersistentDataContainer().getOrDefault(pinataManager.getHealthKey(), PersistentDataType.INTEGER, 1);
         currentHits--;
-        log.debug("Pinata Health: " + currentHits);
 
+        log.debug("Pinata " + pinata + " (UUID: " + pinata.getUniqueId() + ") hit by player " + player.getName() + ". Remaining hits: " + currentHits);
         if (currentHits <= 0) {
             handlePinataDeath(pinata, player);
         } else {
-            pinata.getPersistentDataContainer().set(pinataManager.getHealthKey(), PersistentDataType.INTEGER,
-                    currentHits);
-            pinataManager.playEffect(config.getMainConfig().pinata.effects().hit(), pinata.getLocation());
-            if (config.getMainConfig().pinata.effects().damageFlash()) {
+            pinata.getPersistentDataContainer().set(pinataManager.getHealthKey(), PersistentDataType.INTEGER, currentHits);
+            pinataManager.playEffect(config.getPinataConfig().pinata.effects().hit(), pinata.getLocation());
+            if (config.getPinataConfig().pinata.effects().damageFlash()) {
                 pinata.playHurtAnimation(0);
             }
-            CommandUtils.process(player, config.getMainConfig().pinata.commands().hit(), plugin);
+            log.debug("Processing hit commands for player: " + player.getName());
+            CommandUtils.process(player, config.getPinataConfig().pinata.commands().hit(), plugin);
             String hitMessage = config.getMessageConfig().messages.pinataMessages().pinataHit();
-            if (hitMessage != null && !hitMessage.isEmpty()) {
-                player.sendMessage(mm.deserialize(config.getMessageConfig().messages.prefix() + hitMessage));
-            }
+            if (hitMessage != null && !hitMessage.isEmpty())
+                player.sendRichMessage(config.getMessageConfig().messages.prefix() + hitMessage);
             NamespacedKey maxHealthKey = pinataManager.getMaxHealthKey();
-            int actualMaxHealth = pinata.getPersistentDataContainer().getOrDefault(maxHealthKey,
-                    PersistentDataType.INTEGER, currentHits);
-            pinataManager.updateActiveBossBar(pinata, currentHits, actualMaxHealth);
+            int actualMaxHealth = pinata.getPersistentDataContainer().getOrDefault(maxHealthKey, PersistentDataType.INTEGER, currentHits);
+            pinataManager.updateActiveBossBar(pinata, currentHits, actualMaxHealth, config.getPinataConfig().pinata.display().showHealthBar());
         }
     }
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        log.debug("Removing hit cooldown for player: " + event.getPlayer().getName());
-        hitCooldowns.remove(event.getPlayer().getUniqueId());
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        pinataManager.getActiveBossBars().values().forEach(bossBar -> player.showBossBar(bossBar));
     }
 
     private void handlePinataDeath(LivingEntity pinata, Player player) {
-        pinataManager.playEffect(config.getMainConfig().pinata.effects().death(), pinata.getLocation());
+        log.debug("Handling pinata death for pinata: " + pinata + " (UUID: " + pinata.getUniqueId() + ") by player: " + player.getName());
+        pinataManager.playEffect(config.getPinataConfig().pinata.effects().death(), pinata.getLocation());
 
-        CommandUtils.process(player, config.getMainConfig().pinata.commands().lastHit(), plugin);
+        log.debug("Processing last hit commands for player: " + player.getName() + " on pinata: " + pinata + " (UUID: " + pinata.getUniqueId() + ")");
+        CommandUtils.process(player, config.getPinataConfig().pinata.commands().lastHit(), plugin);
         String lastHitMessage = config.getMessageConfig().messages.pinataMessages().pinataLastHit();
         if (lastHitMessage != null && !lastHitMessage.isEmpty()) {
             player.sendMessage(mm.deserialize(config.getMessageConfig().messages.prefix()
                     + lastHitMessage.replace("{player}", player.getName())));
         }
 
-        CommandUtils.process(player, config.getMainConfig().pinata.commands().death(), plugin);
+        log.debug("Processing death commands for player: " + player.getName() + " on pinata: " + pinata + " (UUID: " + pinata.getUniqueId() + ")");
+        CommandUtils.process(player, config.getPinataConfig().pinata.commands().death(), plugin);
         String downedMessage = config.getMessageConfig().messages.pinataMessages().pinataDowned();
         if (downedMessage != null && !downedMessage.isEmpty()) {
             player.sendMessage(mm.deserialize(config.getMessageConfig().messages.prefix() + downedMessage));

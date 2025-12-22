@@ -13,7 +13,7 @@ import io.papermc.paper.command.brigadier.Commands;
 
 import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
-import com.muhdfdeen.partyanimals.config.MainConfig;
+import com.muhdfdeen.partyanimals.config.PinataConfig;
 
 public class PartyAnimalsCommand {
     private final PartyAnimals plugin;
@@ -28,11 +28,8 @@ public class PartyAnimalsCommand {
         return Commands.literal(commandName)
                 .executes(ctx -> {
                     CommandSender sender = ctx.getSource().getSender();
-                    sender.sendRichMessage(
-                            config.getMessageConfig().messages.prefix() + "Plugin version: "
-                                    + plugin.getPluginMeta().getVersion());
-                    sender.sendRichMessage(
-                            "<green>🛈</green> <gray>Type <white>/partyanimals reload</white> to reload the configuration.</gray>");
+                    sender.sendRichMessage(config.getMessageConfig().messages.prefix() + "Plugin version: " + plugin.getPluginMeta().getVersion());
+                    sender.sendRichMessage("<green>🛈</green> <gray>Type <white>/partyanimals reload</white> to reload the configuration.</gray>");
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.literal("reload")
@@ -41,12 +38,10 @@ public class PartyAnimalsCommand {
                             CommandSender sender = ctx.getSource().getSender();
                             if (plugin.reload()) {
                                 plugin.getPluginLogger().info("Configuration reloaded by " + sender.getName());
-                                sender.sendRichMessage(config.getMessageConfig().messages.prefix()
-                                        + config.getMessageConfig().messages.reloadSuccess());
+                                sender.sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.reloadSuccess());
                             } else {
                                 plugin.getPluginLogger().warn("Failed to reload configuration by " + sender.getName());
-                                sender.sendRichMessage(config.getMessageConfig().messages.prefix()
-                                        + config.getMessageConfig().messages.reloadFail());
+                                sender.sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.reloadFail());
                             }
                             return Command.SINGLE_SUCCESS;
                         }))
@@ -55,46 +50,56 @@ public class PartyAnimalsCommand {
                         .executes(ctx -> handleStart(ctx.getSource(), null))
                         .then(Commands.argument("location", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    config.getMainConfig().pinata.spawnLocations().keySet().forEach(builder::suggest);
+                                    config.getPinataConfig().pinata.spawnLocations().keySet().forEach(builder::suggest);
                                     return builder.buildFuture();
                                 })
-                                .executes(ctx -> handleStart(ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "location")))))
+                                .executes(ctx -> handleStart(ctx.getSource(), StringArgumentType.getString(ctx, "location")))))
                 .then(Commands.literal("summon")
                         .requires(sender -> sender.getSender().hasPermission("partyanimals.summon"))
                         .executes(ctx -> handleSummon(ctx.getSource(), null))
                         .then(Commands.argument("location", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    config.getMainConfig().pinata.spawnLocations().keySet().forEach(builder::suggest);
+                                    config.getPinataConfig().pinata.spawnLocations().keySet().forEach(builder::suggest);
                                     return builder.buildFuture();
                                 })
-                                .executes(ctx -> handleSummon(ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "location")))))
-                .then(Commands.literal("addspawnlocation")
-                        .requires(sender -> sender.getSender().hasPermission("partyanimals.addspawnlocation"))
-                        .then(Commands.argument("Location Name", StringArgumentType.word())
+                                .executes(ctx -> handleSummon(ctx.getSource(), StringArgumentType.getString(ctx, "location")))))
+                .then(Commands.literal("addlocation")
+                        .requires(sender -> sender.getSender().hasPermission("partyanimals.addlocation"))
+                        .then(Commands.argument("location", StringArgumentType.word())
                                 .executes(ctx -> {
                                     CommandSourceStack source = ctx.getSource();
                                     if (!(source.getSender() instanceof Player player)) {
                                         source.getSender().sendRichMessage("<red>Only players can add locations.");
                                         return Command.SINGLE_SUCCESS;
                                     }
-
-                                    String locationName = StringArgumentType.getString(ctx, "Location Name");
+                                    String locationName = StringArgumentType.getString(ctx, "location");
                                     Location currentLocation = player.getLocation();
-
-                                    MainConfig.SerializableLocation spawnLocation = new MainConfig.SerializableLocation(
-                                            currentLocation);
-
-                                    config.getMainConfig().pinata.spawnLocations().put(locationName, spawnLocation);
-
+                                    PinataConfig.SerializableLocation spawnLocation = new PinataConfig.SerializableLocation(currentLocation);
+                                    config.getPinataConfig().pinata.spawnLocations().put(locationName, spawnLocation);
                                     config.saveConfig();
-
-                                    player.sendRichMessage(config.getMessageConfig().messages.prefix() +
-                                            config.getMessageConfig().messages.pinataMessages()
-                                                    .addedSpawnLocation().replace("{location_name}", locationName));
+                                    player.sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages().addedSpawnLocation().replace("{location_name}", locationName));
                                     return Command.SINGLE_SUCCESS;
                                 })))
+                .then(Commands.literal("removelocation")
+                        .requires(sender -> sender.getSender().hasPermission("partyanimals.removelocation"))
+                        .then(Commands.argument("location", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    config.getPinataConfig().pinata.spawnLocations().keySet().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> {
+                                    CommandSourceStack source = ctx.getSource();
+                                    String locationName = StringArgumentType.getString(ctx, "location");
+                                    PinataConfig.SerializableLocation removed = config.getPinataConfig().pinata.spawnLocations().remove(locationName);
+                                    if (removed != null) {
+                                        config.saveConfig();
+                                        source.getSender().sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages().removedSpawnLocation().replace("{location_name}", locationName));
+                                    } else {
+                                        source.getSender().sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages().unknownSpawnLocation().replace("{location_name}", locationName));
+                                    }
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                            ))
                 .build();
     }
 
@@ -104,9 +109,7 @@ public class PartyAnimalsCommand {
             return Command.SINGLE_SUCCESS;
 
         plugin.getPinataManager().startCountdown(location);
-        source.getSender().sendRichMessage(
-                config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages()
-                        .startCountdown());
+        source.getSender().sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages().startCountdown());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -114,19 +117,16 @@ public class PartyAnimalsCommand {
         Location location = resolveLocation(source, locationName);
         if (location == null)
             return Command.SINGLE_SUCCESS;
-
         plugin.getPinataManager().spawnPinata(location);
-        source.getSender().sendRichMessage(config.getMessageConfig().messages.prefix()
-                + config.getMessageConfig().messages.pinataMessages().pinataSummoned());
+        source.getSender().sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages().pinataSummoned());
         return Command.SINGLE_SUCCESS;
     }
 
     private Location resolveLocation(CommandSourceStack source, String locationName) {
         if (locationName != null) {
-            MainConfig.SerializableLocation spawnLocation = config.getMainConfig().pinata.spawnLocations()
-                    .get(locationName);
+            PinataConfig.SerializableLocation spawnLocation = config.getPinataConfig().pinata.spawnLocations().get(locationName);
             if (spawnLocation == null) {
-                source.getSender().sendRichMessage("<red>Unknown location: " + locationName);
+                source.getSender().sendRichMessage(config.getMessageConfig().messages.prefix() + config.getMessageConfig().messages.pinataMessages().unknownSpawnLocation().replace("{location_name}", locationName));
                 return null;
             }
             return spawnLocation.toBukkit();

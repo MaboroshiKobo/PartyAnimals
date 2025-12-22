@@ -38,7 +38,8 @@ A Minecraft plugin for Paper servers that spawns interactive pinata entities. Pl
 | `/partyanimals reload` | `partyanimals.reload` | Reloads all configuration files. |
 | `/partyanimals start <location>` | `partyanimals.start` | Starts a countdown to spawn a pinata at the specified location. |
 | `/partyanimals summon <location>` | `partyanimals.summon` | Instantly spawns a pinata at the specified location. |
-| `/partyanimals addspawnlocation <name>` | `partyanimals.addspawnlocation` | Saves your current location as a named spawn point. |
+| `/partyanimals addlocation <name>` | `partyanimals.addlocation` | Saves your current location as a named spawn point. |
+| `/partyanimals removelocation <name>` | `partyanimals.removelocation` | Removes the specified location from saved spawn point(s). |
 | N/A | `partyanimals.admin` | Receive update notifications on join. |
 
 

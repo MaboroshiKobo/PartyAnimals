@@ -11,17 +11,17 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Creature;
 
-public class PinataRoamGoal implements Goal<Creature> {
+public class PinataRoamAI implements Goal<Creature> {
     private final ConfigManager config;
     private final Creature mob;
     private final GoalKey<Creature> key;
     private final double speed;
 
-    public PinataRoamGoal(PartyAnimals plugin, Creature mob) {
+    public PinataRoamAI(PartyAnimals plugin, Creature mob) {
         this.config = plugin.getConfiguration();
         this.mob = mob;
         this.key = GoalKey.of(Creature.class, new NamespacedKey(plugin, "pinata_roam"));
-        this.speed = config.getMainConfig().pinata.ai().pathfinding().movementSpeedMultiplier();
+        this.speed = config.getPinataConfig().pinata.ai().pathfinding().movementSpeedMultiplier();
     }
 
     @Override
@@ -36,9 +36,9 @@ public class PinataRoamGoal implements Goal<Creature> {
 
     @Override
     public void start() {
-        double rangeX = config.getMainConfig().pinata.ai().pathfinding().range().x();
-        double rangeY = config.getMainConfig().pinata.ai().pathfinding().range().y();
-        double rangeZ = config.getMainConfig().pinata.ai().pathfinding().range().z();
+        double rangeX = config.getPinataConfig().pinata.ai().pathfinding().range().x();
+        double rangeY = config.getPinataConfig().pinata.ai().pathfinding().range().y();
+        double rangeZ = config.getPinataConfig().pinata.ai().pathfinding().range().z();
 
         double x = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeX;
         double y = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeY;
