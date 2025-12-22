@@ -103,7 +103,7 @@ public class PinataManager {
     public void spawnPinata(Location location) {
         List<String> types = config.getMainConfig().pinata.type();
         String randomType = types.get(ThreadLocalRandom.current().nextInt(types.size()));
-        EntityType entityType = EntityType.valueOf(randomType.toUpperCase());
+        EntityType pinataType = EntityType.valueOf(randomType.toUpperCase());
         double scale = config.getMainConfig().pinata.scale();
         int timeout = config.getMainConfig().pinata.timeout();
 
@@ -120,8 +120,8 @@ public class PinataManager {
 
         final int finalHealth = calculatedHealth;
 
-        location.getWorld().spawn(location, entityType.getEntityClass(), entity -> {
-            if (entity instanceof LivingEntity livingEntity) {
+        location.getWorld().spawn(location, pinataType.getEntityClass(), pinata -> {
+            if (pinata instanceof LivingEntity livingEntity) {
                 livingEntity.getPersistentDataContainer().set(is_pinata, PersistentDataType.BOOLEAN, true);
                 livingEntity.getPersistentDataContainer().set(health, PersistentDataType.INTEGER, finalHealth);
                 NamespacedKey maxHealthKey = new NamespacedKey(plugin, "max_health");
@@ -149,15 +149,15 @@ public class PinataManager {
                     org.bukkit.scheduler.BukkitTask task = new BukkitRunnable() {
                         @Override
                         public void run() {
-                            if (entity.isValid() && isPinata((LivingEntity) entity)) {
-                                removeActiveBossBar((LivingEntity) entity);
-                                entity.remove();
+                            if (pinata.isValid() && isPinata((LivingEntity) pinata)) {
+                                removeActiveBossBar((LivingEntity) pinata);
+                                pinata.remove();
                                 log.debug("Pinata timed out.");
                             }
-                            timeoutTasks.remove(entity.getUniqueId());
+                            timeoutTasks.remove(pinata.getUniqueId());
                         }
                     }.runTaskLater(plugin, timeout * 20L);
-                    timeoutTasks.put(entity.getUniqueId(), task);
+                    timeoutTasks.put(pinata.getUniqueId(), task);
                 }
             }
         });
@@ -167,8 +167,8 @@ public class PinataManager {
             plugin.getServer().broadcast(mm.deserialize(config.getMessageConfig().messages.prefix() + spawnMessage));
     }
 
-    public void updateActiveBossBar(LivingEntity entity, int currentHealth, int maxHealth) {
-        BossBar bossBar = activeBossBars.get(entity.getUniqueId());
+    public void updateActiveBossBar(LivingEntity pinata, int currentHealth, int maxHealth) {
+        BossBar bossBar = activeBossBars.get(pinata.getUniqueId());
         if (bossBar == null)
             return;
         float progress = Math.max(0.0f, (float) currentHealth / maxHealth);
@@ -178,13 +178,13 @@ public class PinataManager {
                 .replace("%health%", String.valueOf(currentHealth))));
     }
 
-    public void removeActiveBossBar(LivingEntity entity) {
-        BossBar bossBar = activeBossBars.remove(entity.getUniqueId());
+    public void removeActiveBossBar(LivingEntity pinata) {
+        BossBar bossBar = activeBossBars.remove(pinata.getUniqueId());
         if (bossBar == null)
             return;
         for (Player p : plugin.getServer().getOnlinePlayers())
             p.hideBossBar(bossBar);
-        BukkitTask task = timeoutTasks.remove(entity.getUniqueId());
+        BukkitTask task = timeoutTasks.remove(pinata.getUniqueId());
         if (task != null)
             task.cancel();
     }
@@ -198,16 +198,16 @@ public class PinataManager {
             task.cancel();
         timeoutTasks.clear();
         for (World world : plugin.getServer().getWorlds()) {
-            for (LivingEntity entity : world.getLivingEntities()) {
-                if (isPinata(entity)) {
-                    entity.remove();
+            for (LivingEntity pinata : world.getLivingEntities()) {
+                if (isPinata(pinata)) {
+                    pinata.remove();
                 }
             }
         }
     }
 
-    public boolean isPinata(LivingEntity entity) {
-        return entity.getPersistentDataContainer().has(is_pinata, PersistentDataType.BOOLEAN);
+    public boolean isPinata(LivingEntity pinata) {
+        return pinata.getPersistentDataContainer().has(is_pinata, PersistentDataType.BOOLEAN);
     }
 
     public NamespacedKey getHealthKey() {

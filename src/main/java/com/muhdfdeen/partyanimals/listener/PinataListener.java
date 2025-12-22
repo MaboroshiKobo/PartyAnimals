@@ -41,9 +41,9 @@ public class PinataListener implements Listener {
 
     @EventHandler
     public void onPinataInteract(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked() instanceof LivingEntity entity) {
-            if (pinataManager.isPinata(entity)) {
-                log.debug("Player attempted to interact with a pinata: " + entity);
+        if (event.getRightClicked() instanceof LivingEntity pinata) {
+            if (pinataManager.isPinata(pinata)) {
+                log.debug("Player attempted to interact with a pinata: " + pinata);
                 event.setCancelled(true);
             }
         }
@@ -51,13 +51,13 @@ public class PinataListener implements Listener {
 
     @EventHandler
     public void onPinataHit(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof LivingEntity entity))
+        if (!(event.getEntity() instanceof LivingEntity pinata))
             return;
-        if (!pinataManager.isPinata(entity))
+        if (!pinataManager.isPinata(pinata))
             return;
 
         if (!(event.getDamager() instanceof Player player)) {
-            log.debug("Non-player entity attempted to damage pinata: " + entity);
+            log.debug("Non-player entity attempted to damage pinata: " + pinata);
             event.setCancelled(true);
             return;
         }
@@ -77,39 +77,39 @@ public class PinataListener implements Listener {
                 }
                 hitCooldowns.put(player.getUniqueId(), now + cooldownMillis);
             } else {
-                long nextHit = entity.getPersistentDataContainer().getOrDefault(
+                long nextHit = pinata.getPersistentDataContainer().getOrDefault(
                         pinataManager.getCooldownKey(), PersistentDataType.LONG, 0L);
                 if (now < nextHit) {
-                    log.debug("Pinata " + entity + " is on hit cooldown.");
+                    log.debug("Pinata " + pinata + " is on hit cooldown.");
                     event.setCancelled(true);
                     return;
                 }
-                entity.getPersistentDataContainer().set(
+                pinata.getPersistentDataContainer().set(
                         pinataManager.getCooldownKey(), PersistentDataType.LONG, now + cooldownMillis);
             }
         }
 
         event.setDamage(0);
-        entity.setNoDamageTicks(0);
+        pinata.setNoDamageTicks(0);
 
-        int currentHits = entity.getPersistentDataContainer().getOrDefault(pinataManager.getHealthKey(),
+        int currentHits = pinata.getPersistentDataContainer().getOrDefault(pinataManager.getHealthKey(),
                 PersistentDataType.INTEGER, 5);
         currentHits--;
         log.debug("Pinata Health: " + currentHits);
 
         if (currentHits <= 0) {
-            handlePinataDeath(entity, player);
+            handlePinataDeath(pinata, player);
         } else {
-            entity.getPersistentDataContainer().set(pinataManager.getHealthKey(), PersistentDataType.INTEGER,
+            pinata.getPersistentDataContainer().set(pinataManager.getHealthKey(), PersistentDataType.INTEGER,
                     currentHits);
-            entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 1.0f, 1.0f);
-            entity.playHurtAnimation(0);
+            pinata.getWorld().playSound(pinata.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 1.0f, 1.0f);
+            pinata.playHurtAnimation(0);
             CommandUtils.process(player, config.getMainConfig().pinata.commands().hit(), plugin);
             String hitMessage = config.getMessageConfig().messages.pinataMessages().pinataHit();
             if (hitMessage != null && !hitMessage.isEmpty()) {
                 player.sendMessage(mm.deserialize(config.getMessageConfig().messages.prefix() + hitMessage));
             }
-            pinataManager.updateActiveBossBar(entity, currentHits, config.getMainConfig().pinata.health().maxHealth());
+            pinataManager.updateActiveBossBar(pinata, currentHits, config.getMainConfig().pinata.health().maxHealth());
         }
     }
 
@@ -119,9 +119,9 @@ public class PinataListener implements Listener {
         hitCooldowns.remove(event.getPlayer().getUniqueId());
     }
 
-    private void handlePinataDeath(LivingEntity entity, Player player) {
-        entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-        entity.getWorld().spawnParticle(Particle.EXPLOSION, entity.getLocation().add(0, 1, 0), 5);
+    private void handlePinataDeath(LivingEntity pinata, Player player) {
+        pinata.getWorld().playSound(pinata.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+        pinata.getWorld().spawnParticle(Particle.EXPLOSION, pinata.getLocation().add(0, 1, 0), 5);
         CommandUtils.process(player, config.getMainConfig().pinata.commands().lastHit(), plugin);
         String lastHitMessage = config.getMessageConfig().messages.pinataMessages().pinataLastHit();
         if (lastHitMessage != null && !lastHitMessage.isEmpty()) {
@@ -132,7 +132,7 @@ public class PinataListener implements Listener {
         if (downedMessage != null && !downedMessage.isEmpty()) {
             player.sendMessage(mm.deserialize(config.getMessageConfig().messages.prefix() + downedMessage));
         }
-        pinataManager.removeActiveBossBar(entity);
-        entity.remove();
+        pinataManager.removeActiveBossBar(pinata);
+        pinata.remove();
     }
 }
