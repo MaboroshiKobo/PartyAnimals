@@ -1,4 +1,4 @@
-package com.muhdfdeen.partyanimals.ai;
+package com.muhdfdeen.partyanimals.goal;
 
 import com.destroystokyo.paper.entity.ai.Goal;
 import com.destroystokyo.paper.entity.ai.GoalKey;
@@ -9,19 +9,20 @@ import java.util.EnumSet;
 import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Creature;
 
-public class PinataRoamAI implements Goal<Creature> {
+public class PinataRoamGoal implements Goal<Creature> {
     private final ConfigManager config;
     private final Creature mob;
     private final GoalKey<Creature> key;
     private final double speed;
 
-    public PinataRoamAI(PartyAnimals plugin, Creature mob) {
+    public PinataRoamGoal(PartyAnimals plugin, Creature mob) {
         this.config = plugin.getConfiguration();
         this.mob = mob;
         this.key = GoalKey.of(Creature.class, new NamespacedKey(plugin, "pinata_roam"));
-        this.speed = config.getPinataConfig().pinata.ai().pathfinding().movementSpeedMultiplier();
+        this.speed = config.getPinataConfig().ai.pathfinding().speed();
     }
 
     @Override
@@ -36,16 +37,27 @@ public class PinataRoamAI implements Goal<Creature> {
 
     @Override
     public void start() {
-        double rangeX = config.getPinataConfig().pinata.ai().pathfinding().range().x();
-        double rangeY = config.getPinataConfig().pinata.ai().pathfinding().range().y();
-        double rangeZ = config.getPinataConfig().pinata.ai().pathfinding().range().z();
+        double rangeX = config.getPinataConfig().ai.pathfinding().range().x();
+        double rangeZ = config.getPinataConfig().ai.pathfinding().range().z();
 
         double x = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeX;
-        double y = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeY;
         double z = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeZ;
 
-        Location target = mob.getLocation().add(x, y, z);
+        Location currentLoc = mob.getLocation();
+        int targetX = currentLoc.getBlockX() + (int) x;
+        int targetZ = currentLoc.getBlockZ() + (int) z;
 
+        Block targetBlock = mob.getWorld().getHighestBlockAt(targetX, targetZ);
+        
+        if (Math.abs(targetBlock.getY() - currentLoc.getY()) > 5) {
+            return; 
+        }
+
+        if (targetBlock.isLiquid() || targetBlock.getRelative(0, 1, 0).isLiquid()) {
+            return;
+        }
+
+        Location target = targetBlock.getLocation().add(0.5, 1.1, 0.5);
         if (target.getBlock().isPassable()) {
             mob.getPathfinder().moveTo(target, speed);
         }

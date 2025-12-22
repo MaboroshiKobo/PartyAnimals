@@ -1,4 +1,4 @@
-package com.muhdfdeen.partyanimals.config;
+package com.muhdfdeen.partyanimals.config.settings;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.ConfigLib;
@@ -16,9 +16,22 @@ public final class MainConfig {
                 return YamlConfigurations.update(configFile, MainConfiguration.class, properties);
         }
 
+        public record Modules(
+                @Comment("Enable or disable the Pinata module.")
+                boolean pinata,
+                @Comment("Enable or disable the Vote module.")
+                boolean vote
+        ) {}
+
         @Configuration
         public static class MainConfiguration {
                 @Comment("Enable debug mode for more verbose logging.")
                 public boolean debug = false;
+
+                @Comment("Toggle various modules on or off.")
+                public Modules modules = new Modules(
+                        true,
+                        false
+                );
         }
 }

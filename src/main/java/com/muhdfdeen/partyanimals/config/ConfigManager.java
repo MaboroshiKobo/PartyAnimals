@@ -3,9 +3,12 @@ package com.muhdfdeen.partyanimals.config;
 import java.io.File;
 import java.nio.file.Path;
 
-import com.muhdfdeen.partyanimals.config.MainConfig.MainConfiguration;
-import com.muhdfdeen.partyanimals.config.MessageConfig.MessageConfiguration;
-import com.muhdfdeen.partyanimals.config.PinataConfig.PinataConfiguration;
+import com.muhdfdeen.partyanimals.config.settings.MainConfig;
+import com.muhdfdeen.partyanimals.config.settings.MessageConfig;
+import com.muhdfdeen.partyanimals.config.settings.PinataConfig;
+import com.muhdfdeen.partyanimals.config.settings.MainConfig.MainConfiguration;
+import com.muhdfdeen.partyanimals.config.settings.MessageConfig.MessageConfiguration;
+import com.muhdfdeen.partyanimals.config.settings.PinataConfig.PinataConfiguration;
 
 import de.exlll.configlib.ConfigLib;
 import de.exlll.configlib.YamlConfigurations;
