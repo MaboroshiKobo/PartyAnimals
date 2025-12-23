@@ -9,12 +9,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 
-public class CooldownHandler {
+public class HitCooldownHandler {
     private final PartyAnimals plugin;
     private final ConfigManager config;
     private final MessageHandler messageHandler;
 
-    public CooldownHandler(PartyAnimals plugin) {
+    public HitCooldownHandler(PartyAnimals plugin) {
         this.plugin = plugin;
         this.config = plugin.getConfiguration();
         this.messageHandler = plugin.getMessageHandler();

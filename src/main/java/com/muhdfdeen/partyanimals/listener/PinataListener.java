@@ -16,7 +16,7 @@ import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
 import com.muhdfdeen.partyanimals.handler.RewardHandler;
-import com.muhdfdeen.partyanimals.handler.CooldownHandler;
+import com.muhdfdeen.partyanimals.handler.HitCooldownHandler;
 import com.muhdfdeen.partyanimals.handler.EffectHandler;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
 import com.muhdfdeen.partyanimals.manager.BossBarManager;
@@ -29,7 +29,7 @@ public class PinataListener implements Listener {
     private final ConfigManager config;
     private final PinataManager pinataManager;
     private final BossBarManager bossBarManager;
-    private final CooldownHandler cooldownHandler;
+    private final HitCooldownHandler hitCooldownHandler;
     private final EffectHandler effectHandler;
     private final RewardHandler rewardHandler;
     private final MessageHandler messageHandler;
@@ -40,7 +40,7 @@ public class PinataListener implements Listener {
         this.config = plugin.getConfiguration();
         this.pinataManager = plugin.getPinataManager();
         this.bossBarManager = plugin.getBossBarManager();
-        this.cooldownHandler = plugin.getCooldownHandler();
+        this.hitCooldownHandler = plugin.getCooldownHandler();
         this.effectHandler = plugin.getEffectHandler();
         this.rewardHandler = plugin.getrewardHandler();
         this.messageHandler = plugin.getMessageHandler();
@@ -100,13 +100,13 @@ public class PinataListener implements Listener {
             }
         }
 
-        if (cooldownHandler.isOnCooldown(player, pinata)) {
+        if (hitCooldownHandler.isOnCooldown(player, pinata)) {
             log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " but is on cooldown.");
             event.setCancelled(true);
             return;
         }
 
-        cooldownHandler.applyCooldown(player, pinata);
+        hitCooldownHandler.applyCooldown(player, pinata);
         event.setCancelled(true);
         int currentHits = pinata.getPersistentDataContainer().getOrDefault(pinataManager.getHealthKey(), PersistentDataType.INTEGER, 1);
         currentHits--;

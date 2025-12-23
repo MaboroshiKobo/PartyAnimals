@@ -13,7 +13,7 @@ import org.bstats.bukkit.Metrics;
 import com.muhdfdeen.partyanimals.command.PartyAnimalsCommand;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
 import com.muhdfdeen.partyanimals.handler.RewardHandler;
-import com.muhdfdeen.partyanimals.handler.CooldownHandler;
+import com.muhdfdeen.partyanimals.handler.HitCooldownHandler;
 import com.muhdfdeen.partyanimals.handler.EffectHandler;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
 import com.muhdfdeen.partyanimals.listener.PinataListener;
@@ -30,11 +30,11 @@ public final class PartyAnimals extends JavaPlugin {
     private PinataManager pinataManager;
     private MessageHandler messageHandler;
     private BossBarManager bossBarManager;
-    private CooldownHandler cooldownHandler;
+    private HitCooldownHandler hitCooldownHandler;
     private EffectHandler effectHandler;
     private RewardHandler rewardHandler;
 
-@Override
+    @Override
     public void onEnable() {
         plugin = this;
         this.configManager = new ConfigManager(getDataFolder());
@@ -44,48 +44,35 @@ public final class PartyAnimals extends JavaPlugin {
             configManager.loadConfig();
             configManager.loadMessages();
         } catch (Exception e) {
-            getLogger().severe("Failed to load initial configuration: " + e.getMessage());
+            getLogger().severe("Failed to load configuration: " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        this.messageHandler = new MessageHandler(configManager);
-
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 28389);
 
-        this.rewardHandler = new RewardHandler(this);
-        
+        this.messageHandler = new MessageHandler(configManager);
+        this.bossBarManager = new BossBarManager(this);
+        this.effectHandler = new EffectHandler(log);
+        this.hitCooldownHandler = new HitCooldownHandler(this);
+
         setupModules();
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             PartyAnimalsCommand partyanimalsCommand = new PartyAnimalsCommand(this);
-            event.registrar().register(partyanimalsCommand.createCommand("partyanimals"), "Main PartyAnimals command", List.of("pa"));
+            event.registrar().register(partyanimalsCommand.createCommand("partyanimals"), "Main command", List.of("pa"));
         });
 
-        UpdateChecker updateChecker = new UpdateChecker(this);
-        updateChecker.checkForUpdates();
-        getServer().getPluginManager().registerEvents(updateChecker, this);
-
-        log.info("Plugin enabled successfully");
-    }
-
-    @Override
-    public void onDisable() {
-        if (pinataManager != null) {
-            pinataManager.cleanup();
-        }
-        if (bossBarManager != null) {
-            bossBarManager.removeAll(); 
-        }
+        new UpdateChecker(this).checkForUpdates();
     }
 
     private void setupModules() {
         boolean pinataEnabled = configManager.getMainConfig().modules.pinata();
-
         if (pinataEnabled) {
             if (this.pinataManager == null) {
                 this.pinataManager = new PinataManager(this);
+                this.rewardHandler = new RewardHandler(this);
                 getServer().getPluginManager().registerEvents(new PinataListener(this), this);
                 log.info("Pinata module enabled.");
             }
@@ -131,6 +118,16 @@ public final class PartyAnimals extends JavaPlugin {
         log.info("Reloaded pinata entities and tasks.");
     }
 
+    @Override
+    public void onDisable() {
+        if (pinataManager != null) {
+            pinataManager.cleanup();
+        }
+        if (bossBarManager != null) {
+            bossBarManager.removeAll(); 
+        }
+    }
+
     public static PartyAnimals getPlugin() {
         return plugin;
     }
@@ -155,8 +152,8 @@ public final class PartyAnimals extends JavaPlugin {
         return bossBarManager;
     }
 
-    public CooldownHandler getCooldownHandler() {
-        return cooldownHandler;
+    public HitCooldownHandler getCooldownHandler() {
+        return hitCooldownHandler;
     }
 
     public EffectHandler getEffectHandler() {
