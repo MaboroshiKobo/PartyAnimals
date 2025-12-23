@@ -15,7 +15,7 @@ import org.bukkit.persistence.PersistentDataType;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
-import com.muhdfdeen.partyanimals.handler.CommandHandler;
+import com.muhdfdeen.partyanimals.handler.RewardHandler;
 import com.muhdfdeen.partyanimals.handler.CooldownHandler;
 import com.muhdfdeen.partyanimals.handler.EffectHandler;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
@@ -31,7 +31,7 @@ public class PinataListener implements Listener {
     private final BossBarManager bossBarManager;
     private final CooldownHandler cooldownHandler;
     private final EffectHandler effectHandler;
-    private final CommandHandler commandHandler;
+    private final RewardHandler rewardHandler;
     private final MessageHandler messageHandler;
 
     public PinataListener(PartyAnimals plugin) {
@@ -42,7 +42,7 @@ public class PinataListener implements Listener {
         this.bossBarManager = plugin.getBossBarManager();
         this.cooldownHandler = plugin.getCooldownHandler();
         this.effectHandler = plugin.getEffectHandler();
-        this.commandHandler = plugin.getCommandHandler();
+        this.rewardHandler = plugin.getrewardHandler();
         this.messageHandler = plugin.getMessageHandler();
     }
 
@@ -124,7 +124,7 @@ public class PinataListener implements Listener {
             }
             
             log.debug("Processing hit commands for player: " + player.getName());
-            commandHandler.process(player, config.getPinataConfig().events.hit().rewards());
+            rewardHandler.process(player, config.getPinataConfig().events.hit().rewards());
             
             String hitMessage = config.getMessageConfig().pinata.hitSuccess();
             if (hitMessage != null && !hitMessage.isEmpty())
@@ -175,13 +175,13 @@ public class PinataListener implements Listener {
         effectHandler.playEffects(config.getPinataConfig().events.death().effects(), pinata.getLocation(), false);
 
         log.debug("Processing last hit commands...");
-        commandHandler.process(player, config.getPinataConfig().events.lastHit().rewards());
+        rewardHandler.process(player, config.getPinataConfig().events.lastHit().rewards());
         
         String lastHitMessage = config.getMessageConfig().pinata.lastHit();
         messageHandler.send(player, lastHitMessage); 
 
         log.debug("Processing death commands...");
-        commandHandler.process(player, config.getPinataConfig().events.death().rewards());
+        rewardHandler.process(player, config.getPinataConfig().events.death().rewards());
         
         String downedMessage = config.getMessageConfig().pinata.defeated();
         messageHandler.send(plugin.getServer(), downedMessage, messageHandler.tag("player", player.getName()));

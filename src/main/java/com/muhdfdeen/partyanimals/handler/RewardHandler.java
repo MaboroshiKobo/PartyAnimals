@@ -11,12 +11,12 @@ import com.muhdfdeen.partyanimals.config.settings.PinataConfig;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 
-public class CommandHandler {
+public class RewardHandler {
 
     private final PartyAnimals plugin;
     private final boolean hasPAPI;
 
-    public CommandHandler(PartyAnimals plugin) {
+    public RewardHandler(PartyAnimals plugin) {
         this.plugin = plugin;
         this.hasPAPI = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
     }

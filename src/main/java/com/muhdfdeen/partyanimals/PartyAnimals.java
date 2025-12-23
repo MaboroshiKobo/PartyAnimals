@@ -12,7 +12,7 @@ import org.bstats.bukkit.Metrics;
 
 import com.muhdfdeen.partyanimals.command.PartyAnimalsCommand;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
-import com.muhdfdeen.partyanimals.handler.CommandHandler;
+import com.muhdfdeen.partyanimals.handler.RewardHandler;
 import com.muhdfdeen.partyanimals.handler.CooldownHandler;
 import com.muhdfdeen.partyanimals.handler.EffectHandler;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
@@ -32,7 +32,7 @@ public final class PartyAnimals extends JavaPlugin {
     private BossBarManager bossBarManager;
     private CooldownHandler cooldownHandler;
     private EffectHandler effectHandler;
-    private CommandHandler commandHandler;
+    private RewardHandler rewardHandler;
 
 @Override
     public void onEnable() {
@@ -54,13 +54,10 @@ public final class PartyAnimals extends JavaPlugin {
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 28389);
 
-        this.bossBarManager = new BossBarManager(this);
-        this.effectHandler = new EffectHandler(log);
-        this.cooldownHandler = new CooldownHandler(this);
-        this.commandHandler = new CommandHandler(this);
-        this.pinataManager = new PinataManager(this);
+        this.rewardHandler = new RewardHandler(this);
+        
+        setupModules();
 
-        getServer().getPluginManager().registerEvents(new PinataListener(this), this);
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             PartyAnimalsCommand partyanimalsCommand = new PartyAnimalsCommand(this);
             event.registrar().register(partyanimalsCommand.createCommand("partyanimals"), "Main PartyAnimals command", List.of("pa"));
@@ -83,27 +80,42 @@ public final class PartyAnimals extends JavaPlugin {
         }
     }
 
+    private void setupModules() {
+        boolean pinataEnabled = configManager.getMainConfig().modules.pinata();
+
+        if (pinataEnabled) {
+            if (this.pinataManager == null) {
+                this.pinataManager = new PinataManager(this);
+                getServer().getPluginManager().registerEvents(new PinataListener(this), this);
+                log.info("Pinata module enabled.");
+            }
+        } else {
+            if (this.pinataManager != null) {
+                this.pinataManager.cleanup();
+                this.pinataManager = null;
+                log.info("Pinata module disabled.");
+            }
+        }
+    }
+
     public boolean reload() {
         try {
             if (pinataManager != null) {
                 pinataManager.cleanup();
             }
-            
+
             configManager.loadConfig();
             configManager.loadMessages();
-            
+
+            setupModules();
+
             if (pinataManager != null) {
                 reloadPinatas();
             }
 
             return true;
         } catch (Exception e) {
-            if (log != null) {
-                log.error("Failed to load configuration: " + e.getMessage());
-            } else {
-                getLogger().severe("Failed to load configuration: " + e.getMessage());
-            }
-            e.printStackTrace();
+            log.warn("Failed to reload configuration: " + e.getMessage());
             return false;
         }
     }
@@ -151,7 +163,7 @@ public final class PartyAnimals extends JavaPlugin {
         return effectHandler;
     }
     
-    public CommandHandler getCommandHandler() {
-        return commandHandler;
+    public RewardHandler getrewardHandler() {
+        return rewardHandler;
     }
 }

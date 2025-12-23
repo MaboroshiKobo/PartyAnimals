@@ -4,7 +4,7 @@ import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.behavior.PinataFloatGoal;
 import com.muhdfdeen.partyanimals.behavior.PinataRoamGoal;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
-import com.muhdfdeen.partyanimals.handler.CommandHandler;
+import com.muhdfdeen.partyanimals.handler.RewardHandler;
 import com.muhdfdeen.partyanimals.handler.EffectHandler;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
 import com.muhdfdeen.partyanimals.util.Logger;
@@ -37,7 +37,7 @@ public class PinataManager {
     private final ConfigManager config;
     private final BossBarManager bossBarManager;
     private final EffectHandler effectHandler;
-    private final CommandHandler commandHandler;
+    private final RewardHandler rewardHandler;
     private final MessageHandler messageHandler;
     
     private final NamespacedKey is_pinata;
@@ -55,7 +55,7 @@ public class PinataManager {
         this.config = plugin.getConfiguration();
         this.bossBarManager = plugin.getBossBarManager();
         this.effectHandler = plugin.getEffectHandler();
-        this.commandHandler = plugin.getCommandHandler();
+        this.rewardHandler = plugin.getrewardHandler();
         this.messageHandler = plugin.getMessageHandler();
         this.is_pinata = new NamespacedKey(plugin, "is_pinata");
         this.health = new NamespacedKey(plugin, "health");
@@ -197,7 +197,7 @@ public class PinataManager {
                 effectHandler.playEffects(config.getPinataConfig().events.spawn().effects(), location, false);
             }
         });
-        commandHandler.process(null, config.getPinataConfig().events.spawn().rewards());
+        rewardHandler.process(null, config.getPinataConfig().events.spawn().rewards());
         
         String spawnMessage = config.getMessageConfig().pinata.spawned();
         messageHandler.send(plugin.getServer(), spawnMessage);
