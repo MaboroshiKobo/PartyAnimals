@@ -27,6 +27,7 @@ dependencies {
 tasks.named('shadowJar') {
   relocate 'de.exlll.configlib', 'com.muhdfdeen.partyanimals.libs.configlib'
   relocate 'org.bstats', 'com.muhdfdeen.partyanimals.libs.bstats'
+  exclude 'plugin.yml'
   minimize()
   archiveClassifier.set('')
 }
