@@ -40,9 +40,9 @@ public class PinataListener implements Listener {
         this.config = plugin.getConfiguration();
         this.pinataManager = plugin.getPinataManager();
         this.bossBarManager = plugin.getBossBarManager();
-        this.hitCooldownHandler = plugin.getCooldownHandler();
+        this.hitCooldownHandler = plugin.getHitCooldownHandler();
         this.effectHandler = plugin.getEffectHandler();
-        this.rewardHandler = plugin.getrewardHandler();
+        this.rewardHandler = plugin.getRewardHandler();
         this.messageHandler = plugin.getMessageHandler();
     }
 
@@ -71,6 +71,8 @@ public class PinataListener implements Listener {
 
     @EventHandler
     public void onPinataHit(EntityDamageByEntityEvent event) {
+        if (plugin.getPinataManager() == null) return;
+
         if (!(event.getEntity() instanceof LivingEntity pinata) || !pinataManager.isPinata(pinata))
             return;
 
@@ -108,6 +110,7 @@ public class PinataListener implements Listener {
 
         hitCooldownHandler.applyCooldown(player, pinata);
         event.setCancelled(true);
+
         int currentHits = pinata.getPersistentDataContainer().getOrDefault(pinataManager.getHealthKey(), PersistentDataType.INTEGER, 1);
         currentHits--;
 

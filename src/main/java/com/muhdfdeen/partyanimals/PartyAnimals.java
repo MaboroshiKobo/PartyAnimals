@@ -55,7 +55,6 @@ public final class PartyAnimals extends JavaPlugin {
         this.messageHandler = new MessageHandler(configManager);
         this.bossBarManager = new BossBarManager(this);
         this.effectHandler = new EffectHandler(log);
-        this.hitCooldownHandler = new HitCooldownHandler(this);
 
         setupModules();
 
@@ -72,6 +71,7 @@ public final class PartyAnimals extends JavaPlugin {
         if (pinataEnabled) {
             if (this.pinataManager == null) {
                 this.pinataManager = new PinataManager(this);
+                this.hitCooldownHandler = new HitCooldownHandler(this);
                 this.rewardHandler = new RewardHandler(this);
                 getServer().getPluginManager().registerEvents(new PinataListener(this), this);
                 log.info("Pinata module enabled.");
@@ -80,6 +80,8 @@ public final class PartyAnimals extends JavaPlugin {
             if (this.pinataManager != null) {
                 this.pinataManager.cleanup();
                 this.pinataManager = null;
+                this.hitCooldownHandler = null;
+                this.rewardHandler = null;
                 log.info("Pinata module disabled.");
             }
         }
@@ -152,7 +154,7 @@ public final class PartyAnimals extends JavaPlugin {
         return bossBarManager;
     }
 
-    public HitCooldownHandler getCooldownHandler() {
+    public HitCooldownHandler getHitCooldownHandler() {
         return hitCooldownHandler;
     }
 
@@ -160,7 +162,7 @@ public final class PartyAnimals extends JavaPlugin {
         return effectHandler;
     }
     
-    public RewardHandler getrewardHandler() {
+    public RewardHandler getRewardHandler() {
         return rewardHandler;
     }
 }

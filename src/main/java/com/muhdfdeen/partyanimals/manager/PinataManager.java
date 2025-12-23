@@ -55,7 +55,7 @@ public class PinataManager {
         this.config = plugin.getConfiguration();
         this.bossBarManager = plugin.getBossBarManager();
         this.effectHandler = plugin.getEffectHandler();
-        this.rewardHandler = plugin.getrewardHandler();
+        this.rewardHandler = plugin.getRewardHandler();
         this.messageHandler = plugin.getMessageHandler();
         this.is_pinata = new NamespacedKey(plugin, "is_pinata");
         this.health = new NamespacedKey(plugin, "health");

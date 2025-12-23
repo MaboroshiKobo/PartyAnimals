@@ -131,7 +131,7 @@ public final class PinataConfig {
         @Comment("Movement speed multiplier.") double speed
     ) {}
 
-    public record BehaviorSettings( // Renamed from GoalSettings
+    public record BehaviorSettings(
         @Comment("If false, the pinata acts like a statue.") boolean enabled,
         @Comment("Resistance to being pushed (0.0 to 1.0).") double knockbackResistance,
         @Comment("Movement logic settings.") MovementSettings movement
@@ -197,7 +197,7 @@ public final class PinataConfig {
             new HitCooldown(true, 0.5, false, "ACTION_BAR")
         );
         
-        public BehaviorSettings behavior = new BehaviorSettings( // Renamed from goal
+        public BehaviorSettings behavior = new BehaviorSettings(
             true, 
             0.5, 
             new MovementSettings(new PathfindingRange(15.0, 5.0, 15.0), 1.3)
