@@ -4,7 +4,6 @@ import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.behavior.PinataFloatGoal;
 import com.muhdfdeen.partyanimals.behavior.PinataRoamGoal;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
-import com.muhdfdeen.partyanimals.handler.RewardHandler;
 import com.muhdfdeen.partyanimals.handler.EffectHandler;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
 import com.muhdfdeen.partyanimals.util.Logger;
@@ -37,7 +36,6 @@ public class PinataManager {
     private final ConfigManager config;
     private final BossBarManager bossBarManager;
     private final EffectHandler effectHandler;
-    private final RewardHandler rewardHandler;
     private final MessageHandler messageHandler;
     
     private final NamespacedKey is_pinata;
@@ -55,7 +53,6 @@ public class PinataManager {
         this.config = plugin.getConfiguration();
         this.bossBarManager = plugin.getBossBarManager();
         this.effectHandler = plugin.getEffectHandler();
-        this.rewardHandler = plugin.getRewardHandler();
         this.messageHandler = plugin.getMessageHandler();
         this.is_pinata = new NamespacedKey(plugin, "is_pinata");
         this.health = new NamespacedKey(plugin, "health");
@@ -81,7 +78,7 @@ public class PinataManager {
             messageHandler.parse(null, bossBarCountdown, messageHandler.tag("seconds", (int) countdownSeconds)), 
             1.0f, 
             BossBar.Color.valueOf(barSettings.color()), 
-            BossBar.Overlay.valueOf(barSettings.style())
+            BossBar.Overlay.valueOf(barSettings.overlay())
         );
         
         boolean shouldShowBar = barSettings.enabled();
@@ -197,10 +194,12 @@ public class PinataManager {
                 effectHandler.playEffects(config.getPinataConfig().events.spawn().effects(), location, false);
             }
         });
-        rewardHandler.process(null, config.getPinataConfig().events.spawn().rewards());
+        if (plugin.getRewardHandler() != null) {
+            plugin.getRewardHandler().process(null, config.getPinataConfig().events.spawn().rewards());
+        }
         
         String spawnMessage = config.getMessageConfig().pinata.spawned();
-        messageHandler.send(plugin.getServer(), spawnMessage);
+        messageHandler.send(plugin.getServer(), spawnMessage, messageHandler.tagParsed("location", location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
     }
 
     public void restorePinata(LivingEntity pinata) {

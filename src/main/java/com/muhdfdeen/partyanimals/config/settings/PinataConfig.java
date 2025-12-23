@@ -23,6 +23,70 @@ public final class PinataConfig {
     }
 
     @Configuration
+    public static class PinataConfiguration {
+        
+        public Appearance appearance = new Appearance(
+            List.of("LLAMA", "MULE"), 
+            "<gradient:#FF5555:#FF55FF><bold>Party Pinata</bold></gradient>", 
+            new ScaleSettings(0.75, 1.25), 
+            false, 
+            true,
+            "LIGHT_PURPLE"
+        );
+
+        public HealthSettings health = new HealthSettings(
+            10,
+            true,
+            5,
+            new BossBarSettings(true, true, "GREEN", "NOTCHED_10")
+        );
+        
+        public InteractionSettings interaction = new InteractionSettings(
+            "", 
+            new ItemWhitelist(false, List.of("STICK", "BLAZE_ROD"))
+        );
+        
+        public TimerSettings timer = new TimerSettings(
+            new PhaseSettings(10,
+                new BossBarSettings(true, true, "YELLOW", "PROGRESS"),
+                new EffectGroup(new SoundEffect("block.note_block.bit", 1f, 1f), new ParticleEffect("FIREWORK", 5)),
+                new EffectGroup(new SoundEffect("block.note_block.bit", 1f, 0.8f), new ParticleEffect("NOTE", 5)),
+                new EffectGroup(new SoundEffect("entity.firework_rocket.launch", 1f, 0.8f), new ParticleEffect("SONIC_BOOM", 5))
+            ),
+            new TimeoutSettings(true, 300),
+            new HitCooldown(true, 0.75, false, "ACTION_BAR")
+        );
+        
+        public BehaviorSettings behavior = new BehaviorSettings(
+            true, 
+            1.0,
+            new MovementSettings(new PathfindingRange(15.0, 5.0, 15.0), 1.75)
+        );
+        
+        @Comment("Defined spawn points.")
+        public Map<String, SerializableLocation> spawnLocations = new HashMap<>(Map.of("default", new SerializableLocation()));
+        
+        public EventRegistry events = new EventRegistry(
+            new GameEvent(true,
+                new EffectGroup(new SoundEffect("entity.firework_rocket.twinkle", 1f, 1f), new ParticleEffect("TOTEM_OF_UNDYING", 10)),
+                new HashMap<>(Map.of("announce", new RewardAction(100.0, true, "", List.of("broadcast <green>A pinata has arrived!"))))
+            ),
+            new GameEvent(true,
+                new EffectGroup(new SoundEffect("entity.player.attack.crit", 1f, 1f), new ParticleEffect("CRIT", 5)),
+                new HashMap<>()
+            ),
+            new GameEvent(true,
+                new EffectGroup(new SoundEffect("ui.toast.challenge_complete", 1f, 1f), new ParticleEffect("HEART", 20)),
+                new HashMap<>(Map.of("vip_reward", new RewardAction(50.0, false, "partyanimals.vip", List.of("give {player} diamond 1"))))
+            ),
+            new GameEvent(true,
+                new EffectGroup(new SoundEffect("entity.generic.explode", 1f, 1f), new ParticleEffect("EXPLOSION", 5)),
+                new HashMap<>(Map.of("everyone_emerald", new RewardAction(100.0, true, "", List.of("give @a emerald 5"))))
+            )
+        );
+    }
+
+    @Configuration
     public static class RewardAction {
         @Comment("The chance (0-100) for this reward to trigger.")
         public double chance = 100.0;
@@ -65,15 +129,15 @@ public final class PinataConfig {
     public record BossBarSettings(
         @Comment("Show a boss bar for this phase.") boolean enabled,
         @Comment("If true, all players see the bar. If false, only those near the pinata.") boolean global,
-        @Comment("Bar color (PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE).") String color,
-        @Comment("Bar style (SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20).") String style
+        @Comment({"Bar color.", "See: https://jd.advntr.dev/api/4.25.0/net/kyori/adventure/bossbar/BossBar.Color.html"}) String color,
+        @Comment({"Bar overlay.", "See: https://jd.advntr.dev/api/4.25.0/net/kyori/adventure/bossbar/BossBar.Overlay.html"}) String overlay
     ) {}
 
     public record Appearance(
-        @Comment({"Entity types to use (randomly chosen).", "See: https://jd.papermc.io/paper/1.21.1/org/bukkit/entity/EntityType.html"}) 
+        @Comment({"Entity types to use (randomly chosen).", "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/entity/EntityType.html"}) 
         List<String> entityTypes,
         
-        @Comment("Display name (supports MiniMessage).") 
+        @Comment("Display name.") 
         String name,
         
         @Comment("Size randomization settings.") 
@@ -92,13 +156,13 @@ public final class PinataConfig {
     public record HealthSettings(
         @Comment("Base health points.") int maxHealth,
         @Comment("If true, health scales based on player count (maxHealth * players).") boolean perPlayer,
-        @Comment("Multiplier used if perPlayer is true.") int multiplier,
+        @Comment("Multiplier used if perPlayer is false.") int multiplier,
         @Comment("Health bar visual settings.") BossBarSettings bar
     ) {}
 
     public record ItemWhitelist(
         @Comment("Only allow specific items to deal damage.") boolean enabled,
-        @Comment("List of allowed material names (e.g. WOODEN_SWORD).") List<String> materialNames
+        @Comment({"List of allowed material names.", "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/Material.html"}) List<String> materialNames
     ) {}
 
     public record InteractionSettings(
@@ -115,7 +179,7 @@ public final class PinataConfig {
         @Comment("Enable attack speed limits.") boolean enabled,
         @Comment("Seconds between hits.") double duration,
         @Comment("If true, the cooldown is global (all players share the timer).") boolean global,
-        @Comment("Feedback type: ACTION_BAR or CHAT.") String type
+        @Comment({"Feedback type.", "Options: ACTION_BAR, CHAT"}) String type
     ) {}
 
     public record TimerSettings(
@@ -133,7 +197,7 @@ public final class PinataConfig {
 
     public record BehaviorSettings(
         @Comment("If false, the pinata acts like a statue.") boolean enabled,
-        @Comment("Resistance to being pushed (0.0 to 1.0).") double knockbackResistance,
+        @Comment({"Resistance to being pushed.", "Range: 0.0 to 1.0"}) double knockbackResistance,
         @Comment("Movement logic settings.") MovementSettings movement
     ) {}
 
@@ -159,72 +223,6 @@ public final class PinataConfig {
         @Comment("Triggered when pinata spawns.") GameEvent spawn,
         @Comment("Triggered when pinata is damaged.") GameEvent hit,
         @Comment("Triggered on the final killing blow.") GameEvent lastHit,
-        @Comment("Triggered when pinata dies (Global rewards).") GameEvent death
+        @Comment("Triggered when pinata dies.") GameEvent death
     ) {}
-
-    @Configuration
-    public static class PinataConfiguration {
-        
-        public Appearance appearance = new Appearance(
-            List.of("LLAMA", "MULE"), 
-            "<gradient:#FF5555:#FF55FF><bold>Party Pinata</bold></gradient>", 
-            new ScaleSettings(0.8, 1.2), 
-            true, 
-            true, 
-            "LIGHT_PURPLE"
-        );
-        
-        public HealthSettings health = new HealthSettings(
-            50, 
-            true, 
-            10, 
-            new BossBarSettings(true, true, "MAGENTA", "SEGMENTED_10")
-        );
-        
-        public InteractionSettings interaction = new InteractionSettings(
-            "", 
-            new ItemWhitelist(false, List.of("STICK", "BLAZE_ROD"))
-        );
-        
-        public TimerSettings timer = new TimerSettings(
-            new PhaseSettings(10,
-                new BossBarSettings(true, true, "YELLOW", "SOLID"),
-                new EffectGroup(new SoundEffect("block.note_block.bit", 1f, 1f), new ParticleEffect("FIREWORK", 10)),
-                new EffectGroup(new SoundEffect("block.note_block.bit", 1f, 1.2f), new ParticleEffect("NOTE", 5)),
-                new EffectGroup(new SoundEffect("entity.firework_rocket.launch", 1f, 1f), new ParticleEffect("FLASH", 1))
-            ),
-            new TimeoutSettings(true, 300),
-            new HitCooldown(true, 0.5, false, "ACTION_BAR")
-        );
-        
-        public BehaviorSettings behavior = new BehaviorSettings(
-            true, 
-            0.5, 
-            new MovementSettings(new PathfindingRange(15.0, 5.0, 15.0), 1.3)
-        );
-        
-        @Comment("Defined spawn points.")
-        public Map<String, SerializableLocation> spawnLocations = new HashMap<>(Map.of(
-            "default", new SerializableLocation()
-        ));
-        
-        public EventRegistry events = new EventRegistry(
-            new GameEvent(true, 
-                new EffectGroup(new SoundEffect("entity.firework_rocket.twinkle", 1f, 1f), new ParticleEffect("TOTEM_OF_UNDYING", 50)),
-                new HashMap<>(Map.of("announce", new RewardAction(100.0, true, "", List.of("broadcast <green>A Pinata has arrived!"))))
-            ),
-            new GameEvent(true, 
-                new EffectGroup(new SoundEffect("entity.player.attack.crit", 1f, 1f), new ParticleEffect("CRIT", 5)),
-                new HashMap<>()
-            ),
-            new GameEvent(true, 
-                new EffectGroup(new SoundEffect("ui.toast.challenge_complete", 1f, 1f), new ParticleEffect("HEART", 20)),
-                new HashMap<>(Map.of("vip_reward", new RewardAction(50.0, false, "partyanimals.vip", List.of("give {player} diamond 1"))))
-            ),
-            new GameEvent(true, 
-                new EffectGroup(new SoundEffect("entity.generic.explode", 1f, 1f), new ParticleEffect("EXPLOSION", 5)),
-                new HashMap<>(Map.of("everyone_cash", new RewardAction(100.0, true, "", List.of("eco give * 100"))))
-            )
-        );
-    }
 }

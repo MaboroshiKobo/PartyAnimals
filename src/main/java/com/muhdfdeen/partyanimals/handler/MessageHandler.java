@@ -21,6 +21,8 @@ public class MessageHandler {
     public Component parse(Audience receiver, String message, TagResolver... tags) {
         if (message == null || message.isEmpty()) return Component.empty();
 
+        String finalMessage = message.replace("{", "<").replace("}", ">");
+
         String prefix = config.getMessageConfig().prefix;
         TagResolver prefixTag = Placeholder.parsed("prefix", prefix != null ? prefix : "");
 
@@ -35,7 +37,7 @@ public class MessageHandler {
             prefixTag
         );
 
-        return mm.deserialize(message, finalResolver);
+        return mm.deserialize(finalMessage, finalResolver);
     }
 
     public void send(Audience receiver, String message, TagResolver... tags) {

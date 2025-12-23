@@ -95,7 +95,7 @@ public class PinataListener implements Listener {
             if (!whitelist.materialNames().contains(heldItem)) {
                 String whitelistMessage = config.getMessageConfig().pinata.hitWrongItem();
                 if (whitelistMessage != null && !whitelistMessage.isEmpty()) {
-                    messageHandler.send(player, whitelistMessage);
+                    messageHandler.send(player, whitelistMessage, messageHandler.tag("item", heldItem));
                 }
                 event.setCancelled(true);
                 return;
@@ -181,7 +181,7 @@ public class PinataListener implements Listener {
         rewardHandler.process(player, config.getPinataConfig().events.lastHit().rewards());
         
         String lastHitMessage = config.getMessageConfig().pinata.lastHit();
-        messageHandler.send(player, lastHitMessage); 
+        messageHandler.send(player, lastHitMessage, messageHandler.tag("player", player.getName())); 
 
         log.debug("Processing death commands...");
         rewardHandler.process(player, config.getPinataConfig().events.death().rewards());

@@ -21,7 +21,7 @@ public final class MessageConfig {
     public static class MessageConfiguration {
 
         @Comment("The global prefix used in messages. Use <prefix> in other messages to include it.")
-        public String prefix = "<bold><gradient:#51CF66:#2f9e44>Party Animals</gradient></bold> <dark_gray>➟</dark_gray> ";
+        public String prefix = "<bold><gradient:#51CF66:#2f9e44>Party Animals</gradient></bold> <dark_gray>➟</dark_gray>";
 
         @Comment("General plugin notifications.")
         public GeneralMessages general = new GeneralMessages(
@@ -40,21 +40,21 @@ public final class MessageConfig {
 
         @Comment("Messages specific to the Pinata module.")
         public PinataMessages pinata = new PinataMessages(
-            "<prefix> <green>Countdown started!</green>",
-            "<prefix> <yellow>A pinata has been summoned!</yellow>",
-            "<prefix> <green>Pinata spawned at <white>{location}</white>!</green>",
-            "<prefix> <yellow>You hit the pinata!</yellow>",
-            "<prefix> <red>You must use a <bold>{item}</bold> to hit the pinata!</red>",
-            "<prefix> <red>Too fast! Please wait a moment.</red>",
-            "<prefix> <red>You are not allowed to hit this pinata.</red>",
-            "<prefix> <gold><bold>{player}</bold> dealt the final blow!</gold>",
-            "<prefix> <yellow>The pinata has been broken!</yellow>",
-            "<prefix> <red>The pinata escaped! (Timeout)</red>",
-            "<green>Pinata spawning in <white>{seconds}</white>s...</green>",
-            "{pinata} <white>{health}❤</white> <gray>[{timeout}]</gray>",
-            "<prefix> <green>Spawn location <white>{name}</white> added.</green>",
-            "<prefix> <red>Spawn location <white>{name}</white> removed.</red>",
-            "<prefix> <red>Spawn location <white>{name}</white> does not exist.</red>"
+            "<prefix> <gray>Countdown for the pinata has <green>begun</green>!</gray>",
+            "<prefix> <gray>A pinata has been <yellow>summoned</yellow> instantly!</gray>",
+            "<prefix> <gray>A pinata has spawned at <white>{location}</white>!</gray>",
+            "<prefix> <gray>You landed a hit on the pinata!</gray>",
+            "<prefix> <gray>You must use <red>{item}</red> to hit the pinata!</gray>",
+            "<prefix> <red><bold>Too fast!</bold></red> <gray>Please wait a moment.</gray>",
+            "<prefix> <gray>You are <red>not allowed</red> to hit this pinata.</gray>",
+            "<prefix> {player} <gray>dealt the final blow!</gray>",
+            "<prefix> <gray>The pinata has been <green>defeated</green>!</gray>",
+            "<prefix> <gray>The pinata has <red>escaped</red>!</gray>",
+            "A pinata party will begin in <white>{seconds}</white>. Get ready!",
+            "{pinata} {health} <red>❤</red> <gray>[{timeout}]</gray>",
+            "<prefix> <gray>A new spawn location named <white>{name}</white> has been <green>added</green>.</gray>",
+            "<prefix> <gray>A new spawn location named <white>{name}</white> has been <red>removed</red>.</gray>",
+            "<prefix> <gray>The spawn location named <white>{name}</white> does not exist.</gray>"
         );
     }
 
