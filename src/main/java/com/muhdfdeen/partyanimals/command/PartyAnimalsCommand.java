@@ -28,7 +28,7 @@ public class PartyAnimalsCommand {
     }
 
     private void sendUsage(CommandSender sender, String usage) {
-        messageHandler.send(sender, config.getMessageConfig().commands.usageHelp(), messageHandler.tag("usage", usage));
+        messageHandler.send(sender, config.getMessageConfig().commands.usageHelp(), messageHandler.tag("usage-help", usage));
     }
 
     public LiteralCommandNode<CommandSourceStack> createCommand(final String commandName) {
@@ -95,7 +95,7 @@ public class PartyAnimalsCommand {
                                     SerializableLocation spawnLocation = new SerializableLocation(currentLocation);
                                     config.getPinataConfig().spawnLocations.put(locationName, spawnLocation);
                                     config.saveConfig();
-                                    messageHandler.send(player, config.getMessageConfig().pinata.spawnPointAdded(), messageHandler.tag("name", locationName));
+                                    messageHandler.send(player, config.getMessageConfig().pinata.spawnPointAdded(), messageHandler.tag("location-name", locationName));
                                     return Command.SINGLE_SUCCESS;
                                 })))
                 .then(Commands.literal("removelocation")
@@ -115,9 +115,9 @@ public class PartyAnimalsCommand {
                                     SerializableLocation removed = config.getPinataConfig().spawnLocations.remove(locationName);
                                     if (removed != null) {
                                         config.saveConfig();
-                                        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawnPointRemoved(), messageHandler.tag("name", locationName));
+                                        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawnPointRemoved(), messageHandler.tag("location-name", locationName));
                                     } else {
-                                        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawnPointUnknown(), messageHandler.tag("name", locationName));
+                                        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawnPointUnknown(), messageHandler.tag("location-name", locationName));
                                     }
                                     return Command.SINGLE_SUCCESS;
                                 })
@@ -148,7 +148,7 @@ public class PartyAnimalsCommand {
         if (locationName != null) {
             SerializableLocation spawnLocation = config.getPinataConfig().spawnLocations.get(locationName);
             if (spawnLocation == null) {
-                messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawnPointUnknown(), messageHandler.tag("name", locationName));
+                messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawnPointUnknown(), messageHandler.tag("location-name", locationName));
                 return null;
             }
             return spawnLocation.toBukkit();

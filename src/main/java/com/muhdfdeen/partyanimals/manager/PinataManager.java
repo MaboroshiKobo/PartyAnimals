@@ -75,7 +75,7 @@ public class PinataManager {
         var barSettings = config.getPinataConfig().timer.countdown().bar();
 
         BossBar bossBar = BossBar.bossBar(
-            messageHandler.parse(null, bossBarCountdown, messageHandler.tag("seconds", (int) countdownSeconds)), 
+            messageHandler.parse(null, bossBarCountdown, messageHandler.tag("countdown", (int) countdownSeconds)), 
             1.0f, 
             BossBar.Color.valueOf(barSettings.color()), 
             BossBar.Overlay.valueOf(barSettings.overlay())
@@ -130,7 +130,7 @@ public class PinataManager {
                     if (displaySeconds != lastSeconds) {
                         log.debug("Countdown Tick: " + displaySeconds + "s remaining. Progress: " + progress);
                         effectHandler.playEffects(config.getPinataConfig().timer.countdown().mid(), location, true);
-                        bossBar.name(messageHandler.parse(null, bossBarCountdown, messageHandler.tag("seconds", displaySeconds)));
+                        bossBar.name(messageHandler.parse(null, bossBarCountdown, messageHandler.tag("countdown", displaySeconds)));
                         lastSeconds = displaySeconds;
                     }
                 }
@@ -199,7 +199,7 @@ public class PinataManager {
         }
         
         String spawnMessage = config.getMessageConfig().pinata.spawned();
-        messageHandler.send(plugin.getServer(), spawnMessage, messageHandler.tagParsed("location", location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
+        messageHandler.send(plugin.getServer(), spawnMessage, messageHandler.tagParsed("location-name", location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
     }
 
     public void restorePinata(LivingEntity pinata) {

@@ -62,7 +62,7 @@ public class HitCooldownHandler {
 
         double remainingSeconds = remainingMillis / 1000.0;
 
-        var component = messageHandler.parse(player, msg, messageHandler.tag("seconds", String.format("%.1f", remainingSeconds)));
+        var component = messageHandler.parse(player, msg, messageHandler.tag("countdown", String.format("%.1f", remainingSeconds)));
 
         String displayType = config.getPinataConfig().timer.hitCooldown().type();
 

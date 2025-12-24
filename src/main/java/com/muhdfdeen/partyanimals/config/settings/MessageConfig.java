@@ -27,34 +27,34 @@ public final class MessageConfig {
         public GeneralMessages general = new GeneralMessages(
             "<prefix> <green>Configuration reloaded successfully.</green>",
             "<prefix> <red>Reload failed! Check console for errors.</red>",
-            "<prefix> <gray>New version available: <green>{latest}</green> (Current: <red>{current}</red>)</gray>"
+            "<prefix> <gray>New version available: <green><latest-version></green> (Current: <red><current-version></red>)</gray>"
         );
 
         @Comment("Generic command responses and errors.")
         public CommandMessages commands = new CommandMessages(
             "<prefix> <red>You do not have permission for this.</red>",
             "<prefix> <red>This command is for players only.</red>",
-            "<prefix> <red>Usage: <gray>{usage}</gray></red>",
-            "<prefix> <red>Player <dark_red>{player}</dark_red> not found.</red>"
+            "<prefix> <red>Usage: <gray><usage-help></gray></red>",
+            "<prefix> <red>Player <dark_red><player-name></dark_red> not found.</red>"
         );
 
         @Comment("Messages specific to the pinata module.")
         public PinataMessages pinata = new PinataMessages(
             "<prefix> <gray>Countdown for the pinata has <green>begun</green>!</gray>",
             "<prefix> <gray>A pinata has been <yellow>summoned</yellow> instantly!</gray>",
-            "<prefix> <gray>A pinata has spawned at <white>{location}</white>!</gray>",
+            "<prefix> <gray>A pinata has spawned at <white><location-name></white>!</gray>",
             "<prefix> <gray>You landed a hit on the pinata!</gray>",
-            "<prefix> <gray>You must use <red>{item}</red> to hit the pinata!</gray>",
+            "<prefix> <gray>You must use <red><item></red> to hit the pinata!</gray>",
             "<prefix> <red><bold>Too fast!</bold></red> <gray>Please wait a moment.</gray>",
             "<prefix> <gray>You are <red>not allowed</red> to hit this pinata.</gray>",
-            "<prefix> {player} <gray>dealt the final blow!</gray>",
+            "<prefix> <gray><white><player-name></white> dealt the final blow!</gray>",
             "<prefix> <gray>The pinata has been <green>defeated</green>!</gray>",
             "<prefix> <gray>The pinata has <red>escaped</red>!</gray>",
-            "A pinata party will begin in <white>{seconds}</white>. Get ready!",
-            "{pinata} {health} <red>❤</red> <gray>[{timeout}]</gray>",
-            "<prefix> <gray>A new spawn location named <white>{name}</white> has been <green>added</green>.</gray>",
-            "<prefix> <gray>A new spawn location named <white>{name}</white> has been <red>removed</red>.</gray>",
-            "<prefix> <gray>The spawn location named <white>{name}</white> does not exist.</gray>"
+            "A pinata party will begin in <white><countdown></white>. Get ready!",
+            "<pinata-name> <health> <red>❤</red> <gray>[<timeout>]</gray>",
+            "<prefix> <gray>A new spawn location named <white><location-name></white> has been <green>added</green>.</gray>",
+            "<prefix> <gray>A new spawn location named <white><location-name></white> has been <red>removed</red>.</gray>",
+            "<prefix> <gray>The spawn location named <white><location-name></white> does not exist.</gray>"
         );
     }
 
@@ -99,9 +99,9 @@ public final class MessageConfig {
         String defeated,
         @Comment("Broadcast when pinata despawns due to time.")
         String timeout,
-        @Comment("Boss bar countdown text.")
+        @Comment({"Boss bar countdown text.", "Available placeholders: <pinata-name>, <countdown>"})
         String bossBarCountdown,
-        @Comment("Boss bar active text.")
+        @Comment({"Boss bar active text.", "Available placeholders: <pinata-name>, <health>, <max-health>, <timeout>"})
         String bossBarActive,
         @Comment("Admin: Added spawn location.")
         String spawnPointAdded,

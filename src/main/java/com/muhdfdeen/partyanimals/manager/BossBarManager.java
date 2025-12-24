@@ -31,9 +31,9 @@ public class BossBarManager {
         String timeStr = formatTime(timeout);
 
         Component barName = messageHandler.parse(null, rawMsg,
-                messageHandler.tagParsed("pinata", config.getPinataConfig().appearance.name()),
+                messageHandler.tagParsed("pinata-name", config.getPinataConfig().appearance.name()),
                 messageHandler.tag("health", health),
-                messageHandler.tag("max_health", maxHealth),
+                messageHandler.tag("max-health", maxHealth),
                 messageHandler.tag("timeout", timeStr)
         );
 
@@ -64,9 +64,9 @@ public class BossBarManager {
         }
 
         bossBar.name(messageHandler.parse(null, config.getMessageConfig().pinata.bossBarActive(),
-                messageHandler.tagParsed("pinata", config.getPinataConfig().appearance.name()),
+                messageHandler.tagParsed("pinata-name", config.getPinataConfig().appearance.name()),
                 messageHandler.tag("health", currentHealth),
-                messageHandler.tag("max_health", maxHealth),
+                messageHandler.tag("max-health", maxHealth),
                 messageHandler.tag("timeout", timeStr)
         ));
 
