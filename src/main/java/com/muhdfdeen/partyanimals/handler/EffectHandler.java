@@ -1,8 +1,6 @@
 package com.muhdfdeen.partyanimals.handler;
 
-import com.muhdfdeen.partyanimals.config.settings.PinataConfig.EffectGroup;
-import com.muhdfdeen.partyanimals.config.settings.PinataConfig.ParticleEffect;
-import com.muhdfdeen.partyanimals.config.settings.PinataConfig.SoundEffect;
+import com.muhdfdeen.partyanimals.config.objects.EffectTypes.*;
 import com.muhdfdeen.partyanimals.util.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.muhdfdeen.partyanimals.config.objects.EffectTypes.*;
 import com.muhdfdeen.partyanimals.config.objects.RewardAction;
 import com.muhdfdeen.partyanimals.config.objects.SerializableLocation;
 
@@ -102,7 +103,7 @@ public final class PinataConfig {
     ) {}
 
     public record Appearance(
-        @Comment({"Entity types to use (randomly chosen).", "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/entity/EntityType.html"}) 
+        @Comment({"Entity types to use for the pinata.", "If multiple types are provided, one is chosen randomly.", "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/entity/EntityType.html"}) 
         List<String> entityTypes,
         
         @Comment("Display name.") 
@@ -168,14 +169,6 @@ public final class PinataConfig {
         @Comment({"Resistance to being pushed.", "Range: 0.0 to 1.0"}) double knockbackResistance,
         @Comment("Movement logic settings.") MovementSettings movement
     ) {}
-
-    public record ParticleOffset(double x, double y, double z) {}
-
-    public record SoundEffect(String type, float volume, float pitch) {}
-
-    public record ParticleEffect(String type, int count, ParticleOffset offset, double speed) {}
-
-    public record EffectGroup(List<SoundEffect> sounds, List<ParticleEffect> particles) {}
 
     public record PhaseSettings(
         @Comment("Duration in seconds.") int duration,
