@@ -195,7 +195,7 @@ public class PinataManager {
             }
         });
         if (plugin.getRewardHandler() != null) {
-            plugin.getRewardHandler().process(null, config.getPinataConfig().events.spawn().rewards());
+            plugin.getRewardHandler().process(null, config.getPinataConfig().events.spawn().rewards().values());
         }
         
         String spawnMessage = config.getMessageConfig().pinata.spawned();

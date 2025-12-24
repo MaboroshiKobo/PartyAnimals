@@ -127,7 +127,7 @@ public class PinataListener implements Listener {
             }
             
             log.debug("Processing hit commands for player: " + player.getName());
-            rewardHandler.process(player, config.getPinataConfig().events.hit().rewards());
+            rewardHandler.process(player, config.getPinataConfig().events.hit().rewards().values());
             
             String hitMessage = config.getMessageConfig().pinata.hitSuccess();
             if (hitMessage != null && !hitMessage.isEmpty())
@@ -178,13 +178,13 @@ public class PinataListener implements Listener {
         effectHandler.playEffects(config.getPinataConfig().events.death().effects(), pinata.getLocation(), false);
 
         log.debug("Processing last hit commands...");
-        rewardHandler.process(player, config.getPinataConfig().events.lastHit().rewards());
+        rewardHandler.process(player, config.getPinataConfig().events.lastHit().rewards().values());
         
         String lastHitMessage = config.getMessageConfig().pinata.lastHit();
         messageHandler.send(player, lastHitMessage, messageHandler.tag("player", player.getName())); 
 
         log.debug("Processing death commands...");
-        rewardHandler.process(player, config.getPinataConfig().events.death().rewards());
+        rewardHandler.process(player, config.getPinataConfig().events.death().rewards().values());
         
         String downedMessage = config.getMessageConfig().pinata.defeated();
         messageHandler.send(plugin.getServer(), downedMessage, messageHandler.tag("player", player.getName()));

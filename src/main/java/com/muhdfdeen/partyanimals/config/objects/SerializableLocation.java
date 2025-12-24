@@ -1,4 +1,4 @@
-package com.muhdfdeen.partyanimals.config;
+package com.muhdfdeen.partyanimals.config.objects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

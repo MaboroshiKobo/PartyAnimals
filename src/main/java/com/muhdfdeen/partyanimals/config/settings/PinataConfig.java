@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.muhdfdeen.partyanimals.config.SerializableLocation;
+import com.muhdfdeen.partyanimals.config.objects.RewardAction;
+import com.muhdfdeen.partyanimals.config.objects.SerializableLocation;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.ConfigLib;
@@ -69,7 +70,7 @@ public final class PinataConfig {
         public EventRegistry events = new EventRegistry(
             new GameEvent(true,
                 new EffectGroup(new SoundEffect("entity.firework_rocket.twinkle", 1f, 1f), new ParticleEffect("TOTEM_OF_UNDYING", 10)),
-                new HashMap<>(Map.of("announce", new RewardAction(100.0, true, "", List.of("broadcast <green>A pinata has arrived!"))))
+                new HashMap<>(Map.of("announce", new RewardAction(100.0, List.of("broadcast <green>A pinata has arrived!"))))
             ),
             new GameEvent(true,
                 new EffectGroup(new SoundEffect("entity.player.attack.crit", 1f, 1f), new ParticleEffect("CRIT", 5)),
@@ -77,48 +78,13 @@ public final class PinataConfig {
             ),
             new GameEvent(true,
                 new EffectGroup(new SoundEffect("ui.toast.challenge_complete", 1f, 1f), new ParticleEffect("HEART", 20)),
-                new HashMap<>(Map.of("vip_reward", new RewardAction(50.0, false, "partyanimals.vip", List.of("give {player} diamond 1"))))
+                new HashMap<>(Map.of("vip_reward", new RewardAction(50.0, true, false, false, "partyanimals.vip", List.of("give {player} diamond 1"))))
             ),
             new GameEvent(true,
                 new EffectGroup(new SoundEffect("entity.generic.explode", 1f, 1f), new ParticleEffect("EXPLOSION", 5)),
-                new HashMap<>(Map.of("everyone_emerald", new RewardAction(100.0, true, "", List.of("give @a emerald 5"))))
+                new HashMap<>(Map.of("everyone_emerald", new RewardAction(100.0, true, false, false, "", List.of("give @a emerald 5"))))
             )
         );
-    }
-
-    @Configuration
-    public static class RewardAction {
-        @Comment("The chance (0-100) for this reward to trigger.")
-        public double chance = 100.0;
-
-        @Comment("If true, the command runs for every player on the server.")
-        public boolean global = false;
-
-        @Comment("If true, no further rewards in this list will be processed if this one triggers.")
-        public boolean preventFurtherRewards = false;
-
-        @Comment("If true, commands in the list are shuffled before execution.")
-        public boolean randomize = false;
-
-        @Comment("Permission node required to be eligible for this reward.")
-        public String permission = "";
-
-        @Comment("List of console commands to execute. Use {player} for the player name.")
-        public List<String> commands = List.of();
-
-        public RewardAction() {}
-
-        public RewardAction(double chance, List<String> commands) {
-            this.chance = chance;
-            this.commands = commands;
-        }
-        
-        public RewardAction(double chance, boolean global, String permission, List<String> commands) {
-            this.chance = chance;
-            this.global = global;
-            this.permission = permission;
-            this.commands = commands;
-        }
     }
 
     public record ScaleSettings(

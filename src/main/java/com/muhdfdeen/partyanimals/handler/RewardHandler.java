@@ -1,13 +1,13 @@
 package com.muhdfdeen.partyanimals.handler;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import com.muhdfdeen.partyanimals.PartyAnimals;
-import com.muhdfdeen.partyanimals.config.settings.PinataConfig;
+import com.muhdfdeen.partyanimals.config.objects.RewardAction;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 
@@ -21,10 +21,9 @@ public class RewardHandler {
         this.hasPAPI = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
     }
 
-    public void process(Player player, Map<String, PinataConfig.RewardAction> commands) {
+    public void process(Player player, Collection<RewardAction> commands) {
         if (commands == null || commands.isEmpty()) return;
-
-        for (PinataConfig.RewardAction action : commands.values()) {
+        for (RewardAction action : commands) {
             if (!action.global && action.permission != null && !action.permission.isEmpty()) {
                 if (player != null && !player.hasPermission(action.permission)) {
                     continue;
@@ -47,9 +46,8 @@ public class RewardHandler {
         }
     }
 
-    private void executeAction(Player target, PinataConfig.RewardAction action) {
+    private void executeAction(Player target, RewardAction action) {
         if (action.commands.isEmpty()) return;
-
         if (action.randomize) {
             int index = ThreadLocalRandom.current().nextInt(action.commands.size());
             String randomCmd = action.commands.get(index);
@@ -63,13 +61,9 @@ public class RewardHandler {
 
     private void dispatch(Player player, String command) {
         if (command == null || command.isEmpty()) return;
-
         String parsed = command;
-
         if (player != null) {
-            parsed = parsed
-                    .replace("{player}", player.getName())
-                    .replace("{uuid}", player.getUniqueId().toString());
+            parsed = parsed.replace("{player}", player.getName()).replace("{uuid}", player.getUniqueId().toString());
         }
         if (player != null && hasPAPI) {
             parsed = PlaceholderAPI.setPlaceholders(player, parsed);

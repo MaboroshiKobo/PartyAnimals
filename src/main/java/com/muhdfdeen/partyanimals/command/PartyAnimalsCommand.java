@@ -13,7 +13,7 @@ import io.papermc.paper.command.brigadier.Commands;
 
 import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
-import com.muhdfdeen.partyanimals.config.SerializableLocation;
+import com.muhdfdeen.partyanimals.config.objects.SerializableLocation;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
 
 public class PartyAnimalsCommand {
