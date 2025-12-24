@@ -1,6 +1,7 @@
 package com.muhdfdeen.partyanimals.manager;
 
 import com.muhdfdeen.partyanimals.PartyAnimals;
+import com.muhdfdeen.partyanimals.api.event.pinata.PinataSpawnEvent;
 import com.muhdfdeen.partyanimals.behavior.PinataFloatGoal;
 import com.muhdfdeen.partyanimals.behavior.PinataRoamGoal;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
@@ -161,6 +162,15 @@ public class PinataManager {
                 livingEntity.getPersistentDataContainer().set(spawn_time, PersistentDataType.LONG, System.currentTimeMillis());
                 livingEntity.getAttribute(Attribute.SCALE).setBaseValue(finalScale);
                 
+                var event = new PinataSpawnEvent(livingEntity, location);
+                plugin.getServer().getPluginManager().callEvent(event);
+
+                if (event.isCancelled()) {
+                    log.debug("Pinata spawn event was cancelled by an API event; removing entity.");
+                    livingEntity.remove();
+                    return;
+                }
+
                 applyPinataGoal(livingEntity);
 
                 livingEntity.setSilent(true);
