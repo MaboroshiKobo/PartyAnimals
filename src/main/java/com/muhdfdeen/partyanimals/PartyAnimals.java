@@ -39,7 +39,7 @@ public final class PartyAnimals extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        this.configManager = new ConfigManager(getDataFolder());
+        this.configManager = new ConfigManager(this, getDataFolder());
         this.log = new Logger(this);
 
         try {

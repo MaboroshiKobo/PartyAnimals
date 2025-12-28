@@ -2,9 +2,9 @@ package com.muhdfdeen.partyanimals.config;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 
+import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.config.settings.MainConfig;
 import com.muhdfdeen.partyanimals.config.settings.MessageConfig;
 import com.muhdfdeen.partyanimals.config.settings.PinataConfig;
@@ -18,13 +18,17 @@ import de.exlll.configlib.YamlConfigurations;
 public class ConfigManager {
     private final File dataFolder;
 
+    private final PartyAnimals plugin;
+
     private MainConfiguration mainConfig;
     private Map<String, PinataConfiguration> pinataConfigs;
     private MessageConfiguration messageConfig;
 
-    public ConfigManager(File dataFolder) {
+    public ConfigManager(PartyAnimals plugin, File dataFolder) {
         this.dataFolder = dataFolder;
-        this.pinataConfigs = new HashMap<>();
+        this.plugin = plugin;
+        this.pinataConfigs = new java.util.HashMap<>();
+
     }
 
     public void loadConfig() {
@@ -51,7 +55,7 @@ public class ConfigManager {
             for (File file : files) {
                 String fileName = file.getName();
                 if (fileName.contains(" ")) {
-                    System.err.println("Pinata config file names cannot contain spaces: " + fileName);
+                    plugin.getLogger().warning("Pinata config file '" + fileName + "' contains spaces in its name and will be skipped.");
                     continue;
                 }
                 String id = fileName.substring(0, fileName.lastIndexOf('.'));

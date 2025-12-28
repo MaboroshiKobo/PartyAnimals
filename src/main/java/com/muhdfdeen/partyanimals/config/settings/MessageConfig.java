@@ -52,9 +52,10 @@ public final class MessageConfig {
             "<prefix> <gray>The pinata has <red>escaped</red>!</gray>",
             "A pinata party will begin in <white><countdown></white>. Get ready!",
             "<pinata> <health> <gray>/</gray> <max-health> <red>❤</red> <gray>[<timer>]</gray>",
-            "<prefix> <gray>A new spawn location named <white><location></white> has been <green>added</green>.</gray>",
-            "<prefix> <gray>The spawn location named <white><location></white> has been <red>removed</red>.</gray>",
-            "<prefix> <gray>The spawn location named <white><location></white> does not exist.</gray>"
+            "<prefix> <red>Unknown pinata template: <white><pinata></white></red>",
+            "<prefix> <gray><white><location></white> has been <green>added</green> to <white><pinata></white> as a spawn location.</gray>",
+            "<prefix> <gray><white><location></white> has been <red>removed</red> from <white><pinata></white> as a spawn location.</gray>",
+            "<prefix> <gray>The spawn location, <white><location></white>, does not exist within <white><pinata></white>.</gray>"
         );
     }
 
@@ -103,6 +104,8 @@ public final class MessageConfig {
         String bossBarCountdown,
         @Comment({"Boss bar active text.", "Available placeholders: <pinata>, <health>, <max-health>, <timer>"})
         String bossBarActive,
+        @Comment("Admin: Unknown pinata template.")
+        String unknownTemplate,
         @Comment("Admin: Added spawn location.")
         String spawnPointAdded,
         @Comment("Admin: Removed spawn location.")
