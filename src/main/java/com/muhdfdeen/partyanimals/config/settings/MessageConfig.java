@@ -53,7 +53,7 @@ public final class MessageConfig {
             "A pinata party will begin in <white><countdown></white>. Get ready!",
             "<pinata> <health> <gray>/</gray> <max-health> <red>❤</red> <gray>[<timer>]</gray>",
             "<prefix> <gray>A new spawn location named <white><location></white> has been <green>added</green>.</gray>",
-            "<prefix> <gray>A new spawn location named <white><location></white> has been <red>removed</red>.</gray>",
+            "<prefix> <gray>The spawn location named <white><location></white> has been <red>removed</red>.</gray>",
             "<prefix> <gray>The spawn location named <white><location></white> does not exist.</gray>"
         );
     }
