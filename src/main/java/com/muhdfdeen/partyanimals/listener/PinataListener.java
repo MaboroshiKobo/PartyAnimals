@@ -212,7 +212,6 @@ public class PinataListener implements Listener {
         String downedMessage = config.getMessageConfig().pinata.defeated();
         messageHandler.send(plugin.getServer(), downedMessage, messageHandler.tag("player", player.getName()));
 
-        pinataManager.removeActiveBossBar(pinata);
-        pinata.remove();
+        pinataManager.safelyRemovePinata(pinata);
     }
 }

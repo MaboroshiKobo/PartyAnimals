@@ -99,7 +99,7 @@ public final class PartyAnimals extends JavaPlugin {
     public boolean reload() {
         try {
             if (pinataManager != null) {
-                pinataManager.cleanup();
+                pinataManager.cleanup(false);
             }
 
             configManager.loadConfig();
