@@ -6,6 +6,8 @@ import org.bukkit.entity.Player;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -59,18 +61,12 @@ public class PartyAnimalsCommand {
                         .requires(sender -> sender.getSender().hasPermission("partyanimals.start"))
                         .executes(ctx -> handleStart(ctx.getSource(), null, "default"))
                         .then(Commands.argument("pinata", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    config.getPinataConfigs().keySet().forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
+                                .suggests((ctx, builder) -> suggestPinataTemplates(ctx, builder).buildFuture())
                                 .executes(ctx -> handleStart(ctx.getSource(), null,
                                         StringArgumentType.getString(ctx, "pinata")))
                                 .then(Commands.argument("location", StringArgumentType.word())
-                                        .suggests((ctx, builder) -> {
-                                            config.getPinataConfig("default").spawnLocations.keySet()
-                                                    .forEach(builder::suggest);
-                                            return builder.buildFuture();
-                                        })
+                                        .suggests((ctx, builder) -> suggestLocations(ctx, builder, "pinata")
+                                                .buildFuture())
                                         .executes(ctx -> handleStart(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "location"),
                                                 StringArgumentType.getString(ctx, "pinata"))))))
@@ -78,18 +74,12 @@ public class PartyAnimalsCommand {
                         .requires(sender -> sender.getSender().hasPermission("partyanimals.spawn"))
                         .executes(ctx -> handleSpawn(ctx.getSource(), null, "default"))
                         .then(Commands.argument("pinata", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    config.getPinataConfigs().keySet().forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
+                                .suggests((ctx, builder) -> suggestPinataTemplates(ctx, builder).buildFuture())
                                 .executes(ctx -> handleSpawn(ctx.getSource(), null,
                                         StringArgumentType.getString(ctx, "pinata")))
                                 .then(Commands.argument("location", StringArgumentType.word())
-                                        .suggests((ctx, builder) -> {
-                                            config.getPinataConfig("default").spawnLocations.keySet()
-                                                    .forEach(builder::suggest);
-                                            return builder.buildFuture();
-                                        })
+                                        .suggests((ctx, builder) -> suggestLocations(ctx, builder, "pinata")
+                                                .buildFuture())
                                         .executes(ctx -> handleSpawn(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "location"),
                                                 StringArgumentType.getString(ctx, "pinata"))))))
@@ -108,11 +98,10 @@ public class PartyAnimalsCommand {
                             return Command.SINGLE_SUCCESS;
                         })
                         .then(Commands.argument("pinata", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    config.getPinataConfigs().keySet().forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
+                                .suggests((ctx, builder) -> suggestPinataTemplates(ctx, builder).buildFuture())
                                 .then(Commands.argument("location", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> suggestLocations(ctx, builder, "pinata")
+                                                .buildFuture())
                                         .executes(ctx -> {
                                             CommandSourceStack source = ctx.getSource();
                                             if (!(source.getSender() instanceof Player player)) {
@@ -134,6 +123,7 @@ public class PartyAnimalsCommand {
                                             config.saveConfig();
                                             messageHandler.send(player,
                                                     config.getMessageConfig().pinata.spawnPointAdded(),
+                                                    messageHandler.tagParsed("pinata", templateId),
                                                     messageHandler.tag("location", locationName));
                                             return Command.SINGLE_SUCCESS;
                                         }))))
@@ -144,19 +134,10 @@ public class PartyAnimalsCommand {
                             return Command.SINGLE_SUCCESS;
                         })
                         .then(Commands.argument("pinata", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    config.getPinataConfigs().keySet().forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
+                                .suggests((ctx, builder) -> suggestPinataTemplates(ctx, builder).buildFuture())
                                 .then(Commands.argument("location", StringArgumentType.word())
-                                        .suggests((ctx, builder) -> {
-                                            String templateId = StringArgumentType.getString(ctx, "pinata");
-                                            var pinataConfig = config.getPinataConfig(templateId);
-                                            if (pinataConfig != null && pinataConfig.spawnLocations != null) {
-                                                pinataConfig.spawnLocations.keySet().forEach(builder::suggest);
-                                            }
-                                            return builder.buildFuture();
-                                        })
+                                        .suggests((ctx, builder) -> suggestLocations(ctx, builder, "pinata")
+                                                .buildFuture())
                                         .executes(ctx -> {
                                             CommandSourceStack source = ctx.getSource();
                                             String templateId = StringArgumentType.getString(ctx, "pinata");
@@ -173,10 +154,12 @@ public class PartyAnimalsCommand {
                                                 config.saveConfig();
                                                 messageHandler.send(source.getSender(),
                                                         config.getMessageConfig().pinata.spawnPointRemoved(),
+                                                        messageHandler.tagParsed("pinata", templateId),
                                                         messageHandler.tag("location", locationName));
                                             } else {
                                                 messageHandler.send(source.getSender(),
                                                         config.getMessageConfig().pinata.spawnPointUnknown(),
+                                                        messageHandler.tagParsed("pinata", templateId),
                                                         messageHandler.tag("location", locationName));
                                             }
                                             return Command.SINGLE_SUCCESS;
@@ -185,7 +168,7 @@ public class PartyAnimalsCommand {
     }
 
     private int handleStart(CommandSourceStack source, String locationName, String templateId) {
-        Location location = resolveLocation(source, locationName, "start");
+        Location location = resolveLocation(source, locationName, templateId, "start");
         if (location == null)
             return Command.SINGLE_SUCCESS;
         plugin.getPinataManager().startCountdown(location, templateId);
@@ -194,7 +177,7 @@ public class PartyAnimalsCommand {
     }
 
     private int handleSpawn(CommandSourceStack source, String locationName, String templateId) {
-        Location location = resolveLocation(source, locationName, "spawn");
+        Location location = resolveLocation(source, locationName, templateId, "spawn");
         if (location == null)
             return Command.SINGLE_SUCCESS;
         plugin.getPinataManager().spawnPinata(location, templateId);
@@ -202,12 +185,21 @@ public class PartyAnimalsCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private Location resolveLocation(CommandSourceStack source, String locationName, String commandContext) {
+    private Location resolveLocation(CommandSourceStack source, String locationName, String templateId,
+            String commandContext) {
         if (locationName != null) {
-            SerializableLocation spawnLocation = config.getPinataConfig("default").spawnLocations.get(locationName);
+            var pinataConfig = config.getPinataConfig(templateId);
+            if (pinataConfig == null) {
+                messageHandler.send(
+                        source.getSender(),
+                        config.getMessageConfig().pinata.unknownTemplate(),
+                        messageHandler.tagParsed("pinata", templateId));
+                return null;
+            }
+            SerializableLocation spawnLocation = pinataConfig.spawnLocations.get(locationName);
             if (spawnLocation == null) {
                 messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawnPointUnknown(),
-                        messageHandler.tag("location", locationName));
+                        messageHandler.tagParsed("pinata", templateId), messageHandler.tag("location", locationName));
                 return null;
             }
             return spawnLocation.toBukkit();
@@ -217,5 +209,21 @@ public class PartyAnimalsCommand {
         }
         sendUsage(source.getSender(), "/partyanimals " + commandContext + " [template] [location]");
         return null;
+    }
+
+    private SuggestionsBuilder suggestPinataTemplates(CommandContext<CommandSourceStack> ctx,
+            SuggestionsBuilder builder) {
+        config.getPinataConfigs().keySet().forEach(builder::suggest);
+        return builder;
+    }
+
+    private SuggestionsBuilder suggestLocations(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder,
+            String templateArg) {
+        String templateId = StringArgumentType.getString(ctx, templateArg);
+        var pinataConfig = config.getPinataConfig(templateId);
+        if (pinataConfig != null && pinataConfig.spawnLocations != null) {
+            pinataConfig.spawnLocations.keySet().forEach(builder::suggest);
+        }
+        return builder;
     }
 }
