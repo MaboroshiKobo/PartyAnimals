@@ -7,11 +7,14 @@ import org.bukkit.entity.Player;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+
+import java.util.concurrent.CompletableFuture;
 
 import com.muhdfdeen.partyanimals.PartyAnimals;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
@@ -61,11 +64,11 @@ public class PartyAnimalsCommand {
                         .requires(sender -> sender.getSender().hasPermission("partyanimals.start"))
                         .executes(ctx -> handleStart(ctx.getSource(), null, "default"))
                         .then(Commands.argument("pinata", StringArgumentType.word())
-                                .suggests((ctx, builder) -> suggestPinataTemplates(ctx, builder).buildFuture())
+                                .suggests(this::suggestPinataTemplates)
                                 .executes(ctx -> handleStart(ctx.getSource(), null,
                                         StringArgumentType.getString(ctx, "pinata")))
                                 .then(Commands.argument("location", StringArgumentType.word())
-                                        .suggests((ctx, builder) -> suggestCentralLocations(ctx, builder).buildFuture())
+                                        .suggests(this::suggestCentralLocations)
                                         .executes(ctx -> handleStart(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "location"),
                                                 StringArgumentType.getString(ctx, "pinata"))))))
@@ -73,11 +76,11 @@ public class PartyAnimalsCommand {
                         .requires(sender -> sender.getSender().hasPermission("partyanimals.spawn"))
                         .executes(ctx -> handleSpawn(ctx.getSource(), null, "default"))
                         .then(Commands.argument("pinata", StringArgumentType.word())
-                                .suggests((ctx, builder) -> suggestPinataTemplates(ctx, builder).buildFuture())
+                                .suggests(this::suggestPinataTemplates)
                                 .executes(ctx -> handleSpawn(ctx.getSource(), null,
                                         StringArgumentType.getString(ctx, "pinata")))
                                 .then(Commands.argument("location", StringArgumentType.word())
-                                        .suggests((ctx, builder) -> suggestCentralLocations(ctx, builder).buildFuture())
+                                        .suggests(this::suggestCentralLocations)
                                         .executes(ctx -> handleSpawn(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "location"),
                                                 StringArgumentType.getString(ctx, "pinata"))))))
@@ -105,7 +108,7 @@ public class PartyAnimalsCommand {
                                     
                                     String locationName = StringArgumentType.getString(ctx, "location");
                                     SerializableLocation spawnLocation = new SerializableLocation(player.getLocation());
-
+                                    
                                     config.getMainConfig().modules.pinata().spawnPoints().put(locationName, spawnLocation);
                                     config.saveConfig();
                                     
@@ -121,11 +124,11 @@ public class PartyAnimalsCommand {
                             return Command.SINGLE_SUCCESS;
                         })
                         .then(Commands.argument("location", StringArgumentType.word())
-                                .suggests((ctx, builder) -> suggestCentralLocations(ctx, builder).buildFuture())
+                                .suggests(this::suggestCentralLocations)
                                 .executes(ctx -> {
                                     CommandSourceStack source = ctx.getSource();
                                     String locationName = StringArgumentType.getString(ctx, "location");
-
+                                    
                                     SerializableLocation removed = config.getMainConfig().modules.pinata().spawnPoints().remove(locationName);
                                     
                                     if (removed != null) {
@@ -148,7 +151,7 @@ public class PartyAnimalsCommand {
         if (location == null)
             return Command.SINGLE_SUCCESS;
         plugin.getPinataManager().startCountdown(location, templateId);
-        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.countdownStarted(), messageHandler.tagParsed("pinata", templateId), messageHandler.tag("location", locationName != null ? locationName : "your location"));
+        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.countdownStarted());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -157,7 +160,7 @@ public class PartyAnimalsCommand {
         if (location == null)
             return Command.SINGLE_SUCCESS;
         plugin.getPinataManager().spawnPinata(location, templateId);
-        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawned(), messageHandler.tagParsed("pinata", templateId), messageHandler.tag("location", locationName != null ? locationName : "your location"));
+        messageHandler.send(source.getSender(), config.getMessageConfig().pinata.spawned());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -187,16 +190,16 @@ public class PartyAnimalsCommand {
         return null;
     }
 
-    private SuggestionsBuilder suggestPinataTemplates(CommandContext<CommandSourceStack> ctx,
+    private CompletableFuture<Suggestions> suggestPinataTemplates(CommandContext<CommandSourceStack> ctx,
             SuggestionsBuilder builder) {
         config.getPinataConfigs().keySet().forEach(builder::suggest);
-        return builder;
+        return builder.buildFuture();
     }
 
-    private SuggestionsBuilder suggestCentralLocations(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+    private CompletableFuture<Suggestions> suggestCentralLocations(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
         if (config.getMainConfig().modules.pinata().spawnPoints() != null) {
             config.getMainConfig().modules.pinata().spawnPoints().keySet().forEach(builder::suggest);
         }
-        return builder;
+        return builder.buildFuture();
     }
 }
