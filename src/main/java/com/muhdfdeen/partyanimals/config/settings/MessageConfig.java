@@ -40,11 +40,11 @@ public final class MessageConfig {
 
         @Comment("Messages specific to the pinata module.")
         public PinataMessages pinata = new PinataMessages(
-            "<prefix> <gray>Countdown for the pinata has <green>begun</green>!</gray>",
-            "<prefix> <gray>A pinata has been <yellow>spawned</yellow> instantly!</gray>",
+            "<prefix> <gray>Countdown for <white><pinata></white> at <white><location></white> has <green>begun</green>!</gray>",
+            "<prefix> <gray>The pinata <white><pinata></white> has been <yellow>spawned</yellow> at <white><location></white>!</gray>",
             "<prefix> <gray>A pinata has spawned at <white><location></white>!</gray>",
             "<prefix> <gray>You landed a hit on the pinata!</gray>",
-            "<prefix> <gray>You must use <red><item></red> to hit the pinata!</gray>",
+            "<prefix> <gray>You must use <red><item></red> to hit this pinata!</gray>",
             "<prefix> <red><bold>Too fast!</bold></red> <gray>Please wait a moment.</gray>",
             "<prefix> <gray>You are <red>not allowed</red> to hit this pinata.</gray>",
             "<prefix> <gray><white><player-name></white> dealt the final blow!</gray>",
@@ -53,9 +53,9 @@ public final class MessageConfig {
             "A pinata party will begin in <white><countdown></white>. Get ready!",
             "<pinata> <health> <gray>/</gray> <max-health> <red>❤</red> <gray>[<timer>]</gray>",
             "<prefix> <red>Unknown pinata template: <white><pinata></white></red>",
-            "<prefix> <gray><white><location></white> has been <green>added</green> to <white><pinata></white> as a spawn location.</gray>",
-            "<prefix> <gray><white><location></white> has been <red>removed</red> from <white><pinata></white> as a spawn location.</gray>",
-            "<prefix> <gray>The spawn location, <white><location></white>, does not exist within <white><pinata></white>.</gray>"
+            "<prefix> <gray><white><location></white> has been <green>added</green> as a spawn point.</gray>",
+            "<prefix> <gray><white><location></white> has been <red>removed</red> as a spawn point.</gray>",
+            "<prefix> <gray>The spawn point <white><location></white> does not exist.</gray>"
         );
     }
 

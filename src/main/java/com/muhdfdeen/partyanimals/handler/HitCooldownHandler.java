@@ -68,7 +68,7 @@ public class HitCooldownHandler {
 
         var component = messageHandler.parse(player, msg, messageHandler.tag("countdown", String.format("%.1f", remainingSeconds)));
 
-        String displayType = pinataConfig.timer.hitCooldown().type();
+        String displayType = pinataConfig.timer.hitCooldown().notificationType();
 
         switch (displayType.toLowerCase()) {
             case "action_bar", "actionbar" -> player.sendActionBar(component);

@@ -95,11 +95,11 @@ public class PinataListener implements Listener {
             return;
         }
         
-        var whitelist = pinataConfig.interaction.whitelist();
-        if (whitelist.enabled() && whitelist.materialNames() != null && !whitelist.materialNames().isEmpty()) {
+        var allowedItems = pinataConfig.interaction.allowedItems();
+        if (allowedItems.enabled() && allowedItems.materialNames() != null && !allowedItems.materialNames().isEmpty()) {
             Material heldMaterial = player.getInventory().getItemInMainHand().getType();
             boolean isAllowed = false;
-            for (String configName : whitelist.materialNames()) {
+            for (String configName : allowedItems.materialNames()) {
                 Material targetMaterial = Material.matchMaterial(configName);
                 if (targetMaterial != null && targetMaterial == heldMaterial) {
                     isAllowed = true;
@@ -107,9 +107,9 @@ public class PinataListener implements Listener {
                 }
             }
             if (!isAllowed) {
-                String whitelistMessage = config.getMessageConfig().pinata.hitWrongItem();
-                if (whitelistMessage != null && !whitelistMessage.isEmpty()) {
-                    messageHandler.send(player, whitelistMessage, messageHandler.tag("item", heldMaterial.name()));
+                String allowedItemsMessage = config.getMessageConfig().pinata.hitWrongItem();
+                if (allowedItemsMessage != null && !allowedItemsMessage.isEmpty()) {
+                    messageHandler.send(player, allowedItemsMessage, messageHandler.tag("item", heldMaterial.name()));
                 }
                 log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " with disallowed item: " + heldMaterial);
                 event.setCancelled(true);

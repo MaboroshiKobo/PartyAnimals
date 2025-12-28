@@ -40,6 +40,6 @@ public final class MainConfig {
 
     public record PinataSettings(
             @Comment("Enable or disable the pinata system.") boolean enabled,
-            @Comment("Defined spawn points.") Map<String, SerializableLocation> spawnLocations
+            @Comment("Defined spawn points.") Map<String, SerializableLocation> spawnPoints
     ) {}
 }

@@ -40,8 +40,8 @@ public class PinataRoamGoal implements Goal<Creature> {
     public void start() {
         PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
         
-        double rangeX = config.behavior.movement().range().x();
-        double rangeZ = config.behavior.movement().range().z();
+        double rangeX = config.behavior.movement().wanderRadius().x();
+        double rangeZ = config.behavior.movement().wanderRadius().z();
 
         double x = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeX;
         double z = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeZ;

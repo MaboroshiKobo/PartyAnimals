@@ -182,9 +182,7 @@ public class PinataManager {
         final double finalScale = (minScale >= maxScale) ? minScale : ThreadLocalRandom.current().nextDouble(minScale, maxScale);
 
         int baseHealth = pinataConfig.health.maxHealth();
-        int calculatedHealth = pinataConfig.health.perPlayer() 
-            ? baseHealth * Math.max(1, plugin.getServer().getOnlinePlayers().size()) 
-            : baseHealth * pinataConfig.health.multiplier();
+        int calculatedHealth = pinataConfig.health.perPlayer() ? baseHealth * Math.max(1, plugin.getServer().getOnlinePlayers().size()) : baseHealth;
         final int finalHealth = calculatedHealth;
 
         location.getWorld().spawn(spawnLocation, pinataType.getEntityClass(), pinata -> {
