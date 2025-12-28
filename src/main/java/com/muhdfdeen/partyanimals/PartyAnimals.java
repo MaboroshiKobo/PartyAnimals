@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.bstats.bukkit.Metrics;
 
+import com.muhdfdeen.partyanimals.api.event.PartyAnimalsReloadEvent;
 import com.muhdfdeen.partyanimals.command.PartyAnimalsCommand;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
 import com.muhdfdeen.partyanimals.handler.RewardHandler;
@@ -98,7 +99,7 @@ public final class PartyAnimals extends JavaPlugin {
     public boolean reload() {
         try {
             if (pinataManager != null) {
-                pinataManager.cleanup();
+                pinataManager.cleanup(false);
             }
 
             configManager.loadConfig();
@@ -109,6 +110,8 @@ public final class PartyAnimals extends JavaPlugin {
             if (pinataManager != null) {
                 reloadPinatas();
             }
+
+            getServer().getPluginManager().callEvent(new PartyAnimalsReloadEvent());
 
             return true;
         } catch (Exception e) {
@@ -121,7 +124,7 @@ public final class PartyAnimals extends JavaPlugin {
         for (World world : Bukkit.getWorlds()) {
             for (LivingEntity entity : world.getLivingEntities()) {
                 if (pinataManager.isPinata(entity)) {
-                    pinataManager.restorePinata(entity);
+                    pinataManager.activatePinata(entity);
                 }
             }
         }

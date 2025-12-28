@@ -31,17 +31,17 @@ public class BossBarManager {
         String timeStr = formatTime(timeout);
 
         Component barName = messageHandler.parse(null, rawMsg,
-                messageHandler.tagParsed("pinata-name", config.getPinataConfig().appearance.name()),
+                messageHandler.tagParsed("pinata", config.getPinataConfig().appearance.name()),
                 messageHandler.tag("health", health),
                 messageHandler.tag("max-health", maxHealth),
-                messageHandler.tag("timeout", timeStr)
+                messageHandler.tag("timer", timeStr)
         );
 
         BossBar bossBar = BossBar.bossBar(
                 barName,
                 1.0f,
-                BossBar.Color.valueOf(config.getPinataConfig().health.bar().color().toUpperCase()),
-                BossBar.Overlay.valueOf(config.getPinataConfig().health.bar().overlay().toUpperCase())
+                config.getPinataConfig().health.bar().color(),
+                config.getPinataConfig().health.bar().overlay()
         );
 
         activeBossBars.put(pinata.getUniqueId(), bossBar);
@@ -64,10 +64,10 @@ public class BossBarManager {
         }
 
         bossBar.name(messageHandler.parse(null, config.getMessageConfig().pinata.bossBarActive(),
-                messageHandler.tagParsed("pinata-name", config.getPinataConfig().appearance.name()),
+                messageHandler.tagParsed("pinata", config.getPinataConfig().appearance.name()),
                 messageHandler.tag("health", currentHealth),
                 messageHandler.tag("max-health", maxHealth),
-                messageHandler.tag("timeout", timeStr)
+                messageHandler.tag("timer", timeStr)
         ));
 
         updateViewerList(pinata, bossBar);
@@ -85,7 +85,9 @@ public class BossBarManager {
     }
 
     private String formatTime(int seconds) {
-        if (!config.getPinataConfig().timer.timeout().enabled()) return "∞";
+        if (!config.getPinataConfig().timer.timeout().enabled() || seconds <= 0) {
+            return "∞";
+        }
         return String.format("%02d:%02d", seconds / 60, seconds % 60);
     }
 

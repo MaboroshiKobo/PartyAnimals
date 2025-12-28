@@ -41,8 +41,8 @@ public final class MessageConfig {
         @Comment("Messages specific to the pinata module.")
         public PinataMessages pinata = new PinataMessages(
             "<prefix> <gray>Countdown for the pinata has <green>begun</green>!</gray>",
-            "<prefix> <gray>A pinata has been <yellow>summoned</yellow> instantly!</gray>",
-            "<prefix> <gray>A pinata has spawned at <white><location-name></white>!</gray>",
+            "<prefix> <gray>A pinata has been <yellow>spawned</yellow> instantly!</gray>",
+            "<prefix> <gray>A pinata has spawned at <white><location></white>!</gray>",
             "<prefix> <gray>You landed a hit on the pinata!</gray>",
             "<prefix> <gray>You must use <red><item></red> to hit the pinata!</gray>",
             "<prefix> <red><bold>Too fast!</bold></red> <gray>Please wait a moment.</gray>",
@@ -51,10 +51,10 @@ public final class MessageConfig {
             "<prefix> <gray>The pinata has been <green>defeated</green>!</gray>",
             "<prefix> <gray>The pinata has <red>escaped</red>!</gray>",
             "A pinata party will begin in <white><countdown></white>. Get ready!",
-            "<pinata-name> <health> <red>❤</red> <gray>[<timeout>]</gray>",
-            "<prefix> <gray>A new spawn location named <white><location-name></white> has been <green>added</green>.</gray>",
-            "<prefix> <gray>A new spawn location named <white><location-name></white> has been <red>removed</red>.</gray>",
-            "<prefix> <gray>The spawn location named <white><location-name></white> does not exist.</gray>"
+            "<pinata> <health> <gray>/</gray> <max-health> <red>❤</red> <gray>[<timer>]</gray>",
+            "<prefix> <gray>A new spawn location named <white><location></white> has been <green>added</green>.</gray>",
+            "<prefix> <gray>A new spawn location named <white><location></white> has been <red>removed</red>.</gray>",
+            "<prefix> <gray>The spawn location named <white><location></white> does not exist.</gray>"
         );
     }
 
@@ -81,10 +81,10 @@ public final class MessageConfig {
     public record PinataMessages(
         @Comment("Broadcast when countdown begins.")
         String countdownStarted,
-        @Comment("Broadcast when manually summoned.")
-        String summoned,
-        @Comment("Broadcast when spawned naturally.")
+        @Comment("Broadcast when manually spawned.")
         String spawned,
+        @Comment("Broadcast when spawned naturally.")
+        String spawnedNaturally,
         @Comment("Feedback when a player hits the entity.")
         String hitSuccess,
         @Comment("Error when hitting with wrong item.")
@@ -99,9 +99,9 @@ public final class MessageConfig {
         String defeated,
         @Comment("Broadcast when pinata despawns due to time.")
         String timeout,
-        @Comment({"Boss bar countdown text.", "Available placeholders: <pinata-name>, <countdown>"})
+        @Comment({"Boss bar countdown text.", "Available placeholders: <pinata>, <countdown>"})
         String bossBarCountdown,
-        @Comment({"Boss bar active text.", "Available placeholders: <pinata-name>, <health>, <max-health>, <timeout>"})
+        @Comment({"Boss bar active text.", "Available placeholders: <pinata>, <health>, <max-health>, <timer>"})
         String bossBarActive,
         @Comment("Admin: Added spawn location.")
         String spawnPointAdded,
