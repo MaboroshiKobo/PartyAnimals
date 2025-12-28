@@ -28,7 +28,7 @@ public final class PinataConfig {
 
     public static PinataConfiguration load(File dataFolder) {
         YamlConfigurationProperties properties = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder().build();
-        Path pinataFile = new File(dataFolder, "modules/pinata.yml").toPath();
+        Path pinataFile = new File(dataFolder, "pinatas/default-pinata.yml").toPath();
         return YamlConfigurations.update(pinataFile, PinataConfiguration.class, properties);
     }
 
@@ -40,7 +40,7 @@ public final class PinataConfig {
             new NameTagSettings(
                 true,
                 "TEXT",
-                List.of("<pinata-name>", "<health> <gray>/</gray> <max-health> <red>❤</red>"),
+                List.of("<pinata>", "<health> <gray>/</gray> <max-health> <red>❤</red>"),
                 TextAlignment.CENTER,
                 new BackgroundSettings(
                     false,
@@ -60,7 +60,7 @@ public final class PinataConfig {
                 new TransformSettings(
                     new TranslationSettings(
                         0,
-                        0,
+                        0.5,
                         0
                     ),
                     new NameTagSettings.ScaleSettings(
