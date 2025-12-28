@@ -338,7 +338,7 @@ public class PinataManager {
             if (lines != null) {
                 for (String line : lines) {
                     components.add(messageHandler.parse(null, line,
-                        messageHandler.tag("pinata", config.getPinataConfig().appearance.name()),
+                        messageHandler.tagParsed("pinata", config.getPinataConfig().appearance.name()),
                         messageHandler.tag("health", currentHealth),
                         messageHandler.tag("max-health", maxHealthVal),
                         messageHandler.tag("timer", timeStr)
@@ -411,7 +411,7 @@ public class PinataManager {
         if (lines != null) {
             for (String line : lines) {
                 components.add(messageHandler.parse(null, line,
-                    messageHandler.tag("pinata", config.getPinataConfig().appearance.name()),
+                    messageHandler.tagParsed("pinata", config.getPinataConfig().appearance.name()),
                     messageHandler.tag("health", currentHealth),
                     messageHandler.tag("max-health", maxHealthVal),
                     messageHandler.tag("timer", initialTimeStr)
