@@ -19,7 +19,6 @@ import de.exlll.configlib.Configuration;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 
-import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay.TextAlignment;
 
@@ -43,7 +42,13 @@ public final class PinataConfig {
                 "TEXT",
                 List.of("<pinata-name>", "<health> <gray>/</gray> <max-health> <red>❤</red>"),
                 TextAlignment.CENTER,
-                new BackgroundSettings(false, Color.WHITE),
+                new BackgroundSettings(
+                    false,
+                    64,
+                    0,
+                    0,
+                    0
+                ),
                 new TextShadowSettings(
                     true,
                     0,
@@ -62,9 +67,7 @@ public final class PinataConfig {
                         1,
                         1,
                         1
-                    ),
-                    0,
-                    0
+                    )
                 )
             ), 
             new ScaleSettings(0.75, 1.25), 

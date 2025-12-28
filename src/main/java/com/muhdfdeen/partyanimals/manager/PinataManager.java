@@ -22,6 +22,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -215,7 +216,20 @@ public class PinataManager {
 
                     nameTag.setAlignment(config.getPinataConfig().appearance.nameTag().textAlignment());
                     nameTag.setDefaultBackground(config.getPinataConfig().appearance.nameTag().background().enabled());
-                    nameTag.setBackgroundColor(config.getPinataConfig().appearance.nameTag().background().color());
+
+                    var bgConfig = config.getPinataConfig().appearance.nameTag().background();
+                    nameTag.setDefaultBackground(false);
+                    if (bgConfig.enabled()) {
+                        nameTag.setBackgroundColor(Color.fromARGB(
+                            bgConfig.alpha(),
+                            bgConfig.red(),
+                            bgConfig.green(),
+                            bgConfig.blue()
+                        ));
+                    } else {
+                        nameTag.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+                    }
+
                     nameTag.setShadowed(config.getPinataConfig().appearance.nameTag().shadow().enabled());
                     nameTag.setShadowRadius(config.getPinataConfig().appearance.nameTag().shadow().radius());
                     nameTag.setShadowStrength(config.getPinataConfig().appearance.nameTag().shadow().strength());
@@ -223,17 +237,17 @@ public class PinataManager {
                     nameTag.setSeeThrough(config.getPinataConfig().appearance.nameTag().seeThrough());
 
                     Transformation nameTransform = nameTag.getTransformation();
-                    nameTransform.getTranslation().set(
-                        (float) config.getPinataConfig().appearance.nameTag().transformation().translation().x(),
-                        (float) config.getPinataConfig().appearance.nameTag().transformation().translation().y(),
-                        (float) config.getPinataConfig().appearance.nameTag().transformation().translation().z()
-                    );
 
-                    nameTransform.getScale().set(
-                        (float) config.getPinataConfig().appearance.nameTag().transformation().scale().x(),
-                        (float) config.getPinataConfig().appearance.nameTag().transformation().scale().y(),
-                        (float) config.getPinataConfig().appearance.nameTag().transformation().scale().z()
-                    );
+                    float scaleX = (float) config.getPinataConfig().appearance.nameTag().transformation().scale().x();
+                    float scaleY = (float) config.getPinataConfig().appearance.nameTag().transformation().scale().y();
+                    float scaleZ = (float) config.getPinataConfig().appearance.nameTag().transformation().scale().z();
+
+                    float transX = (float) config.getPinataConfig().appearance.nameTag().transformation().translation().x();
+                    float transY = (float) config.getPinataConfig().appearance.nameTag().transformation().translation().y();
+                    float transZ = (float) config.getPinataConfig().appearance.nameTag().transformation().translation().z();
+
+                    nameTransform.getTranslation().set(transX, transY, transZ);
+                    nameTransform.getScale().set(scaleX, scaleY, scaleZ);
 
                     nameTag.setTransformation(nameTransform);
 

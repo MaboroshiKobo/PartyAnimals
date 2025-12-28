@@ -2,7 +2,6 @@ package com.muhdfdeen.partyanimals.config.objects;
 
 import java.util.List;
 
-import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay;
 import de.exlll.configlib.Comment;
@@ -41,7 +40,10 @@ public record NameTagSettings(
 
     public record BackgroundSettings(
         boolean enabled,
-        Color color
+        int alpha,
+        int red,
+        int green,
+        int blue
     ) {}
 
     public record TextShadowSettings(
@@ -52,9 +54,7 @@ public record NameTagSettings(
 
     public record TransformSettings(
         TranslationSettings translation,
-        ScaleSettings scale,
-        float yaw,
-        float pitch
+        ScaleSettings scale
     ) {}
 
     public record TranslationSettings(double x, double y, double z) {}
