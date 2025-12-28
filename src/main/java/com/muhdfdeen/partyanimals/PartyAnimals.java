@@ -124,7 +124,7 @@ public final class PartyAnimals extends JavaPlugin {
         for (World world : Bukkit.getWorlds()) {
             for (LivingEntity entity : world.getLivingEntities()) {
                 if (pinataManager.isPinata(entity)) {
-                    pinataManager.restorePinata(entity);
+                    pinataManager.activatePinata(entity);
                 }
             }
         }

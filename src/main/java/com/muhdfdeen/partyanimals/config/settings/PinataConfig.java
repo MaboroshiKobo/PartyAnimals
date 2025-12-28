@@ -19,6 +19,7 @@ import de.exlll.configlib.Configuration;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 
+import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay.TextAlignment;
 
@@ -42,7 +43,7 @@ public final class PinataConfig {
                 "TEXT",
                 List.of("<pinata-name>", "<health> <gray>/</gray> <max-health> <red>❤</red>"),
                 TextAlignment.CENTER,
-                "transparent",
+                new BackgroundSettings(false, Color.WHITE),
                 new TextShadowSettings(
                     true,
                     0,

@@ -58,7 +58,7 @@ public class PinataListener implements Listener {
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (pinata.isValid()) {
                 log.debug("Restoring pinata state: " + pinata.getUniqueId());
-                pinataManager.restorePinata(pinata);
+                pinataManager.activatePinata(pinata);
             }
         });
     }

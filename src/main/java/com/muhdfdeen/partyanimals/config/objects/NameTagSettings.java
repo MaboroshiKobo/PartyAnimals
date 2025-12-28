@@ -1,6 +1,8 @@
 package com.muhdfdeen.partyanimals.config.objects;
 
 import java.util.List;
+
+import org.bukkit.Color;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay;
 import de.exlll.configlib.Comment;
@@ -18,8 +20,8 @@ public record NameTagSettings(
     @Comment("Text alignment. Options: LEFT, RIGHT, CENTER.")
     TextDisplay.TextAlignment textAlignment,
 
-    @Comment("Background color (#AARRGGBB) or 'transparent'.")
-    String backgroundColor,
+    @Comment("Background settings.")
+    BackgroundSettings background,
 
     @Comment("Shadow settings.")
     TextShadowSettings shadow,
@@ -37,17 +39,22 @@ public record NameTagSettings(
     TransformSettings transformation
 ) {
 
-    public record TransformSettings(
-        TranslationSettings translation,
-        ScaleSettings scale,
-        float yaw,
-        float pitch
+    public record BackgroundSettings(
+        boolean enabled,
+        Color color
     ) {}
 
     public record TextShadowSettings(
         boolean enabled,
         float radius,
         float strength
+    ) {}
+
+    public record TransformSettings(
+        TranslationSettings translation,
+        ScaleSettings scale,
+        float yaw,
+        float pitch
     ) {}
 
     public record TranslationSettings(double x, double y, double z) {}

@@ -9,12 +9,17 @@ import com.muhdfdeen.partyanimals.handler.EffectHandler;
 import com.muhdfdeen.partyanimals.handler.MessageHandler;
 import com.muhdfdeen.partyanimals.util.Logger;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -28,7 +33,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Transformation;
@@ -48,7 +52,7 @@ public class PinataManager {
     private final NamespacedKey spawn_time;
 
     private final Map<UUID, LivingEntity> activePinatas = new HashMap<>();
-    private final Map<UUID, BukkitTask> timeoutTasks = new HashMap<>();
+    private final Map<UUID, ScheduledTask> timeoutTasks = new HashMap<>();
 
     public PinataManager(PartyAnimals plugin) {
         this.plugin = plugin;
@@ -173,8 +177,6 @@ public class PinataManager {
                     return;
                 }
 
-                applyPinataGoal(livingEntity);
-
                 livingEntity.setSilent(true);
                 livingEntity.setInvulnerable(false);
                 livingEntity.setRemoveWhenFarAway(false);
@@ -196,25 +198,49 @@ public class PinataManager {
                         team.addEntry(livingEntity.getUniqueId().toString());
                     }
                 }
-                
+
                 if (config.getPinataConfig().appearance.nameTag().enabled()) {
                     TextDisplay nameTag = (TextDisplay) location.getWorld().spawnEntity(location, EntityType.TEXT_DISPLAY);
-                    nameTag.text(messageHandler.parse(null, config.getPinataConfig().appearance.name()));
+
+                    List<String> lines = config.getPinataConfig().appearance.nameTag().text();
+                    List<Component> components = new ArrayList<>();
+                    
+                    if (lines != null) {
+                        for (String line : lines) {
+                            components.add(messageHandler.parse(null, line)); 
+                        }
+                    }
+                    
+                    nameTag.text(Component.join(JoinConfiguration.newlines(), components));
+
+                    nameTag.setAlignment(config.getPinataConfig().appearance.nameTag().textAlignment());
+                    nameTag.setDefaultBackground(config.getPinataConfig().appearance.nameTag().background().enabled());
+                    nameTag.setBackgroundColor(config.getPinataConfig().appearance.nameTag().background().color());
                     nameTag.setShadowed(config.getPinataConfig().appearance.nameTag().shadow().enabled());
-                    nameTag.setSeeThrough(config.getPinataConfig().appearance.nameTag().seeThrough());
+                    nameTag.setShadowRadius(config.getPinataConfig().appearance.nameTag().shadow().radius());
+                    nameTag.setShadowStrength(config.getPinataConfig().appearance.nameTag().shadow().strength());
                     nameTag.setBillboard(config.getPinataConfig().appearance.nameTag().billboard());
-                    nameTag.setDefaultBackground(false);
+                    nameTag.setSeeThrough(config.getPinataConfig().appearance.nameTag().seeThrough());
+
                     Transformation nameTransform = nameTag.getTransformation();
                     nameTransform.getTranslation().set(
-                        config.getPinataConfig().appearance.nameTag().transformation().translation().x(),
-                        config.getPinataConfig().appearance.nameTag().transformation().translation().y(),
-                        config.getPinataConfig().appearance.nameTag().transformation().translation().z()
+                        (float) config.getPinataConfig().appearance.nameTag().transformation().translation().x(),
+                        (float) config.getPinataConfig().appearance.nameTag().transformation().translation().y(),
+                        (float) config.getPinataConfig().appearance.nameTag().transformation().translation().z()
                     );
+
+                    nameTransform.getScale().set(
+                        (float) config.getPinataConfig().appearance.nameTag().transformation().scale().x(),
+                        (float) config.getPinataConfig().appearance.nameTag().transformation().scale().y(),
+                        (float) config.getPinataConfig().appearance.nameTag().transformation().scale().z()
+                    );
+
                     nameTag.setTransformation(nameTransform);
+
                     livingEntity.addPassenger(nameTag);
                 }
 
-                restorePinata(livingEntity);
+                activatePinata(livingEntity);
 
                 log.debug("Playing pinata spawn effect at location: " + location + " for entity: " + livingEntity.getType() + " (UUID: " + livingEntity.getUniqueId() + ")");
                 effectHandler.playEffects(config.getPinataConfig().events.spawn().effects(), location, false);
@@ -228,27 +254,64 @@ public class PinataManager {
         messageHandler.send(plugin.getServer(), spawnMessage, messageHandler.tagParsed("location-name", location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
     }
 
-    public void restorePinata(LivingEntity pinata) {
+    public void activatePinata(LivingEntity pinata) {
         if (!pinata.isValid()) return;
 
         activePinatas.put(pinata.getUniqueId(), pinata);
         applyPinataGoal(pinata);
         startUpdateTask(pinata);
         startTimeoutTask(pinata);
+
+        if (config.getPinataConfig().appearance.nameTag().enabled()) {
+            for (org.bukkit.entity.Entity passenger : pinata.getPassengers()) {
+                if (passenger instanceof TextDisplay textDisplay) {
+                    startNameTagTask(pinata, textDisplay);
+                    break;
+                }
+            }
+        }
     }
 
-    public void startTimeoutTask(LivingEntity pinata) {
-        BukkitTask existing = timeoutTasks.remove(pinata.getUniqueId());
-        if (existing != null && !existing.isCancelled()) {
-            existing.cancel();
+    private void startUpdateTask(LivingEntity livingEntity) {
+        int currentHealth = livingEntity.getPersistentDataContainer().getOrDefault(health, PersistentDataType.INTEGER, config.getPinataConfig().health.maxHealth());
+        int maxHealthVal = livingEntity.getPersistentDataContainer().getOrDefault(max_health, PersistentDataType.INTEGER, currentHealth);
+        int timeout = config.getPinataConfig().timer.timeout().duration();
+
+        if (!bossBarManager.hasBossBar(livingEntity.getUniqueId())) {
+            bossBarManager.createBossBar(livingEntity, currentHealth, maxHealthVal, timeout);
         }
+
+        livingEntity.getScheduler().runAtFixedRate(plugin, (task) -> {
+
+            if (!livingEntity.isValid()) {
+                if (livingEntity.isDead()) {
+                    removeActiveBossBar(livingEntity);
+                }
+                task.cancel();
+                return;
+            }
+
+            if (!bossBarManager.hasBossBar(livingEntity.getUniqueId())) {
+                task.cancel();
+                return;
+            }
+
+            int currHealth = livingEntity.getPersistentDataContainer().getOrDefault(health, PersistentDataType.INTEGER, 0);
+            int maxHealth = livingEntity.getPersistentDataContainer().getOrDefault(max_health, PersistentDataType.INTEGER, 0);
+
+            bossBarManager.updateBossBar(livingEntity, currHealth, maxHealth, spawn_time);
+        }, () -> {}, 20L, 20L);
+    }
+
+    private void startTimeoutTask(LivingEntity pinata) {
+        var existing = timeoutTasks.remove(pinata.getUniqueId());
+        if (existing != null) existing.cancel();
 
         if (!config.getPinataConfig().timer.timeout().enabled()) return;
 
         long spawnTime = pinata.getPersistentDataContainer().getOrDefault(spawn_time, PersistentDataType.LONG, 0L);
         int timeoutSeconds = config.getPinataConfig().timer.timeout().duration();
-        
-        if (spawnTime <= 0) spawnTime = System.currentTimeMillis(); 
+        if (spawnTime <= 0) spawnTime = System.currentTimeMillis();
 
         long elapsedMillis = System.currentTimeMillis() - spawnTime;
         long remainingMillis = (timeoutSeconds * 1000L) - elapsedMillis;
@@ -261,52 +324,55 @@ public class PinataManager {
             return;
         }
 
-        BukkitTask task = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (pinata.isValid() && isPinata(pinata)) {
-                    removeActiveBossBar(pinata);
-                    pinata.remove();
-                    String timeoutMsg = config.getMessageConfig().pinata.timeout();
-                    messageHandler.send(plugin.getServer(), timeoutMsg);
-                }
-                timeoutTasks.remove(pinata.getUniqueId());
+        var task = pinata.getScheduler().runDelayed(plugin, (t) -> {
+            if (pinata.isValid() && isPinata(pinata)) {
+                removeActiveBossBar(pinata);
+                pinata.remove();
+                String timeoutMsg = config.getMessageConfig().pinata.timeout();
+                messageHandler.send(plugin.getServer(), timeoutMsg);
             }
-        }.runTaskLater(plugin, remainingTicks);
-        
+            timeoutTasks.remove(pinata.getUniqueId());
+        }, () -> {}, remainingTicks);
+
         timeoutTasks.put(pinata.getUniqueId(), task);
     }
 
-    public void startUpdateTask(LivingEntity livingEntity) {
-        int currentHealth = livingEntity.getPersistentDataContainer().getOrDefault(health, PersistentDataType.INTEGER, config.getPinataConfig().health.maxHealth());
-        int maxHealthVal = livingEntity.getPersistentDataContainer().getOrDefault(max_health, PersistentDataType.INTEGER, currentHealth);
-        int timeout = config.getPinataConfig().timer.timeout().duration();
+    private void startNameTagTask(LivingEntity livingEntity, TextDisplay nameTag) {
+        int interval = config.getPinataConfig().appearance.nameTag().updateTextInterval();
+        if (interval <= 0) return;
 
-        if (!bossBarManager.hasBossBar(livingEntity.getUniqueId())) {
-            bossBarManager.createBossBar(livingEntity, currentHealth, maxHealthVal, timeout);
-        }
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!livingEntity.isValid()) {
-                    if (livingEntity.isDead()) {
-                        removeActiveBossBar(livingEntity);
-                    }
-                    this.cancel();
-                    return;
-                }
-                if (!bossBarManager.hasBossBar(livingEntity.getUniqueId())) {
-                    this.cancel();
-                    return;
-                }
-
-                int currentHealth = livingEntity.getPersistentDataContainer().getOrDefault(health, PersistentDataType.INTEGER, 0);
-                int maxHealth = livingEntity.getPersistentDataContainer().getOrDefault(max_health, PersistentDataType.INTEGER, 0);
-
-                bossBarManager.updateBossBar(livingEntity, currentHealth, maxHealth, spawn_time);
+        long intervalTicks = (long) interval;
+        livingEntity.getScheduler().runAtFixedRate(plugin, (task) -> {
+            if (!nameTag.isValid() || !livingEntity.isValid()) {
+                task.cancel();
+                if (nameTag.isValid()) nameTag.remove();
+                return;
             }
-        }.runTaskTimer(plugin, 20L, 20L);
+
+            int currentHealth = livingEntity.getPersistentDataContainer().getOrDefault(health, PersistentDataType.INTEGER, 0);
+            int maxHealthVal = livingEntity.getPersistentDataContainer().getOrDefault(max_health, PersistentDataType.INTEGER, 1);
+            
+            String timeStr = "∞";
+            if (config.getPinataConfig().timer.timeout().enabled()) {
+                long spawnTime = livingEntity.getPersistentDataContainer().getOrDefault(spawn_time, PersistentDataType.LONG, System.currentTimeMillis());
+                int totalTimeout = config.getPinataConfig().timer.timeout().duration();
+                int remaining = Math.max(0, totalTimeout - (int) ((System.currentTimeMillis() - spawnTime) / 1000));
+                timeStr = String.format("%02d:%02d", remaining / 60, remaining % 60);
+            }
+
+            List<String> lines = config.getPinataConfig().appearance.nameTag().text();
+            List<Component> components = new ArrayList<>();
+            if (lines != null) {
+                for (String line : lines) {
+                    components.add(messageHandler.parse(null, line,
+                        messageHandler.tag("health", currentHealth),
+                        messageHandler.tag("max_health", maxHealthVal),
+                        messageHandler.tagParsed("timeout", timeStr)
+                    ));
+                }
+            }
+            nameTag.text(Component.join(JoinConfiguration.newlines(), components));
+        }, () -> {}, intervalTicks, intervalTicks);
     }
 
     public void applyPinataGoal(LivingEntity pinata) {
@@ -330,7 +396,7 @@ public class PinataManager {
         bossBarManager.removeBossBar(pinata.getUniqueId());
         activePinatas.remove(pinata.getUniqueId());
         
-        BukkitTask task = timeoutTasks.remove(pinata.getUniqueId());
+        ScheduledTask task = timeoutTasks.remove(pinata.getUniqueId());
         if (task != null)
             task.cancel();
     }
@@ -346,7 +412,7 @@ public class PinataManager {
         }
         
         activePinatas.clear();
-        timeoutTasks.values().forEach(BukkitTask::cancel);
+        timeoutTasks.values().forEach(ScheduledTask::cancel);
         timeoutTasks.clear();
     }
 
