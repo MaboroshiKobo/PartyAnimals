@@ -20,6 +20,7 @@ import com.muhdfdeen.partyanimals.api.event.pinata.PinataDeathEvent;
 import com.muhdfdeen.partyanimals.api.event.pinata.PinataHitEvent;
 import com.muhdfdeen.partyanimals.config.ConfigManager;
 import com.muhdfdeen.partyanimals.config.settings.PinataConfig.PinataConfiguration;
+import com.muhdfdeen.partyanimals.config.settings.PinataConfig.ItemWhitelist;
 import com.muhdfdeen.partyanimals.handler.RewardHandler;
 import com.muhdfdeen.partyanimals.handler.HitCooldownHandler;
 import com.muhdfdeen.partyanimals.handler.EffectHandler;
@@ -95,26 +96,10 @@ public class PinataListener implements Listener {
             return;
         }
         
-        var allowedItems = pinataConfig.interaction.allowedItems();
-        if (allowedItems.enabled() && allowedItems.materialNames() != null && !allowedItems.materialNames().isEmpty()) {
-            Material heldMaterial = player.getInventory().getItemInMainHand().getType();
-            boolean isAllowed = false;
-            for (String configName : allowedItems.materialNames()) {
-                Material targetMaterial = Material.matchMaterial(configName);
-                if (targetMaterial != null && targetMaterial == heldMaterial) {
-                    isAllowed = true;
-                    break;
-                }
-            }
-            if (!isAllowed) {
-                String allowedItemsMessage = config.getMessageConfig().pinata.hitWrongItem();
-                if (allowedItemsMessage != null && !allowedItemsMessage.isEmpty()) {
-                    messageHandler.send(player, allowedItemsMessage, messageHandler.tag("item", heldMaterial.name()));
-                }
-                log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " with disallowed item: " + heldMaterial);
-                event.setCancelled(true);
-                return;
-            }
+        if (!isItemAllowed(player, pinataConfig.interaction.allowedItems())) {
+            log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " with disallowed item.");
+            event.setCancelled(true);
+            return;
         }
 
         if (hitCooldownHandler.isOnCooldown(player, pinata)) {
@@ -191,6 +176,33 @@ public class PinataListener implements Listener {
             }
             return false;
         }
+        return true;
+    }
+
+    private boolean isItemAllowed(Player player, ItemWhitelist allowedItems) {
+        if (!allowedItems.enabled() || allowedItems.materialNames() == null || allowedItems.materialNames().isEmpty()) {
+            return true;
+        }
+
+        Material heldMaterial = player.getInventory().getItemInMainHand().getType();
+        boolean isAllowed = false;
+        
+        for (String configName : allowedItems.materialNames()) {
+            Material targetMaterial = Material.matchMaterial(configName);
+            if (targetMaterial != null && targetMaterial == heldMaterial) {
+                isAllowed = true;
+                break;
+            }
+        }
+
+        if (!isAllowed) {
+            String allowedItemsMessage = config.getMessageConfig().pinata.hitWrongItem();
+            if (allowedItemsMessage != null && !allowedItemsMessage.isEmpty()) {
+                messageHandler.send(player, allowedItemsMessage, messageHandler.tag("item", heldMaterial.name()));
+            }
+            return false;
+        }
+        
         return true;
     }
 
