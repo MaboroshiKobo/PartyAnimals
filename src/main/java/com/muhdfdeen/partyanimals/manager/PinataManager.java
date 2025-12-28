@@ -182,18 +182,14 @@ public class PinataManager {
         final double finalScale = (minScale >= maxScale) ? minScale : ThreadLocalRandom.current().nextDouble(minScale, maxScale);
 
         int baseHealth = pinataConfig.health.maxHealth();
-        int calculatedHealth = pinataConfig.health.perPlayer() ? baseHealth * Math.max(1, plugin.getServer().getOnlinePlayers().size()) : baseHealth;
+        int calculatedHealth = pinataConfig.health.perPlayer() 
+            ? baseHealth * Math.max(1, plugin.getServer().getOnlinePlayers().size()) 
+            : baseHealth;
         final int finalHealth = calculatedHealth;
 
         location.getWorld().spawn(spawnLocation, pinataType.getEntityClass(), pinata -> {
             if (pinata instanceof LivingEntity livingEntity) {
-                livingEntity.getPersistentDataContainer().set(pinata_template, PersistentDataType.STRING, templateId);
-
-                livingEntity.getPersistentDataContainer().set(is_pinata, PersistentDataType.BOOLEAN, true);
-                livingEntity.getPersistentDataContainer().set(health, PersistentDataType.INTEGER, finalHealth);
-                livingEntity.getPersistentDataContainer().set(max_health, PersistentDataType.INTEGER, finalHealth);
-                livingEntity.getPersistentDataContainer().set(spawn_time, PersistentDataType.LONG, System.currentTimeMillis());
-                livingEntity.getAttribute(Attribute.SCALE).setBaseValue(finalScale);
+                initializePinataEntity(livingEntity, pinataConfig, templateId, finalHealth, finalScale);
                 
                 var event = new PinataSpawnEvent(livingEntity, spawnLocation);
                 plugin.getServer().getPluginManager().callEvent(event);
@@ -202,28 +198,6 @@ public class PinataManager {
                     log.debug("Pinata spawn event was cancelled by an API event; removing entity.");
                     livingEntity.remove();
                     return;
-                }
-
-                livingEntity.setSilent(true);
-                livingEntity.setInvulnerable(false);
-                livingEntity.setRemoveWhenFarAway(false);
-                livingEntity.setMaximumAir(100000);
-                livingEntity.setRemainingAir(100000);
-
-                if (livingEntity instanceof Mob mob) mob.setTarget(null);
-
-                livingEntity.setGlowing(pinataConfig.appearance.glowing());
-                if (pinataConfig.appearance.glowing()) {
-                    String colorName = pinataConfig.appearance.glowColor();
-                    NamedTextColor glowColor = NamedTextColor.NAMES.value(colorName.toLowerCase());
-                    if (glowColor != null) {
-                        Scoreboard mainBoard = Bukkit.getScoreboardManager().getMainScoreboard();
-                        String teamName = "PA_" + glowColor.toString().toUpperCase();
-                        Team team = mainBoard.getTeam(teamName);
-                        if (team == null) team = mainBoard.registerNewTeam(teamName);
-                        team.color(glowColor);
-                        team.addEntry(livingEntity.getUniqueId().toString());
-                    }
                 }
 
                 if (pinataConfig.appearance.nameTag().enabled()) {
@@ -243,6 +217,37 @@ public class PinataManager {
         
         String spawnMessage = config.getMessageConfig().pinata.spawnedNaturally();
         messageHandler.send(plugin.getServer(), spawnMessage, messageHandler.tagParsed("location", location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
+    }
+
+    private void initializePinataEntity(LivingEntity livingEntity, PinataConfiguration pinataConfig, String templateId, int health, double scale) {
+        livingEntity.getPersistentDataContainer().set(pinata_template, PersistentDataType.STRING, templateId);
+        livingEntity.getPersistentDataContainer().set(is_pinata, PersistentDataType.BOOLEAN, true);
+        livingEntity.getPersistentDataContainer().set(this.health, PersistentDataType.INTEGER, health);
+        livingEntity.getPersistentDataContainer().set(max_health, PersistentDataType.INTEGER, health);
+        livingEntity.getPersistentDataContainer().set(spawn_time, PersistentDataType.LONG, System.currentTimeMillis());
+        livingEntity.getAttribute(Attribute.SCALE).setBaseValue(scale);
+
+        livingEntity.setSilent(true);
+        livingEntity.setInvulnerable(false);
+        livingEntity.setRemoveWhenFarAway(false);
+        livingEntity.setMaximumAir(100000);
+        livingEntity.setRemainingAir(100000);
+
+        if (livingEntity instanceof Mob mob) mob.setTarget(null);
+
+        livingEntity.setGlowing(pinataConfig.appearance.glowing());
+        if (pinataConfig.appearance.glowing()) {
+            String colorName = pinataConfig.appearance.glowColor();
+            NamedTextColor glowColor = NamedTextColor.NAMES.value(colorName.toLowerCase());
+            if (glowColor != null) {
+                Scoreboard mainBoard = Bukkit.getScoreboardManager().getMainScoreboard();
+                String teamName = "PA_" + glowColor.toString().toUpperCase();
+                Team team = mainBoard.getTeam(teamName);
+                if (team == null) team = mainBoard.registerNewTeam(teamName);
+                team.color(glowColor);
+                team.addEntry(livingEntity.getUniqueId().toString());
+            }
+        }
     }
 
     public void activatePinata(LivingEntity pinata) {
