@@ -1,7 +1,6 @@
 package com.muhdfdeen.partyanimals.config.settings;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +25,9 @@ import net.kyori.adventure.bossbar.BossBar;
 
 public final class PinataConfig {
 
-    public static PinataConfiguration load(File dataFolder) {
+    public static PinataConfiguration load(File pinataFile) {
         YamlConfigurationProperties properties = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder().build();
-        Path pinataFile = new File(dataFolder, "pinatas/default-pinata.yml").toPath();
-        return YamlConfigurations.update(pinataFile, PinataConfiguration.class, properties);
+        return YamlConfigurations.update(pinataFile.toPath(), PinataConfiguration.class, properties);
     }
 
     @Configuration

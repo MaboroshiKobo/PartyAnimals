@@ -2,6 +2,8 @@ package com.muhdfdeen.partyanimals.config;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.muhdfdeen.partyanimals.config.settings.MainConfig;
 import com.muhdfdeen.partyanimals.config.settings.MessageConfig;
@@ -17,16 +19,46 @@ public class ConfigManager {
     private final File dataFolder;
 
     private MainConfiguration mainConfig;
-    private PinataConfiguration pinataConfig;
+    private Map<String, PinataConfiguration> pinataConfigs;
     private MessageConfiguration messageConfig;
 
     public ConfigManager(File dataFolder) {
         this.dataFolder = dataFolder;
+        this.pinataConfigs = new HashMap<>();
     }
 
     public void loadConfig() {
         this.mainConfig = MainConfig.load(dataFolder);
-        this.pinataConfig = PinataConfig.load(dataFolder);
+        loadPinataConfigs();
+    }
+
+    private void loadPinataConfigs() {
+        pinataConfigs.clear();
+
+        File pinataFolder = new File(dataFolder, "pinatas");
+        if (!pinataFolder.exists()) {
+            pinataFolder.mkdirs();
+        }
+
+        File defaultPinata = new File(pinataFolder, "default.yml");
+        if (!defaultPinata.exists()) {
+            PinataConfig.load(defaultPinata);
+        }
+
+        File[] files = pinataFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        
+        if (files != null) {
+            for (File file : files) {
+                String fileName = file.getName();
+                if (fileName.contains(" ")) {
+                    System.err.println("Pinata config file names cannot contain spaces: " + fileName);
+                    continue;
+                }
+                String id = fileName.substring(0, fileName.lastIndexOf('.'));
+                PinataConfiguration config = PinataConfig.load(file);
+                pinataConfigs.put(id, config);
+            }
+        }
     }
 
     public void loadMessages() {
@@ -40,12 +72,16 @@ public class ConfigManager {
                 MainConfiguration.class,
                 mainConfig,
                 ConfigLib.BUKKIT_DEFAULT_PROPERTIES);
-        Path pinataPath = new File(dataFolder, "modules/pinata.yml").toPath();
-        YamlConfigurations.save(
-                pinataPath,
+
+        for (Map.Entry<String, PinataConfiguration> entry : pinataConfigs.entrySet()) {
+            Path path = new File(dataFolder, "pinatas/" + entry.getKey() + ".yml").toPath();
+            YamlConfigurations.save(
+                path,
                 PinataConfiguration.class,
-                pinataConfig,
-                ConfigLib.BUKKIT_DEFAULT_PROPERTIES);
+                entry.getValue(),
+                ConfigLib.BUKKIT_DEFAULT_PROPERTIES
+            );
+        }
     }
 
     public void saveMessages() {
@@ -61,8 +97,12 @@ public class ConfigManager {
         return mainConfig;
     }
 
-    public PinataConfiguration getPinataConfig() {
-        return pinataConfig;
+    public PinataConfiguration getPinataConfig(String id) {
+        return pinataConfigs.get(id);
+    }
+
+    public Map<String, PinataConfiguration> getPinataConfigs() {
+        return pinataConfigs;
     }
 
     public MessageConfiguration getMessageConfig() {
