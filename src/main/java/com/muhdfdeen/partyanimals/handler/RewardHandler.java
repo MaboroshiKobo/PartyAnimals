@@ -12,7 +12,6 @@ import com.muhdfdeen.partyanimals.config.objects.RewardAction;
 import me.clip.placeholderapi.PlaceholderAPI;
 
 public class RewardHandler {
-
     private final PartyAnimals plugin;
     private final boolean hasPAPI;
 
@@ -72,8 +71,6 @@ public class RewardHandler {
             parsed = parsed.substring(1);
         }
         final String finalCommand = parsed;
-        Bukkit.getScheduler().runTask(plugin, () -> 
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand)
-        );
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand);
     }
 }
