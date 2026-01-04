@@ -103,7 +103,7 @@ public final class PinataConfig {
         public EventRegistry events = new EventRegistry(
             new GameEvent(true,
                 new EffectGroup(List.of(new SoundEffect("entity.firework_rocket.twinkle", 1f, 1f)), List.of(new ParticleEffect("TOTEM_OF_UNDYING", 10, new ParticleOffset(0.5, 1.0, 0.5), 0.1))),
-                new HashMap<>(Map.of("announce", new RewardAction(100.0, List.of("broadcast <green>A pinata has arrived!"))))
+                new HashMap<>(Map.of("announce", new RewardAction(100.0, List.of("say <green>A pinata has arrived!"))))
             ),
             new GameEvent(true,
                 new EffectGroup(List.of(new SoundEffect("entity.player.attack.crit", 1f, 1f)), List.of(new ParticleEffect("CRIT", 5, new ParticleOffset(0.3, 1.0, 0.3), 0.0))),

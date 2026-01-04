@@ -3,6 +3,7 @@ package org.maboroshi.partyanimals;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.maboroshi.partyanimals.api.event.PartyAnimalsReloadEvent;
 import org.maboroshi.partyanimals.command.PartyAnimalsCommand;
@@ -16,6 +17,7 @@ import org.maboroshi.partyanimals.listener.PinataListener;
 import org.maboroshi.partyanimals.listener.VoteListener;
 import org.maboroshi.partyanimals.manager.BossBarManager;
 import org.maboroshi.partyanimals.manager.DatabaseManager;
+import org.maboroshi.partyanimals.manager.LeaderboardManager;
 import org.maboroshi.partyanimals.manager.PinataManager;
 import org.maboroshi.partyanimals.util.Logger;
 import org.maboroshi.partyanimals.util.UpdateChecker;
@@ -38,6 +40,8 @@ public final class PartyAnimals extends JavaPlugin {
     private EffectHandler effectHandler;
     private RewardHandler rewardHandler;
     private DatabaseManager databaseManager;
+    private LeaderboardManager leaderboardManager;
+    private VoteListener voteListener;
 
     @Override
     public void onEnable() {
@@ -60,9 +64,11 @@ public final class PartyAnimals extends JavaPlugin {
         this.messageHandler = new MessageHandler(configManager);
         this.bossBarManager = new BossBarManager(this);
         this.effectHandler = new EffectHandler(log);
+        this.rewardHandler = new RewardHandler(this);
 
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.connect();
+        this.leaderboardManager = new LeaderboardManager(this);
 
         setupModules();
 
@@ -81,13 +87,12 @@ public final class PartyAnimals extends JavaPlugin {
         new UpdateChecker(this).checkForUpdates();
     }
 
-    private void setupModules() {
+private void setupModules() {
         boolean pinataEnabled = configManager.getMainConfig().modules.pinata().enabled();
         if (pinataEnabled) {
             if (this.pinataManager == null) {
                 this.pinataManager = new PinataManager(this);
                 this.hitCooldownHandler = new HitCooldownHandler(this);
-                this.rewardHandler = new RewardHandler(this);
                 getServer().getPluginManager().registerEvents(new PinataListener(this), this);
                 log.info("Pinata module enabled.");
             }
@@ -96,19 +101,27 @@ public final class PartyAnimals extends JavaPlugin {
                 this.pinataManager.cleanup();
                 this.pinataManager = null;
                 this.hitCooldownHandler = null;
-                this.rewardHandler = null;
                 log.info("Pinata module disabled.");
             }
         }
 
         boolean voteEnabled = configManager.getMainConfig().modules.vote().enabled();
-        boolean hasNuVotifier = getServer().getPluginManager().isPluginEnabled("NuVotifier");
+        boolean hasNuVotifier = getServer().getPluginManager().isPluginEnabled("Votifier");
 
-        if (voteEnabled) {
-            if (hasNuVotifier) {
-                getServer().getPluginManager().registerEvents(new VoteListener(this), this);
+        if (voteEnabled && hasNuVotifier) {
+            if (this.voteListener == null) {
+                this.voteListener = new VoteListener(this);
+                getServer().getPluginManager().registerEvents(this.voteListener, this);
                 log.info("Vote module enabled.");
-            } else {
+            }
+        } else {
+            if (this.voteListener != null) {
+                HandlerList.unregisterAll(this.voteListener);
+                this.voteListener = null;
+                log.info("Vote module disabled.");
+            }
+            
+            if (voteEnabled && !hasNuVotifier) {
                 log.warn("Vote module is enabled, but NuVotifier is not installed! Voting features will not work.");
             }
         }
@@ -200,5 +213,9 @@ public final class PartyAnimals extends JavaPlugin {
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
+    }
+
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboardManager;
     }
 }
