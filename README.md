@@ -1,18 +1,20 @@
-# Party Animals
+# PartyAnimals
 
-Party Animals is a plugin that elevates your server events by introducing interactive, loot-filled Pinatas. The purpose of the plugin is to add excitement to your events and provide a fun, configurable way to distribute rewards to your players.
-<!--
+**PartyAnimals** is a modular **player engagement plugin** designed to reward your community through **voting** and interactive, **loot-filled Pinatas**!
+
+The purpose of the plugin is to boost engagement, reward voters, and automate excitement with community-driven events.
+
 ## Documentation
 
-Any and all information you need for the plugin should already be included in the [Wiki](link-here)!
+For a complete guide on features, commands, permissions, and configuration, please visit our [Wiki](https://docs.maboroshi.org/).
 
 ## Support
 
-If there is anything missing, you have a question, you want to report a bug, or anything else, please join the [Discord server](link-here). Support is available in the server.
--->
+If you have questions, want to report a bug, or need help, please join our [Discord server](https://discord.maboroshi.org).
+
 ## Server Compatibility
 
-Party Animals is compatible with **Paper** and its forks. It is recommended to use Paper to run your server.
+PartyAnimals is compatible with **Paper** and its forks (Folia, Purpur, etc.). It is recommended to use Paper to run your server.
 
 This plugin supports Minecraft versions **1.21** and newer running **Java 21**.
 
@@ -22,27 +24,10 @@ This plugin supports Minecraft versions **1.21** and newer running **Java 21**.
 2. Place the file into your server's `plugins` directory.
 3. Restart the server.
 
-*Note: [PlaceholderAPI](https://placeholderapi.com/) is optional but recommended for placeholder support.*
+### Dependencies
 
-## Commands and Permissions
-
-| Command | Permission | Description |
-| :--- | :--- | :--- |
-| `/partyanimals` (or `/pa`) | None | Displays plugin version information. |
-| `/pa reload` | `partyanimals.reload` | Reloads all configuration files and pinata templates. |
-| `/pa start [template] [location]` | `partyanimals.start` | Starts the countdown for a specific pinata template at a saved location. |
-| `/pa spawn [template] [location]` | `partyanimals.spawn` | Spawns a pinata immediately, skipping the countdown. |
-| `/pa killall` | `partyanimals.killall` | Removes all active pinata entities from the world. |
-| `/pa addlocation <name>` | `partyanimals.addlocation` | Saves the player's current location as a named spawn point. |
-| `/pa removelocation <name>` | `partyanimals.removelocation` | Removes a saved spawn point. |
-
-## Configuration
-
-This plugin uses a modular configuration system located in the `plugins/PartyAnimals/` directory.
-
-* `config.yml`: General settings and module toggles.
-* `messages.yml`: All plugin text, supporting [MiniMessage](https://docs.advntr.dev/minimessage/format.html) formatting.
-* `pinatas/`: Directory containing individual pinata template files (e.g., `default.yml`).
+* **[NuVotifier](https://github.com/NuVotifier/NuVotifier)**: Required for the Voting Module.
+* **[PlaceholderAPI](https://placeholderapi.com/)**: Recommended for using placeholders in messages.
 
 ## Building from Source
 
