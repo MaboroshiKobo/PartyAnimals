@@ -239,6 +239,7 @@ public class PinataManager {
         livingEntity.getPersistentDataContainer().set(max_health, PersistentDataType.INTEGER, health);
         livingEntity.getPersistentDataContainer().set(spawn_time, PersistentDataType.LONG, System.currentTimeMillis());
         livingEntity.getAttribute(Attribute.SCALE).setBaseValue(scale);
+        livingEntity.setMaximumNoDamageTicks(0);
 
         livingEntity.setSilent(true);
         livingEntity.setInvulnerable(false);

@@ -77,7 +77,7 @@ public class PinataListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPinataHit(EntityDamageByEntityEvent event) {
         if (plugin.getPinataManager() == null) return;
 
