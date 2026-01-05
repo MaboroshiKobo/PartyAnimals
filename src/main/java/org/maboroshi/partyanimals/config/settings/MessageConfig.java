@@ -59,7 +59,7 @@ public final class MessageConfig {
     public String header =
         "<gradient:#51CF66:#2f9e44>🪅 <bold>Party Animals Help</bold></gradient>";
     public String entry =
-        "<gray>-</gray> <click:suggest_command:/<command>><white>/<command></white> <dark_gray>»</dark_gray> <gray><description></gray></click>";
+        "<gray>-</gray> <click:suggest_command:/<command><white>/<command></white> <dark_gray>»</dark_gray> <gray><description></gray></click>";
   }
 
   @Configuration
