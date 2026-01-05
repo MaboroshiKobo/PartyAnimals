@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'com.gradleup.shadow' version '9.3.0'
+    id 'com.diffplug.spotless' version '8.1.0'
 }
 
 group = 'org.maboroshi'
@@ -56,4 +57,24 @@ processResources {
     filesMatching('paper-plugin.yml') {
         expand props
     }
+}
+
+spotless {
+  ratchetFrom 'origin/main'
+
+  format 'misc', {
+    target '*.gradle', '.gitattributes', '.gitignore'
+    trimTrailingWhitespace()
+    leadingTabsToSpaces()
+    endWithNewline()
+  }
+
+  java {
+    target 'src/*/java/**/*.java'
+    googleJavaFormat('1.33.0')
+    formatAnnotations()
+    importOrder()
+    removeUnusedImports()
+    cleanthat()
+  }
 }
