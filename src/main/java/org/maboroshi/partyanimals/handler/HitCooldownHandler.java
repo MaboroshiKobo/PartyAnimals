@@ -22,7 +22,7 @@ public class HitCooldownHandler {
 
     public boolean isOnCooldown(Player player, LivingEntity pinata) {
         PinataConfiguration pinataConfig = plugin.getPinataManager().getPinataConfig(pinata);
-        var cooldownConfig = pinataConfig.timer.hitCooldown;
+        var cooldownConfig = pinataConfig.interaction.hitCooldown;
         double cooldownSeconds = cooldownConfig.duration;
         if (cooldownSeconds <= 0) return false;
 
@@ -45,7 +45,7 @@ public class HitCooldownHandler {
     public void applyCooldown(Player player, LivingEntity pinata) {
         PinataConfiguration pinataConfig = plugin.getPinataManager().getPinataConfig(pinata);
 
-        var cooldownConfig = pinataConfig.timer.hitCooldown;
+        var cooldownConfig = pinataConfig.interaction.hitCooldown;
         double cooldownSeconds = cooldownConfig.duration;
         if (cooldownSeconds <= 0) return;
 
@@ -68,7 +68,7 @@ public class HitCooldownHandler {
         var component = messageHandler.parse(
                 player, msg, messageHandler.tag("countdown", String.format("%.1f", remainingSeconds)));
 
-        String displayType = pinataConfig.timer.hitCooldown.notificationType;
+        String displayType = pinataConfig.interaction.hitCooldown.notificationType;
 
         switch (displayType.toLowerCase()) {
             case "action_bar", "actionbar" -> player.sendActionBar(component);

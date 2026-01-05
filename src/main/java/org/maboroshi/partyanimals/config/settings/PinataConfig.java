@@ -147,31 +147,6 @@ public final class PinataConfig {
     }
 
     @Configuration
-    public static class InteractionSettings {
-        @Comment("Permission required to hit the pinata.")
-        public String permission = "";
-
-        @Comment("Item restriction settings.")
-        public ItemWhitelist allowedItems = new ItemWhitelist(false, Set.of("STICK", "BLAZE_ROD"));
-    }
-
-    @Configuration
-    public static class TimeoutSettings {
-        @Comment("Enable despawning if not killed in time.")
-        public boolean enabled = true;
-
-        @Comment("Seconds before despawning.")
-        public int duration = 300;
-
-        public TimeoutSettings() {}
-
-        public TimeoutSettings(boolean enabled, int duration) {
-            this.enabled = enabled;
-            this.duration = duration;
-        }
-    }
-
-    @Configuration
     public static class HitCooldown {
         @Comment("Enable attack speed limits.")
         public boolean enabled = true;
@@ -196,6 +171,34 @@ public final class PinataConfig {
     }
 
     @Configuration
+    public static class InteractionSettings {
+        @Comment("Permission required to hit the pinata.")
+        public String permission = "";
+
+        @Comment("Item restriction settings.")
+        public ItemWhitelist allowedItems = new ItemWhitelist(false, Set.of("STICK", "BLAZE_ROD"));
+
+        @Comment("Anti-spam click settings.")
+        public HitCooldown hitCooldown = new HitCooldown(true, 0.75, false, "ACTION_BAR");
+    }
+
+    @Configuration
+    public static class TimeoutSettings {
+        @Comment("Enable despawning if not killed in time.")
+        public boolean enabled = true;
+
+        @Comment("Seconds before despawning.")
+        public int duration = 300;
+
+        public TimeoutSettings() {}
+
+        public TimeoutSettings(boolean enabled, int duration) {
+            this.enabled = enabled;
+            this.duration = duration;
+        }
+    }
+
+    @Configuration
     public static class TimerSettings {
         @Comment("Countdown before the pinata spawns.")
         public PhaseSettings countdown = new PhaseSettings(
@@ -213,9 +216,6 @@ public final class PinataConfig {
 
         @Comment("Maximum time to kill the pinata.")
         public TimeoutSettings timeout = new TimeoutSettings(true, 300);
-
-        @Comment("Anti-spam click settings.")
-        public HitCooldown hitCooldown = new HitCooldown(true, 0.75, false, "ACTION_BAR");
     }
 
     @Configuration
@@ -326,18 +326,18 @@ public final class PinataConfig {
                 new EffectGroup(
                         List.of(new SoundEffect("entity.player.attack.crit", 1f, 1f)),
                         List.of(new ParticleEffect("CRIT", 5, new ParticleOffset(0.3, 1.0, 0.3), 0.0))),
-                new HashMap<>());
-
-        @Comment("Triggered on the final killing blow.")
-        public GameEvent lastHit = new GameEvent(
-                true,
-                new EffectGroup(
-                        List.of(new SoundEffect("ui.toast.challenge_complete", 1f, 1f)),
-                        List.of(new ParticleEffect("HEART", 20, new ParticleOffset(0.0, 0.0, 0.0), 0.0))),
                 new HashMap<>(Map.of(
                         "vip_reward",
                         new RewardAction(
-                                50.0, true, false, false, "partyanimals.vip", List.of("give {player} diamond 1")))));
+                                50.0, false, false, false, "partyanimals.vip", List.of("give {player} diamond 1")))));
+
+        @Comment("Triggered on the final killing blow.")
+        public GameEvent lastHit = new GameEvent(
+                false,
+                new EffectGroup(
+                        List.of(new SoundEffect("ui.toast.challenge_complete", 1f, 1f)),
+                        List.of(new ParticleEffect("HEART", 20, new ParticleOffset(0.0, 0.0, 0.0), 0.0))),
+                new HashMap<>());
 
         @Comment("Triggered when pinata dies.")
         public GameEvent death = new GameEvent(
@@ -347,6 +347,6 @@ public final class PinataConfig {
                         List.of(new ParticleEffect("EXPLOSION", 5, new ParticleOffset(0.0, 0.0, 0.0), 0.0))),
                 new HashMap<>(Map.of(
                         "everyone_emerald",
-                        new RewardAction(100.0, true, false, false, "", List.of("give @a emerald 5")))));
+                        new RewardAction(100.0, false, false, false, "", List.of("give @a emerald 5")))));
     }
 }
