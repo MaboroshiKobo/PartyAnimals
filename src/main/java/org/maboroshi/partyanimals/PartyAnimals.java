@@ -70,10 +70,8 @@ public final class PartyAnimals extends JavaPlugin {
         setupModules();
 
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            if (pinataManager != null) {
-                new PartyAnimalsExpansion(this).register();
-                log.info("Hooked into PlaceholderAPI.");
-            }
+            new PartyAnimalsExpansion(this).register();
+            log.info("Hooked into PlaceholderAPI.");
         }
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
