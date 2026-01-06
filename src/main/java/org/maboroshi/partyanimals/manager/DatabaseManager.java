@@ -3,7 +3,6 @@ package org.maboroshi.partyanimals.manager;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.MainConfig.DatabaseSettings;
 import org.maboroshi.partyanimals.config.settings.MainConfig.PoolSettings;
@@ -153,34 +153,45 @@ public class DatabaseManager {
     }
 
     public int getVotes(UUID uuid) {
-        String sql = "SELECT SUM(amount) FROM " + votesTable + " WHERE uuid = ?;";
+        if (uuid == null) return 0; //
+        String sql = "SELECT SUM(amount) FROM " + votesTable + " WHERE uuid = ?;"; //
         try (Connection connection = getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, uuid.toString());
-            ResultSet resultSet = statement.executeQuery();
+            statement.setString(1, uuid.toString()); //
+            ResultSet resultSet = statement.executeQuery(); //
             if (resultSet.next()) {
-                return resultSet.getInt(1);
+                return resultSet.getInt(1); //
             }
         } catch (SQLException e) {
-            log.error("Failed to get votes: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Failed to get votes: " + e.getMessage()); //
         }
-        return 0;
+        return 0; //
     }
 
     public UUID getPlayerUUID(String playerName) {
-        boolean forceOffline = plugin.getConfiguration().getMainConfig().modules.vote.forceOfflineMode;
-
-        if (forceOffline) {
-            return UUID.nameUUIDFromBytes(("OfflinePlayer:" + playerName).getBytes(StandardCharsets.UTF_8));
-        } else {
-            try {
-                return Bukkit.createProfile(playerName).getId();
-            } catch (Exception ignored) {
+        String sql = "SELECT uuid FROM " + votesTable + " WHERE LOWER(username) = LOWER(?) LIMIT 1;";
+        try (Connection connection = getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, playerName);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return UUID.fromString(rs.getString("uuid"));
+                }
             }
-
-            return Bukkit.getOfflinePlayer(playerName).getUniqueId();
+        } catch (SQLException e) {
+            log.error("Database fallback lookup failed for: " + playerName);
         }
+
+        Player onlinePlayer = Bukkit.getPlayerExact(playerName);
+        if (onlinePlayer != null) return onlinePlayer.getUniqueId();
+
+        try {
+            var profile = Bukkit.createProfile(playerName);
+            if (profile.getId() != null) return profile.getId();
+        } catch (Exception ignored) {
+        }
+
+        return Bukkit.getOfflinePlayer(playerName).getUniqueId();
     }
 
     public void queueRewards(UUID uuid, String command) {

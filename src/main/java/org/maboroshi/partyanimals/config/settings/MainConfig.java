@@ -102,13 +102,6 @@ public final class MainConfig {
         @Comment("Enable or disable the voting module.")
         public boolean enabled = false;
 
-        @Comment({
-            "If true, the plugin will always generate UUIDs based on the player name. (This feature has not been tested extensively.)",
-            "Useful for offline-mode servers or testing environments.",
-            "WARNING: Changing this after database creation will reset player data links!"
-        })
-        public boolean forceOfflineMode = false;
-
         @Comment("Settings for handling offline votes.")
         public OfflineVoteSettings offline = new OfflineVoteSettings();
 
