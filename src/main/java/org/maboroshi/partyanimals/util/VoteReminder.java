@@ -29,14 +29,19 @@ public class VoteReminder implements Runnable {
                 int recentVotes = plugin.getDatabaseManager().getVotesSince(player.getUniqueId(), timeThreshold);
 
                 if (recentVotes <= 0) {
-                    player.getScheduler().run(plugin, (st) -> {
-                        if (player.isOnline()) {
-                            plugin.getEffectHandler().playEffects(settings.effects, player.getLocation(), false);
-                            settings.message.forEach(msg -> {
-                                plugin.getMessageUtils().send(player, msg);
-                            });
-                        }
-                    }, null);
+                    player.getScheduler()
+                            .run(
+                                    plugin,
+                                    (st) -> {
+                                        if (player.isOnline()) {
+                                            plugin.getEffectHandler()
+                                                    .playEffects(settings.effects, player.getLocation(), false);
+                                            settings.message.forEach(msg -> {
+                                                plugin.getMessageUtils().send(player, msg);
+                                            });
+                                        }
+                                    },
+                                    null);
                 }
             }
         });
