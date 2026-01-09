@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -53,6 +54,7 @@ public class PinataManager {
 
     private final Map<UUID, LivingEntity> activePinatas = new HashMap<>();
     private final Map<UUID, ScheduledTask> timeoutTasks = new HashMap<>();
+    private final Map<ScheduledTask, BossBar> activeCountdowns = new ConcurrentHashMap<>();
 
     public PinataManager(PartyAnimals plugin) {
         this.plugin = plugin;
@@ -118,7 +120,7 @@ public class PinataManager {
 
         final int[] lastSeconds = {(int) countdownSeconds};
 
-        Bukkit.getRegionScheduler()
+        ScheduledTask scheduledTask = Bukkit.getRegionScheduler()
                 .runAtFixedRate(
                         plugin,
                         location,
@@ -132,6 +134,7 @@ public class PinataManager {
                                 }
                                 effectHandler.playEffects(pinataConfig.timer.countdown.end, location, true);
                                 spawnPinata(location, templateId);
+                                activeCountdowns.remove(task);
                                 task.cancel();
                                 return;
                             }
@@ -162,6 +165,7 @@ public class PinataManager {
                         },
                         1L,
                         1L);
+        activeCountdowns.put(scheduledTask, bossBar);
     }
 
     public void spawnPinata(Location location, String templateId) {
@@ -564,6 +568,18 @@ public class PinataManager {
         activePinatas.clear();
         timeoutTasks.values().forEach(ScheduledTask::cancel);
         timeoutTasks.clear();
+
+        for (var entry : activeCountdowns.entrySet()) {
+            ScheduledTask task = entry.getKey();
+            BossBar bar = entry.getValue();
+
+            task.cancel();
+
+            for (Player p : plugin.getServer().getOnlinePlayers()) {
+                p.hideBossBar(bar);
+            }
+        }
+        activeCountdowns.clear();
     }
 
     public boolean isPinata(LivingEntity pinata) {
