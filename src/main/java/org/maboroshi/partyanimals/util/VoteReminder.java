@@ -1,6 +1,9 @@
 package org.maboroshi.partyanimals.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.MainConfig.VoteReminderSettings;
 
@@ -17,11 +20,25 @@ public class VoteReminder implements Runnable {
 
         if (!settings.enabled) return;
 
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            plugin.getEffectHandler().playEffects(settings.effects, player.getLocation(), false);
-            settings.message.forEach(msg -> {
-                plugin.getMessageUtils().send(player, msg);
-            });
+        List<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
+
+        Bukkit.getAsyncScheduler().runNow(plugin, (task) -> {
+            long timeThreshold = System.currentTimeMillis() - (24 * 60 * 60 * 1000L);
+
+            for (Player player : onlinePlayers) {
+                int recentVotes = plugin.getDatabaseManager().getVotesSince(player.getUniqueId(), timeThreshold);
+
+                if (recentVotes <= 0) {
+                    player.getScheduler().run(plugin, (st) -> {
+                        if (player.isOnline()) {
+                            plugin.getEffectHandler().playEffects(settings.effects, player.getLocation(), false);
+                            settings.message.forEach(msg -> {
+                                plugin.getMessageUtils().send(player, msg);
+                            });
+                        }
+                    }, null);
+                }
+            }
         });
     }
 }
