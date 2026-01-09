@@ -1,5 +1,6 @@
 package org.maboroshi.partyanimals.hook;
 
+import java.util.Calendar;
 import java.util.UUID;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Location;
@@ -7,7 +8,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.maboroshi.partyanimals.PartyAnimals;
-import org.maboroshi.partyanimals.manager.DatabaseManager.TopVoter;
 import org.maboroshi.partyanimals.manager.PinataManager;
 
 public class PartyAnimalsExpansion extends PlaceholderExpansion {
@@ -83,13 +83,89 @@ public class PartyAnimalsExpansion extends PlaceholderExpansion {
             }
         }
 
-        if (plugin.getLeaderboardManager() != null && params.startsWith("top_")) {
-            return handleLeaderboardPlaceholders(params);
-        }
+        if (player != null) {
+            if (params.equals("votes")) {
+                UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
+                return String.valueOf(plugin.getDatabaseManager().getVotes(targetUUID));
+            }
 
-        if (player != null && params.equals("votes")) {
-            UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
-            return String.valueOf(plugin.getDatabaseManager().getVotes(targetUUID));
+            if (params.startsWith("votes_")) {
+                String period = params.substring("votes_".length()).toLowerCase();
+                UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
+                long startTimestamp = 0L;
+
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+
+                switch (period) {
+                    case "daily":
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    case "weekly":
+                        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    case "monthly":
+                        cal.set(Calendar.DAY_OF_MONTH, 1);
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    case "yearly":
+                        cal.set(Calendar.DAY_OF_YEAR, 1);
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    default:
+                        return null;
+                }
+                return String.valueOf(plugin.getDatabaseManager().getVotesSince(targetUUID, startTimestamp));
+            }
+
+            if (params.startsWith("votes_previous_")) {
+                String period = params.substring("votes_previous_".length()).toLowerCase();
+                UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
+
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+
+                long endTimestamp = 0L;
+                long startTimestamp = 0L;
+
+                switch (period) {
+                    case "daily":
+                        endTimestamp = cal.getTimeInMillis();
+                        cal.add(Calendar.DAY_OF_MONTH, -1);
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    case "weekly":
+                        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                        endTimestamp = cal.getTimeInMillis();
+                        cal.add(Calendar.WEEK_OF_YEAR, -1);
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    case "monthly":
+                        cal.set(Calendar.DAY_OF_MONTH, 1);
+                        endTimestamp = cal.getTimeInMillis();
+                        cal.add(Calendar.MONTH, -1);
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    case "yearly":
+                        cal.set(Calendar.DAY_OF_YEAR, 1);
+                        endTimestamp = cal.getTimeInMillis();
+                        cal.add(Calendar.YEAR, -1);
+                        startTimestamp = cal.getTimeInMillis();
+                        break;
+                    default:
+                        return null;
+                }
+
+                return String.valueOf(
+                        plugin.getDatabaseManager().getVotesBetween(targetUUID, startTimestamp, endTimestamp));
+            }
         }
 
         if (params.startsWith("vote_community_")) {
@@ -132,36 +208,6 @@ public class PartyAnimalsExpansion extends PlaceholderExpansion {
                 default -> null;
             };
         }
-
-        return null;
-    }
-
-    private String handleLeaderboardPlaceholders(String params) {
-        String[] parts = params.split("_");
-
-        if (parts.length < 4) return null;
-
-        String field = parts[parts.length - 1];
-
-        String rankStr = parts[parts.length - 2];
-        int rank;
-        try {
-            rank = Integer.parseInt(rankStr);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-
-        StringBuilder typeBuilder = new StringBuilder();
-        for (int i = 1; i < parts.length - 2; i++) {
-            if (i > 1) typeBuilder.append("_");
-            typeBuilder.append(parts[i]);
-        }
-        String type = typeBuilder.toString();
-
-        TopVoter top = plugin.getLeaderboardManager().getTopVoter(type, rank);
-
-        if (field.equalsIgnoreCase("name")) return top.name();
-        if (field.equalsIgnoreCase("votes")) return String.valueOf(top.votes());
 
         return null;
     }

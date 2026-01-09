@@ -288,28 +288,51 @@ public class DatabaseManager {
         }
     }
 
-    public record TopVoter(String name, int votes) {}
+    public int getVotesSince(UUID uuid, long timestamp) {
+        if (uuid == null) return 0;
 
-    public List<TopVoter> getTopVoters(long afterTimestamp, int limit) {
-        List<TopVoter> results = new ArrayList<>();
-        String sql = "SELECT MAX(username) as username, SUM(amount) as total FROM "
-                + votesTable
-                + " WHERE timestamp >= ? GROUP BY uuid ORDER BY total DESC LIMIT ?;";
+        String sql = "SELECT SUM(amount) FROM " + votesTable + " WHERE uuid = ? AND timestamp >= ?;";
 
         try (Connection connection = getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, afterTimestamp);
-            statement.setInt(2, limit);
 
-            ResultSet rs = statement.executeQuery();
-            while (rs.next()) {
-                results.add(new TopVoter(rs.getString("username"), rs.getInt("total")));
+            statement.setString(1, uuid.toString());
+            statement.setLong(2, timestamp);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
             }
         } catch (SQLException e) {
-            log.error("Failed to calculate top voters: " + e.getMessage());
+            log.error("Failed to get votes since timestamp: " + e.getMessage());
             e.printStackTrace();
         }
-        return results;
+        return 0;
+    }
+
+    public int getVotesBetween(UUID uuid, long start, long end) {
+        if (uuid == null) return 0;
+
+        String sql = "SELECT SUM(amount) FROM " + votesTable + " WHERE uuid = ? AND timestamp >= ? AND timestamp < ?;";
+
+        try (Connection connection = getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, uuid.toString());
+            statement.setLong(2, start);
+            statement.setLong(3, end);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get votes between timestamps: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public void disconnect() {

@@ -1,6 +1,7 @@
 package org.maboroshi.partyanimals;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.List;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
@@ -19,11 +20,11 @@ import org.maboroshi.partyanimals.listener.PinataListener;
 import org.maboroshi.partyanimals.listener.VoteListener;
 import org.maboroshi.partyanimals.manager.BossBarManager;
 import org.maboroshi.partyanimals.manager.DatabaseManager;
-import org.maboroshi.partyanimals.manager.LeaderboardManager;
 import org.maboroshi.partyanimals.manager.PinataManager;
 import org.maboroshi.partyanimals.util.Logger;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.UpdateChecker;
+import org.maboroshi.partyanimals.util.VoteReminder;
 
 public final class PartyAnimals extends JavaPlugin {
     private static PartyAnimals plugin;
@@ -37,8 +38,8 @@ public final class PartyAnimals extends JavaPlugin {
     private EffectHandler effectHandler;
     private RewardHandler rewardHandler;
     private DatabaseManager databaseManager;
-    private LeaderboardManager leaderboardManager;
     private VoteListener voteListener;
+    private ScheduledTask voteReminderTask;
 
     @Override
     public void onEnable() {
@@ -65,7 +66,6 @@ public final class PartyAnimals extends JavaPlugin {
 
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.connect();
-        this.leaderboardManager = new LeaderboardManager(this);
 
         setupModules();
 
@@ -110,7 +110,23 @@ public final class PartyAnimals extends JavaPlugin {
                 getServer().getPluginManager().registerEvents(this.voteListener, this);
                 log.info("Vote module enabled.");
             }
+            var reminderSettings = configManager.getMainConfig().modules.vote.reminder;
+            if (reminderSettings.enabled && voteReminderTask == null) {
+                long intervalTicks = reminderSettings.interval * 20L;
+                this.voteReminderTask = Bukkit.getGlobalRegionScheduler()
+                        .runAtFixedRate(
+                                this,
+                                (task) -> {
+                                    new VoteReminder(this).run();
+                                },
+                                intervalTicks,
+                                intervalTicks);
+            }
         } else {
+            if (voteReminderTask != null) {
+                voteReminderTask.cancel();
+                voteReminderTask = null;
+            }
             if (this.voteListener != null) {
                 HandlerList.unregisterAll(this.voteListener);
                 this.voteListener = null;
@@ -209,9 +225,5 @@ public final class PartyAnimals extends JavaPlugin {
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
-    }
-
-    public LeaderboardManager getLeaderboardManager() {
-        return leaderboardManager;
     }
 }
