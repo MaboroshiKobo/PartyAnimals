@@ -133,6 +133,10 @@ public final class MainConfig {
         @Comment("Interval in seconds (default 3 hours).")
         public int interval = 10800;
 
+        @Comment("Message to send to players.")
+        public List<String> message = List.of(
+                "<prefix> <yellow>Don't forget to vote for our server! <click:open_url:\"https://example.com/vote\"><underline><blue>Click here to vote!</blue></underline></click>");
+
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup(
                 new HashMap<>(Map.of("notification", new SoundEffect("block.note_block.pling", 1f, 1f))),
