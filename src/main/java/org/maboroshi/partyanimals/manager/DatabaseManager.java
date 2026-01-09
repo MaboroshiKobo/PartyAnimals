@@ -113,7 +113,7 @@ public class DatabaseManager {
         String createServerDataTable = "CREATE TABLE IF NOT EXISTS "
                 + serverDataTable
                 + " ("
-                + "key VARCHAR(64) PRIMARY KEY, "
+                + "setting_key VARCHAR(64) PRIMARY KEY, "
                 + "value TEXT"
                 + ");";
 
@@ -238,7 +238,7 @@ public class DatabaseManager {
     }
 
     public int getCommunityGoalProgress() {
-        String sql = "SELECT value FROM " + serverDataTable + " WHERE key = 'community_vote_count';";
+        String sql = "SELECT value FROM " + serverDataTable + " WHERE setting_key = 'community_vote_count';";
         try (Connection connection = getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             ResultSet rs = statement.executeQuery();
@@ -251,8 +251,9 @@ public class DatabaseManager {
     }
 
     public int incrementCommunityGoalProgress() {
-        String updateSql = "UPDATE " + serverDataTable + " SET value = value + 1 WHERE key = 'community_vote_count';";
-        String selectSql = "SELECT value FROM " + serverDataTable + " WHERE key = 'community_vote_count';";
+        String updateSql =
+                "UPDATE " + serverDataTable + " SET value = value + 1 WHERE setting_key = 'community_vote_count';";
+        String selectSql = "SELECT value FROM " + serverDataTable + " WHERE setting_key = 'community_vote_count';";
 
         try (Connection connection = getConnection()) {
             try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
@@ -278,7 +279,7 @@ public class DatabaseManager {
     }
 
     private void setCommunityGoalProgress(int value) {
-        String sql = "REPLACE INTO " + serverDataTable + " (key, value) VALUES ('community_vote_count', ?);";
+        String sql = "REPLACE INTO " + serverDataTable + " (setting_key, value) VALUES ('community_vote_count', ?);";
         try (Connection connection = getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, String.valueOf(value));
