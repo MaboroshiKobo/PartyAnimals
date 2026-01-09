@@ -135,7 +135,7 @@ public final class MainConfig {
 
         @Comment("Message to send to players.")
         public List<String> message = List.of(
-                "<prefix> <yellow>Don't forget to vote for our server! <click:open_url:\"https://example.com/vote\"><underline><blue>Click here to vote!</blue></underline></click>");
+                "<prefix> <yellow>Don't forget to vote for our server! <click:open_url:\"https://example.com/vote\"><u><blue>Click here to vote!</blue></u></click>");
 
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup(
