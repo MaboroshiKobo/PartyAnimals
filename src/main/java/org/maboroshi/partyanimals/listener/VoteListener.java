@@ -123,7 +123,7 @@ public class VoteListener implements Listener {
                             .run(
                                     plugin,
                                     (st) -> {
-                                        VoteEvent voteEvent = config.getMainConfig().modules.vote.events.vote;
+                                        VoteEvent voteEvent = config.getMainConfig().modules.vote.events.playerVote;
                                         if (!voteEvent.enabled) return;
 
                                         effectHandler.playEffects(voteEvent.effects, player.getLocation(), false);
@@ -133,7 +133,7 @@ public class VoteListener implements Listener {
                 } else {
                     var offlineSettings = config.getMainConfig().modules.vote.offline;
                     if (offlineSettings.enabled) {
-                        VoteEvent voteEvent = config.getMainConfig().modules.vote.events.vote;
+                        VoteEvent voteEvent = config.getMainConfig().modules.vote.events.playerVote;
 
                         if (offlineSettings.queueRewards) {
                             Bukkit.getAsyncScheduler().runNow(plugin, (at) -> {

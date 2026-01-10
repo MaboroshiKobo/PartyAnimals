@@ -59,7 +59,7 @@ public final class PinataConfig {
         @Comment({
             "Entity types to use for the pinata.",
             "If multiple types are provided, one is chosen randomly.",
-            "See: https://jd.papermc.io/paper/1.21.1/org/bukkit/entity/EntityType.html"
+            "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/entity/EntityType.html"
         })
         public List<String> entityTypes = List.of("LLAMA", "MULE");
 

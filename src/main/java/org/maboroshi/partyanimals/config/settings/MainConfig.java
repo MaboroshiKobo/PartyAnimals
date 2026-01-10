@@ -157,7 +157,8 @@ public final class MainConfig {
         public CommunityGoalSettings() {
             this.rewards.put(
                     "community_reward",
-                    new RewardAction(100.0, List.of("say <green>Community goal reached!", "pa spawn default spawn")));
+                    new RewardAction(
+                            100.0, List.of("say <green>Community goal reached!", "pa pinata start default default")));
         }
     }
 
@@ -178,6 +179,6 @@ public final class MainConfig {
     @Configuration
     public static class EventRegistry {
         @Comment("Triggered when a single vote is received.")
-        public VoteEvent vote = new VoteEvent();
+        public VoteEvent playerVote = new VoteEvent();
     }
 }
