@@ -90,40 +90,11 @@ public class PartyAnimalsExpansion extends PlaceholderExpansion {
             }
 
             if (params.startsWith("votes_")) {
-                String period = params.substring("votes_".length()).toLowerCase();
-                UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
-                long startTimestamp = 0L;
+                String fullParam = params.substring("votes_".length()).toLowerCase();
 
-                Calendar cal = Calendar.getInstance();
-                cal.set(Calendar.HOUR_OF_DAY, 0);
-                cal.set(Calendar.MINUTE, 0);
-                cal.set(Calendar.SECOND, 0);
-                cal.set(Calendar.MILLISECOND, 0);
+                boolean isPrevious = fullParam.startsWith("previous_");
+                String period = isPrevious ? fullParam.substring("previous_".length()) : fullParam;
 
-                switch (period) {
-                    case "daily":
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    case "weekly":
-                        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    case "monthly":
-                        cal.set(Calendar.DAY_OF_MONTH, 1);
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    case "yearly":
-                        cal.set(Calendar.DAY_OF_YEAR, 1);
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    default:
-                        return null;
-                }
-                return String.valueOf(plugin.getDatabaseManager().getVotesSince(targetUUID, startTimestamp));
-            }
-
-            if (params.startsWith("votes_previous_")) {
-                String period = params.substring("votes_previous_".length()).toLowerCase();
                 UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
 
                 Calendar cal = Calendar.getInstance();
@@ -132,43 +103,36 @@ public class PartyAnimalsExpansion extends PlaceholderExpansion {
                 cal.set(Calendar.SECOND, 0);
                 cal.set(Calendar.MILLISECOND, 0);
 
-                long endTimestamp = 0L;
-                long startTimestamp = 0L;
-
                 switch (period) {
-                    case "daily":
-                        endTimestamp = cal.getTimeInMillis();
-                        cal.add(Calendar.DAY_OF_MONTH, -1);
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    case "weekly":
-                        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-                        endTimestamp = cal.getTimeInMillis();
-                        cal.add(Calendar.WEEK_OF_YEAR, -1);
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    case "monthly":
-                        cal.set(Calendar.DAY_OF_MONTH, 1);
-                        endTimestamp = cal.getTimeInMillis();
-                        cal.add(Calendar.MONTH, -1);
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    case "yearly":
-                        cal.set(Calendar.DAY_OF_YEAR, 1);
-                        endTimestamp = cal.getTimeInMillis();
-                        cal.add(Calendar.YEAR, -1);
-                        startTimestamp = cal.getTimeInMillis();
-                        break;
-                    default:
+                    case "daily" -> {}
+                    case "weekly" -> cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                    case "monthly" -> cal.set(Calendar.DAY_OF_MONTH, 1);
+                    case "yearly" -> cal.set(Calendar.DAY_OF_YEAR, 1);
+                    default -> {
                         return null;
+                    }
                 }
 
-                return String.valueOf(
-                        plugin.getDatabaseManager().getVotesBetween(targetUUID, startTimestamp, endTimestamp));
+                long currentPeriodStart = cal.getTimeInMillis();
+
+                if (isPrevious) {
+                    switch (period) {
+                        case "daily" -> cal.add(Calendar.DAY_OF_MONTH, -1);
+                        case "weekly" -> cal.add(Calendar.WEEK_OF_YEAR, -1);
+                        case "monthly" -> cal.add(Calendar.MONTH, -1);
+                        case "yearly" -> cal.add(Calendar.YEAR, -1);
+                    }
+                    long previousPeriodStart = cal.getTimeInMillis();
+
+                    return String.valueOf(plugin.getDatabaseManager()
+                            .getVotesBetween(targetUUID, previousPeriodStart, currentPeriodStart));
+                } else {
+                    return String.valueOf(plugin.getDatabaseManager().getVotesSince(targetUUID, currentPeriodStart));
+                }
             }
         }
 
-        if (params.startsWith("vote_community_")) {
+        if (params.startsWith("community_goal_")) {
             var goalConfig = plugin.getConfiguration().getMainConfig().modules.vote.communityGoal;
 
             if (!goalConfig.enabled) {
@@ -185,23 +149,23 @@ public class PartyAnimalsExpansion extends PlaceholderExpansion {
             }
 
             return switch (params) {
-                case "vote_community_current" -> String.valueOf(visualProgress);
-                case "vote_community_required" -> String.valueOf(required);
-                case "vote_community_percentage" -> {
+                case "community_goal_current" -> String.valueOf(visualProgress);
+                case "community_goal_required" -> String.valueOf(required);
+                case "community_goal_percentage" -> {
                     if (required == 0) yield "0%";
                     int percent = (int) ((visualProgress / (double) required) * 100);
                     yield percent + "%";
                 }
 
-                case "vote_community_total" -> String.valueOf(rawTotal);
+                case "community_goal_total" -> String.valueOf(rawTotal);
 
-                case "vote_community_remaining" -> {
+                case "community_goal_remaining" -> {
                     int remaining = required - visualProgress;
                     if (remaining == 0) remaining = required;
                     yield String.valueOf(remaining);
                 }
 
-                case "vote_community_goals_met" -> {
+                case "community_goal_met_count" -> {
                     yield String.valueOf(required > 0 ? rawTotal / required : 0);
                 }
 
