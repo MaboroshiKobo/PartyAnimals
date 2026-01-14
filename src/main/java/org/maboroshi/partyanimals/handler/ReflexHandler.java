@@ -36,12 +36,12 @@ public class ReflexHandler {
                                     .toVector()
                                     .subtract(pinata.getLocation().toVector());
                             if (direction.lengthSquared() < 0.01) {
-                                direction = new Vector(0, 0.5, 0);
+                                direction = new Vector(0, shockwave.verticalBoost, 0);
                             } else {
                                 direction
                                         .normalize()
                                         .multiply(shockwave.strength)
-                                        .setY(0.5);
+                                        .setY(shockwave.verticalBoost);
                             }
                             player.setVelocity(direction);
                         }

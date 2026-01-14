@@ -285,6 +285,9 @@ public final class PinataConfig {
         @Comment("Strength multiplier.")
         public double strength = 1.5;
 
+        @Comment("Vertical boost applied to affected players.")
+        public double verticalBoost = 0.5;
+
         @Comment("Radius in blocks to find players to affect.")
         public double radius = 5.0;
 
