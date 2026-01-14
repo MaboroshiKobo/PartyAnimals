@@ -131,7 +131,6 @@ public class ReflexHandler {
             }
             effectHandler.playEffects(leap.effects, pinata.getLocation(), false);
             pinata.setVelocity(new Vector(0, leap.strength, 0));
-            pinata.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 100, 0, false, false));
             if (!leap.commands.isEmpty()) {
                 rewardHandler.process(attacker, leap.commands.values());
             }
