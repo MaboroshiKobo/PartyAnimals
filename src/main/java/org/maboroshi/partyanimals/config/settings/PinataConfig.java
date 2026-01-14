@@ -258,7 +258,7 @@ public final class PinataConfig {
     @Configuration
     public static class MovementSettings {
         @Comment({"Active movement type.", "Options: ROAM, FLEE, BOTH, NONE"})
-        public String type = "BOTH";
+        public String type = "FLEE";
 
         @Comment("Radius for random movement.")
         public PathfindingRange radius = new PathfindingRange(15.0, 5.0, 15.0);
