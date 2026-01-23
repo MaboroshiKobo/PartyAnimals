@@ -170,6 +170,13 @@ public final class MainConfig {
         @Comment("Maximum number of votes before a player stops receiving rewards (-1 for unlimited).")
         public int amount = 5;
 
+        @Comment({
+            "If true, votes received after the limit is reached, are still saved to the database",
+            "and count towards community goals/leaderboards, but grant no rewards.",
+            "If false, excess votes are completely ignored (stats are capped to the configured amount)."
+        })
+        public boolean countExcessVotes = true;
+
         @Comment("Actions to execute when the limit is reached (e.g. warn the player).")
         public Map<String, RewardAction> actions = new HashMap<>(Map.of(
                 "warn",

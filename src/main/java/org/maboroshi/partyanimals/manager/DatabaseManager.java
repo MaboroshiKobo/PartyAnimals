@@ -153,19 +153,19 @@ public class DatabaseManager {
     }
 
     public int getVotes(UUID uuid) {
-        if (uuid == null) return 0; //
-        String sql = "SELECT SUM(amount) FROM " + votesTable + " WHERE uuid = ?;"; //
+        if (uuid == null) return 0;
+        String sql = "SELECT SUM(amount) FROM " + votesTable + " WHERE uuid = ?;";
         try (Connection connection = getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, uuid.toString()); //
-            ResultSet resultSet = statement.executeQuery(); //
+            statement.setString(1, uuid.toString());
+            ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return resultSet.getInt(1); //
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
-            log.error("Failed to get votes: " + e.getMessage()); //
+            log.error("Failed to get votes: " + e.getMessage());
         }
-        return 0; //
+        return 0;
     }
 
     public UUID getPlayerUUID(String playerName) {
