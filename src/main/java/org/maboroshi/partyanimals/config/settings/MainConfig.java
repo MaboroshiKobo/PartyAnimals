@@ -90,7 +90,7 @@ public final class MainConfig {
     @Configuration
     public static class PinataSettings {
         @Comment("Enable or disable the pinata module.")
-        public boolean enabled = false;
+        public boolean enabled = true;
 
         @Comment("Defined spawn points.")
         public Map<String, SerializableLocation> spawnPoints =
@@ -128,7 +128,7 @@ public final class MainConfig {
     @Configuration
     public static class VoteReminderSettings {
         @Comment("Enable or disable the vote reminders.")
-        public boolean enabled = true;
+        public boolean enabled = false;
 
         @Comment("Interval in seconds (default 3 hours).")
         public int interval = 10800;
@@ -146,7 +146,7 @@ public final class MainConfig {
     @Configuration
     public static class CommunityGoalSettings {
         @Comment("Enable the community goal system?")
-        public boolean enabled = true;
+        public boolean enabled = false;
 
         @Comment("How many votes are needed to trigger the rewards?")
         public int votesRequired = 50;
@@ -165,7 +165,7 @@ public final class MainConfig {
     @Configuration
     public static class VoteLimitSettings {
         @Comment("Enable daily vote limits per player.")
-        public boolean enabled = true;
+        public boolean enabled = false;
 
         @Comment("Maximum number of votes before a player stops receiving rewards (-1 for unlimited).")
         public int amount = 5;
