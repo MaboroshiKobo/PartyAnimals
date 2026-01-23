@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.manager.PinataManager;
 
-public class PartyAnimalsExpansion extends PlaceholderExpansion {
+public class Placeholders extends PlaceholderExpansion {
     private final PartyAnimals plugin;
 
-    public PartyAnimalsExpansion(PartyAnimals plugin) {
+    public Placeholders(PartyAnimals plugin) {
         this.plugin = plugin;
     }
 
@@ -85,7 +85,7 @@ public class PartyAnimalsExpansion extends PlaceholderExpansion {
 
         if (player != null) {
             if (params.equals("votes")) {
-                UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
+                UUID targetUUID = player.getUniqueId();
                 return String.valueOf(plugin.getDatabaseManager().getVotes(targetUUID));
             }
 
@@ -95,7 +95,7 @@ public class PartyAnimalsExpansion extends PlaceholderExpansion {
                 boolean isPrevious = fullParam.startsWith("previous_");
                 String period = isPrevious ? fullParam.substring("previous_".length()) : fullParam;
 
-                UUID targetUUID = plugin.getDatabaseManager().getPlayerUUID(player.getName());
+                UUID targetUUID = player.getUniqueId();
 
                 Calendar cal = Calendar.getInstance();
                 cal.set(Calendar.HOUR_OF_DAY, 0);
