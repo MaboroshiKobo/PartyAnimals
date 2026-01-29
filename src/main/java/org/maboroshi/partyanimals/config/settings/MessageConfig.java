@@ -76,10 +76,8 @@ public final class MessageConfig {
 
     @Configuration
     public static class PinataEvents {
-        public String starting =
-                "<prefix> <gray>Countdown for <white><pinata></white> at <white><location></white> has <green>begun</green>!</gray>";
-        public String spawned =
-                "<prefix> <gray>The pinata <white><pinata></white> has been <yellow>spawned</yellow> at <white><location></white>!</gray>";
+        public String starting = "<prefix> <gray>Started countdown for a pinata to spawn at <white><location></white>.</gray>";
+        public String spawned = "<prefix> <gray>A pinata has <yellow>spawned</yellow> at <white><location></white>!</gray>";
         public String spawnedNaturally = "<prefix> <gray>A pinata has spawned at <white><location></white>!</gray>";
         public String defeated = "<prefix> <gray>The pinata has been <green>defeated</green>!</gray>";
         public String timeout = "<prefix> <gray>The pinata has <red>escaped</red>!</gray>";
@@ -96,7 +94,7 @@ public final class MessageConfig {
 
     @Configuration
     public static class PinataAdmin {
-        public String unknownTemplate = "<prefix> <red>Unknown pinata template: <white><pinata></white></red>";
+        public String unknownTemplate = "<prefix> <red>Unknown pinata template: <white><template></white></red>";
         public String spawnPointAdded =
                 "<prefix> <gray><white><location></white> has been <green>added</green> as a spawn point.</gray>";
         public String spawnPointRemoved =
