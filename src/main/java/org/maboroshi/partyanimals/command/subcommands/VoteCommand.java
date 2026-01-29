@@ -63,18 +63,14 @@ public class VoteCommand {
                         })));
 
         if (Bukkit.getPluginManager().isPluginEnabled("Votifier")) {
-
-            voteNode.then(Commands.literal("test")
-                    .requires(s -> s.getSender().hasPermission("partyanimals.vote.test"))
-                    .then(Commands.argument("player", StringArgumentType.word())
-                            .suggests(this::suggestPlayers)
-                            .executes(ctx -> handleTestSafe(ctx, "TestVote (Dry Run)"))));
-
             voteNode.then(Commands.literal("send")
                     .requires(s -> s.getSender().hasPermission("partyanimals.vote.send"))
                     .then(Commands.argument("player", StringArgumentType.word())
                             .suggests(this::suggestPlayers)
-                            .executes(ctx -> handleTestSafe(ctx, "TestVote"))));
+                            .executes(ctx -> simulateVote(ctx, "FakeService"))
+                            .then(Commands.argument("service", StringArgumentType.greedyString())
+                                    .executes(
+                                            ctx -> simulateVote(ctx, StringArgumentType.getString(ctx, "service"))))));
         }
 
         return voteNode;
@@ -136,9 +132,9 @@ public class VoteCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int handleTestSafe(CommandContext<CommandSourceStack> ctx, String serviceName) {
+    private int simulateVote(CommandContext<CommandSourceStack> ctx, String serviceName) {
         String targetName = StringArgumentType.getString(ctx, "player");
-        VotifierHook.triggerTestVote(ctx.getSource().getSender(), targetName, serviceName, messageUtils);
+        VotifierHook.sendVote(ctx.getSource().getSender(), targetName, serviceName, messageUtils);
         return Command.SINGLE_SUCCESS;
     }
 }

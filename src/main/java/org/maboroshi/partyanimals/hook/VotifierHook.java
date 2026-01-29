@@ -7,9 +7,8 @@ import org.bukkit.command.CommandSender;
 import org.maboroshi.partyanimals.util.MessageUtils;
 
 public class VotifierHook {
-    public static void triggerTestVote(
+    public static void sendVote(
             CommandSender sender, String targetName, String serviceName, MessageUtils messageUtils) {
-
         Vote vote = new Vote(serviceName, targetName, "127.0.0.1", String.valueOf(System.currentTimeMillis()));
         VotifierEvent event = new VotifierEvent(vote);
 
