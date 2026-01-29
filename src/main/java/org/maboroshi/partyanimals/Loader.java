@@ -21,6 +21,9 @@ public class Loader implements PluginLoader {
         resolver.addRepository(
                 new RemoteRepository.Builder("paper", "default", "https://repo.papermc.io/repository/maven-public/")
                         .build());
+        resolver.addRepository(
+                new RemoteRepository.Builder("codemc", "default", "https://repo.codemc.io/repository/maven-public/")
+                        .build());
 
         classpathBuilder.addLibrary(resolver);
     }
