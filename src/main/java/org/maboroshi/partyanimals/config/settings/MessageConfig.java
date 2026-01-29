@@ -76,8 +76,10 @@ public final class MessageConfig {
 
     @Configuration
     public static class PinataEvents {
-        public String starting = "<prefix> <gray>Started countdown for a pinata to spawn at <white><location></white>.</gray>";
-        public String spawned = "<prefix> <gray>A pinata has <yellow>spawned</yellow> at <white><location></white>!</gray>";
+        public String starting =
+                "<prefix> <gray>Started countdown for a pinata to spawn at <white><location></white>.</gray>";
+        public String spawned =
+                "<prefix> <gray>A pinata has <yellow>spawned</yellow> at <white><location></white>!</gray>";
         public String spawnedNaturally = "<prefix> <gray>A pinata has spawned at <white><location></white>!</gray>";
         public String defeated = "<prefix> <gray>The pinata has been <green>defeated</green>!</gray>";
         public String timeout = "<prefix> <gray>The pinata has <red>escaped</red>!</gray>";
