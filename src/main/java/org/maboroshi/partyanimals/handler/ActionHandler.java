@@ -3,7 +3,6 @@ package org.maboroshi.partyanimals.handler;
 import java.util.Collection;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
-
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -22,7 +21,8 @@ public class ActionHandler {
         process(player, commands, str -> str);
     }
 
-    public void process(OfflinePlayer player, Collection<CommandAction> commands, Function<String, String> commandParser) {
+    public void process(
+            OfflinePlayer player, Collection<CommandAction> commands, Function<String, String> commandParser) {
         if (commands == null || commands.isEmpty()) return;
 
         for (CommandAction action : commands) {
