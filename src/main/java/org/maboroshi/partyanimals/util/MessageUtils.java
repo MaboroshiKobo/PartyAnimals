@@ -57,6 +57,6 @@ public class MessageUtils {
     }
 
     public String parsePinataPlaceholders(LivingEntity pinata, String string) {
-        return string.replace("%entity_type%", pinata.getType().toString());
+        return string.replace("<entity_type>", pinata.getType().toString());
     }
 }
