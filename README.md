@@ -1,9 +1,8 @@
 <div align="center">
-  <h3>PartyAnimals</h3>
+  <img src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/partyanimals/partyanimals.avif" width="180" alt="PartyAnimals Logo">
+  <h1>PartyAnimals</h1>
   <p>The modular player engagement and voting solution for Paper servers</p>
 </div>
-
-***
 
 **PartyAnimals** is a modular **player engagement plugin** for **Paper** servers designed to reward your community through **voting** and interactive, **loot-filled Pinatas**. The purpose of the plugin is to boost engagement, reward voters, and automate excitement with community-driven events.
 
