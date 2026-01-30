@@ -53,6 +53,8 @@ public final class MessageConfig {
         public String playerOnly = "<prefix> <red>This command is for players only.</red>";
         public String usageHelp = "<prefix> <red>Usage: <gray><usage-help></gray></red>";
         public String playerNotFound = "<prefix> <red>Player <dark_red><player></dark_red> not found.</red>";
+        public String voteTriggered =
+                "<prefix> <gray>Triggered vote event for <white><player></white> via <white><service></white></gray>";
     }
 
     @Configuration
