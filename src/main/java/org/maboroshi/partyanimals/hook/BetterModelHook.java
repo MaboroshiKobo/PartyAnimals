@@ -2,6 +2,7 @@ package org.maboroshi.partyanimals.hook;
 
 import kr.toxicity.model.api.BetterModel;
 import kr.toxicity.model.api.animation.AnimationModifier;
+import kr.toxicity.model.api.bukkit.platform.BukkitAdapter;
 import org.bukkit.entity.LivingEntity;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.util.Logger;
@@ -19,12 +20,12 @@ public class BetterModelHook {
             log.warn("Failed to apply BetterModel model: " + modelId);
             return false;
         }
-        model.getOrCreate(pinata);
+        model.getOrCreate(BukkitAdapter.adapt(pinata));
         return true;
     }
 
     public void playAnimation(LivingEntity pinata, String animationId) {
-        BetterModel.registry(pinata).ifPresent(registry -> {
+        BetterModel.registry(BukkitAdapter.adapt(pinata)).ifPresent(registry -> {
             registry.trackers()
                     .forEach(tracker -> tracker.animate(animationId, AnimationModifier.DEFAULT_WITH_PLAY_ONCE));
         });
