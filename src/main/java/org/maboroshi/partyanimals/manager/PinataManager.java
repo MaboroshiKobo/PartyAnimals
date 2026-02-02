@@ -3,7 +3,6 @@ package org.maboroshi.partyanimals.manager;
 import de.tr7zw.changeme.nbtapi.NBT;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,8 +48,8 @@ public class PinataManager {
     private final ModelEngineHook modelEngineHook;
     private final BetterModelHook betterModelHook;
 
-    private final Map<UUID, LivingEntity> activePinatas = new HashMap<>();
-    private final Map<UUID, ScheduledTask> timeoutTasks = new HashMap<>();
+    private final Map<UUID, LivingEntity> activePinatas = new ConcurrentHashMap<>();
+    private final Map<UUID, ScheduledTask> timeoutTasks = new ConcurrentHashMap<>();
     private final Map<ScheduledTask, UUID> activeCountdowns = new ConcurrentHashMap<>();
 
     public PinataManager(PartyAnimals plugin, ModelEngineHook modelEngineHook, BetterModelHook betterModelHook) {
@@ -648,8 +647,7 @@ public class PinataManager {
         double closestDistSq = Double.MAX_VALUE;
 
         for (LivingEntity pinata : activePinatas.values()) {
-            if (!pinata.isValid()) continue;
-            if (pinata.getWorld() != location.getWorld()) continue;
+            if (!pinata.isValid() || !pinata.getWorld().equals(location.getWorld())) continue;
 
             double distSq = pinata.getLocation().distanceSquared(location);
             if (distSq < closestDistSq) {
