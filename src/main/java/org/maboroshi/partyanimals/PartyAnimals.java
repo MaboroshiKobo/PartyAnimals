@@ -4,7 +4,6 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.List;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.HandlerList;
@@ -16,7 +15,9 @@ import org.maboroshi.partyanimals.handler.ActionHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
 import org.maboroshi.partyanimals.handler.HitCooldownHandler;
 import org.maboroshi.partyanimals.handler.ReflexHandler;
-import org.maboroshi.partyanimals.hook.Placeholders;
+import org.maboroshi.partyanimals.hook.BetterModelHook;
+import org.maboroshi.partyanimals.hook.ModelEngineHook;
+import org.maboroshi.partyanimals.hook.PlaceholderAPIHook;
 import org.maboroshi.partyanimals.listener.PinataListener;
 import org.maboroshi.partyanimals.listener.VoteListener;
 import org.maboroshi.partyanimals.manager.BossBarManager;
@@ -29,7 +30,6 @@ import org.maboroshi.partyanimals.util.UpdateChecker;
 
 public final class PartyAnimals extends JavaPlugin {
     private static PartyAnimals plugin;
-
     private ConfigManager configManager;
     private Logger log;
     private MessageUtils messageUtils;
@@ -42,6 +42,9 @@ public final class PartyAnimals extends JavaPlugin {
     private ReflexHandler reflexHandler;
     private VoteListener voteListener;
     private ScheduledTask voteReminderTask;
+
+    private ModelEngineHook modelEngineHook;
+    private BetterModelHook betterModelHook;
 
     @Override
     public void onEnable() {
@@ -72,9 +75,23 @@ public final class PartyAnimals extends JavaPlugin {
 
         setupModules();
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            new Placeholders(this).register();
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            new PlaceholderAPIHook(this).register();
             log.info("Hooked into PlaceholderAPI.");
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("ModelEngine")) {
+            this.modelEngineHook = new ModelEngineHook(this);
+            log.info("Hooked into ModelEngine.");
+        } else {
+            this.modelEngineHook = null;
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("BetterModel")) {
+            this.betterModelHook = new BetterModelHook(this);
+            log.info("Hooked into BetterModel.");
+        } else {
+            this.betterModelHook = null;
         }
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -88,9 +105,10 @@ public final class PartyAnimals extends JavaPlugin {
 
     private void setupModules() {
         boolean pinataEnabled = configManager.getMainConfig().modules.pinata.enabled;
+
         if (pinataEnabled) {
             if (this.pinataManager == null) {
-                this.pinataManager = new PinataManager(this);
+                this.pinataManager = new PinataManager(this, this.modelEngineHook, this.betterModelHook);
                 this.hitCooldownHandler = new HitCooldownHandler(this);
                 getServer().getPluginManager().registerEvents(new PinataListener(this), this);
                 log.info("Pinata module enabled.");
@@ -116,7 +134,8 @@ public final class PartyAnimals extends JavaPlugin {
             var reminderSettings = configManager.getMainConfig().modules.vote.reminder;
             if (reminderSettings.enabled && voteReminderTask == null) {
                 long intervalTicks = reminderSettings.interval * 20L;
-                this.voteReminderTask = Bukkit.getGlobalRegionScheduler()
+                this.voteReminderTask = getServer()
+                        .getGlobalRegionScheduler()
                         .runAtFixedRate(
                                 this,
                                 (task) -> {
@@ -175,7 +194,7 @@ public final class PartyAnimals extends JavaPlugin {
     }
 
     private void reloadPinatas() {
-        for (World world : Bukkit.getWorlds()) {
+        for (World world : getServer().getWorlds()) {
             for (LivingEntity entity : world.getLivingEntities()) {
                 if (pinataManager.isPinata(entity)) {
                     pinataManager.activatePinata(entity);

@@ -31,6 +31,8 @@ import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfigurati
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataVariant;
 import org.maboroshi.partyanimals.handler.ActionHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
+import org.maboroshi.partyanimals.hook.BetterModelHook;
+import org.maboroshi.partyanimals.hook.ModelEngineHook;
 import org.maboroshi.partyanimals.util.Logger;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
@@ -44,11 +46,14 @@ public class PinataManager {
     private final ActionHandler actionHandler;
     private final MessageUtils messageUtils;
 
+    private final ModelEngineHook modelEngineHook;
+    private final BetterModelHook betterModelHook;
+
     private final Map<UUID, LivingEntity> activePinatas = new HashMap<>();
     private final Map<UUID, ScheduledTask> timeoutTasks = new HashMap<>();
     private final Map<ScheduledTask, UUID> activeCountdowns = new ConcurrentHashMap<>();
 
-    public PinataManager(PartyAnimals plugin) {
+    public PinataManager(PartyAnimals plugin, ModelEngineHook modelEngineHook, BetterModelHook betterModelHook) {
         this.plugin = plugin;
         this.log = plugin.getPluginLogger();
         this.config = plugin.getConfiguration();
@@ -56,6 +61,8 @@ public class PinataManager {
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
         this.messageUtils = plugin.getMessageUtils();
+        this.modelEngineHook = modelEngineHook;
+        this.betterModelHook = betterModelHook;
     }
 
     public void startCountdown(Location location, String templateId) {
@@ -240,6 +247,20 @@ public class PinataManager {
         livingEntity.setRemoveWhenFarAway(false);
         livingEntity.setMaximumAir(100000);
         livingEntity.setRemainingAir(100000);
+
+        boolean modelApplied = false;
+
+        if (modelEngineHook != null && variant.modelId != null && !variant.modelId.isEmpty()) {
+            if (modelEngineHook.applyModel(livingEntity, variant.modelId)) {
+                modelApplied = true;
+            }
+        }
+
+        if (!modelApplied && betterModelHook != null && variant.modelId != null && !variant.modelId.isEmpty()) {
+            if (betterModelHook.applyModel(livingEntity, variant.modelId)) {
+                modelApplied = true;
+            }
+        }
 
         if (livingEntity instanceof Mob mob) mob.setTarget(null);
 

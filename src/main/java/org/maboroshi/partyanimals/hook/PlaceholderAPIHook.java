@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.manager.PinataManager;
 
-public class Placeholders extends PlaceholderExpansion {
+public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final PartyAnimals plugin;
 
-    public Placeholders(PartyAnimals plugin) {
+    public PlaceholderAPIHook(PartyAnimals plugin) {
         this.plugin = plugin;
     }
 
