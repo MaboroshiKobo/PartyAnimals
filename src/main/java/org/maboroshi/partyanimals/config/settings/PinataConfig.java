@@ -4,7 +4,6 @@ import de.exlll.configlib.Comment;
 import de.exlll.configlib.ConfigLib;
 import de.exlll.configlib.Configuration;
 import de.exlll.configlib.NameFormatters;
-import de.exlll.configlib.PostProcess;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import java.io.File;
@@ -82,7 +81,7 @@ public final class PinataConfig {
         public List<String> types = List.of("LLAMA", "MULE");
 
         @Comment("Model ID for ModelEngine or BetterModel. Leave empty to use vanilla mobs.")
-        public String modelId = "";
+        public String model = "";
 
         @Comment("Custom name of the pinata entity.")
         public String name = "<gradient:#FF5555:#FF55FF>🪅 <bold>Party Pinata</bold></gradient>";
@@ -291,27 +290,14 @@ public final class PinataConfig {
         @Comment("Radius in blocks to find players to affect.")
         public double radius = 5.0;
 
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup();
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        private Map<String, CommandAction> rewards = null;
-        private Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrateLegacyData() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
-                rewards = null;
-            }
-
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -333,6 +319,9 @@ public final class PinataConfig {
         })
         public ScaleSettings scale = new ScaleSettings(0.5, 1.5);
 
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup();
 
@@ -353,6 +342,9 @@ public final class PinataConfig {
         @Comment("If true, y-coordinates are ignored from the teleportation calculation.")
         public boolean ignoreYLevel = true;
 
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup();
 
@@ -369,6 +361,9 @@ public final class PinataConfig {
 
         @Comment("Strength multiplier.")
         public double strength = 1.0;
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
 
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup();
@@ -390,6 +385,9 @@ public final class PinataConfig {
         @Comment("Speed level (0 = Speed I, 1 = Speed II, 2 = Speed III).")
         public int amplifier = 2;
 
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup();
 
@@ -406,6 +404,9 @@ public final class PinataConfig {
 
         @Comment("Duration in ticks.")
         public int duration = 60;
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
 
         @Comment({"Visual/Audio effects.", "These apply to the players' FOV."})
         public EffectGroup effects = new EffectGroup(
@@ -539,22 +540,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        private Map<String, CommandAction> rewards = null;
-        private Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrateLegacyData() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
-                rewards = null;
-            }
-
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
-                commands = null;
-            }
-        }
 
         public GameEvent() {}
 

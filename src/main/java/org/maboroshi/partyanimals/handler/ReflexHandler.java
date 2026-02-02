@@ -13,14 +13,17 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
+import org.maboroshi.partyanimals.manager.PinataManager;
 
 public class ReflexHandler {
     private final PartyAnimals plugin;
+    private final PinataManager pinataManager;
     private final EffectHandler effectHandler;
     private final ActionHandler actionHandler;
 
     public ReflexHandler(PartyAnimals plugin) {
         this.plugin = plugin;
+        this.pinataManager = plugin.getPinataManager();
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
     }
@@ -30,6 +33,7 @@ public class ReflexHandler {
 
         var shockwave = config.behavior.reflexes.shockwave;
         if (shockwave.enabled && shouldTrigger(shockwave.chance)) {
+            pinataManager.playAnimation(pinata, shockwave.animation);
             effectHandler.playEffects(shockwave.effects, pinata.getLocation(), false);
             pinata.getNearbyEntities(shockwave.radius, shockwave.radius, shockwave.radius)
                     .forEach(entity -> {
@@ -56,6 +60,7 @@ public class ReflexHandler {
 
         var morph = config.behavior.reflexes.morph;
         if (morph.enabled && shouldTrigger(morph.chance)) {
+            pinataManager.playAnimation(pinata, morph.animation);
             effectHandler.playEffects(morph.effects, pinata.getLocation(), false);
             if (morph.type.equalsIgnoreCase("AGE")) {
                 if (pinata instanceof Ageable ageable) {
@@ -77,10 +82,9 @@ public class ReflexHandler {
                     var originalScale = scaleAttribute.getBaseValue();
                     double min = Math.min(morph.scale.min, morph.scale.max);
                     double max = Math.max(morph.scale.min, morph.scale.max);
-                    double newScale = ThreadLocalRandom.current().nextDouble(min, max);
-
+                    double newScale =
+                            (min == max) ? min : ThreadLocalRandom.current().nextDouble(min, max);
                     scaleAttribute.setBaseValue(newScale);
-
                     pinata.getScheduler()
                             .runDelayed(
                                     plugin,
@@ -103,6 +107,7 @@ public class ReflexHandler {
 
         var blink = config.behavior.reflexes.blink;
         if (blink.enabled && shouldTrigger(blink.chance)) {
+            pinataManager.playAnimation(pinata, blink.animation);
             effectHandler.playEffects(blink.effects, pinata.getLocation(), false);
 
             Location location = pinata.getLocation();
@@ -133,6 +138,7 @@ public class ReflexHandler {
                 return;
             }
             effectHandler.playEffects(leap.effects, pinata.getLocation(), false);
+            pinataManager.playAnimation(pinata, leap.animation);
             pinata.setVelocity(new Vector(0, leap.strength, 0));
             if (!leap.actions.isEmpty()) {
                 actionHandler.process(attacker, leap.actions.values(), cmd -> plugin.getMessageUtils()
@@ -143,6 +149,7 @@ public class ReflexHandler {
         var sugarRush = config.behavior.reflexes.sugarRush;
         if (sugarRush.enabled && shouldTrigger(sugarRush.chance)) {
             effectHandler.playEffects(sugarRush.effects, pinata.getLocation(), false);
+            pinataManager.playAnimation(pinata, sugarRush.animation);
             pinata.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, sugarRush.duration, sugarRush.amplifier));
             if (!sugarRush.actions.isEmpty()) {
                 actionHandler.process(attacker, sugarRush.actions.values(), cmd -> plugin.getMessageUtils()
@@ -153,6 +160,7 @@ public class ReflexHandler {
         var dazzle = config.behavior.reflexes.dazzle;
         if (dazzle.enabled && shouldTrigger(dazzle.chance)) {
             effectHandler.playEffects(dazzle.effects, attacker.getEyeLocation(), false);
+            pinataManager.playAnimation(pinata, dazzle.animation);
             attacker.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, dazzle.duration, 0));
             attacker.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, dazzle.duration, 0));
             if (!dazzle.actions.isEmpty()) {

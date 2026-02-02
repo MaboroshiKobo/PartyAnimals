@@ -1,6 +1,7 @@
 package org.maboroshi.partyanimals.hook;
 
 import kr.toxicity.model.api.BetterModel;
+import kr.toxicity.model.api.animation.AnimationModifier;
 import org.bukkit.entity.LivingEntity;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.util.Logger;
@@ -20,5 +21,12 @@ public class BetterModelHook {
         }
         model.getOrCreate(pinata);
         return true;
+    }
+
+    public void playAnimation(LivingEntity pinata, String animationId) {
+        BetterModel.registry(pinata).ifPresent(registry -> {
+            registry.trackers()
+                    .forEach(tracker -> tracker.animate(animationId, AnimationModifier.DEFAULT_WITH_PLAY_ONCE));
+        });
     }
 }

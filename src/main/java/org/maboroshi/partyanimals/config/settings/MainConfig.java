@@ -4,7 +4,6 @@ import de.exlll.configlib.Comment;
 import de.exlll.configlib.ConfigLib;
 import de.exlll.configlib.Configuration;
 import de.exlll.configlib.NameFormatters;
-import de.exlll.configlib.PostProcess;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import java.io.File;
@@ -141,22 +140,6 @@ public final class MainConfig {
         @Comment("Actions to execute.")
         public Map<String, CommandAction> actions = new HashMap<>(Map.of(
                 "reminder", new CommandAction(100.0, List.of("msg <player> Don't forget to vote for our server!"))));
-
-        private Map<String, CommandAction> rewards = null;
-        private Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrateLegacyData() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
-                rewards = null;
-            }
-
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -169,22 +152,6 @@ public final class MainConfig {
 
         @Comment("Actions to execute when the goal is reached.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        private Map<String, CommandAction> rewards = null;
-        private Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrateLegacyData() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
-                rewards = null;
-            }
-
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
-                commands = null;
-            }
-        }
 
         public CommunityGoalSettings() {
             this.actions.put(
@@ -215,22 +182,6 @@ public final class MainConfig {
         @Comment("Actions to execute.")
         public Map<String, CommandAction> actions = new HashMap<>(
                 Map.of("announce", new CommandAction(100.0, List.of("say Thank you <player> for voting!"))));
-
-        private Map<String, CommandAction> rewards = null;
-        private Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrateLegacyData() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
-                rewards = null;
-            }
-
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -256,21 +207,5 @@ public final class MainConfig {
         public Map<String, CommandAction> actions = new HashMap<>(Map.of(
                 "limit_reached",
                 new CommandAction(100.0, List.of("msg <player> You have reached your daily vote reward limit!"))));
-
-        private Map<String, CommandAction> rewards = null;
-        private Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrateLegacyData() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
-                rewards = null;
-            }
-
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
-                commands = null;
-            }
-        }
     }
 }

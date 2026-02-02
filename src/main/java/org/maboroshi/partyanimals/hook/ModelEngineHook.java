@@ -24,4 +24,11 @@ public class ModelEngineHook {
         modeledEntity.addModel(activeModel, true);
         return true;
     }
+
+    public void playAnimation(LivingEntity pinata, String animationId) {
+        ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
+        for (ActiveModel model : modeledEntity.getModels().values()) {
+            model.getAnimationHandler().playAnimation(animationId, 0, 0, 1, false);
+        }
+    }
 }

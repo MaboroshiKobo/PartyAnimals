@@ -29,8 +29,10 @@ public class HelpCommand {
 
         sendHelpLine(sender, "pa reload", "Reload configuration", "partyanimals.reload");
 
-        sendHelpLine(sender, "pa pinata start <pinata> <location>", "Start pinata countdown", "partyanimals.pinata.start");
-        sendHelpLine(sender, "pa pinata spawn <pinata> <location>", "Spawn pinata immediately", "partyanimals.pinata.spawn");
+        sendHelpLine(
+                sender, "pa pinata start <pinata> <location>", "Start pinata countdown", "partyanimals.pinata.start");
+        sendHelpLine(
+                sender, "pa pinata spawn <pinata> <location>", "Spawn pinata immediately", "partyanimals.pinata.spawn");
         sendHelpLine(sender, "pa pinata killall", "Remove all active pinatas", "partyanimals.pinata.killall");
 
         sendHelpLine(

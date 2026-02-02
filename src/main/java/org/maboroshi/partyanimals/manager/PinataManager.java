@@ -249,14 +249,14 @@ public class PinataManager {
 
         boolean modelApplied = false;
 
-        if (modelEngineHook != null && variant.modelId != null && !variant.modelId.isEmpty()) {
-            if (modelEngineHook.applyModel(livingEntity, variant.modelId)) {
+        if (modelEngineHook != null && variant.model != null && !variant.model.isEmpty()) {
+            if (modelEngineHook.applyModel(livingEntity, variant.model)) {
                 modelApplied = true;
             }
         }
 
-        if (!modelApplied && betterModelHook != null && variant.modelId != null && !variant.modelId.isEmpty()) {
-            if (betterModelHook.applyModel(livingEntity, variant.modelId)) {
+        if (!modelApplied && betterModelHook != null && variant.model != null && !variant.model.isEmpty()) {
+            if (betterModelHook.applyModel(livingEntity, variant.model)) {
                 modelApplied = true;
             }
         }
@@ -314,6 +314,18 @@ public class PinataManager {
             if (!tagFound) {
                 spawnNameTag(pinata);
             }
+        }
+    }
+
+    public void playAnimation(LivingEntity pinata, String animationId) {
+        if (animationId == null || animationId.isEmpty()) return;
+
+        if (modelEngineHook != null) {
+            modelEngineHook.playAnimation(pinata, animationId);
+        }
+
+        if (betterModelHook != null) {
+            betterModelHook.playAnimation(pinata, animationId);
         }
     }
 
