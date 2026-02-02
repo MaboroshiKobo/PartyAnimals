@@ -59,7 +59,7 @@ public final class MessageConfig {
 
     @Configuration
     public static class HelpMessages {
-        public String header = "<gradient:#51CF66:#2f9e44>🪅 <bold>Party Animals Help</bold></gradient>";
+        public String header = "<gradient:#51CF66:#2f9e44>🪅 <bold>Party Animals</bold> Commands</gradient>";
         public String entry =
                 "<gray>-</gray> <click:suggest_command:\"/<command>\"><white>/<command></white> <dark_gray>»</dark_gray> <gray><description></gray></click>";
     }
