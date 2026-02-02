@@ -13,7 +13,7 @@ public class Loader implements PluginLoader {
         MavenLibraryResolver resolver = new MavenLibraryResolver();
 
         resolver.addDependency(new Dependency(new DefaultArtifact("com.zaxxer:HikariCP:7.0.2"), null));
-        resolver.addDependency(new Dependency(new DefaultArtifact("com.mysql:mysql-connector-j:9.5.0"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("com.mysql:mysql-connector-j:9.6.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("org.mariadb.jdbc:mariadb-java-client:3.5.7"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("de.exlll:configlib-paper:4.8.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("de.tr7zw:item-nbt-api:2.15.5"), null));
