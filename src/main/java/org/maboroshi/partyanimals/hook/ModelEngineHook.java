@@ -21,7 +21,7 @@ public class ModelEngineHook {
             log.warn("Failed to apply ModelEngine model: " + modelId);
             return false;
         }
-        modeledEntity.addModel(activeModel, true);
+        modeledEntity.addModel(activeModel, false);
         return true;
     }
 
