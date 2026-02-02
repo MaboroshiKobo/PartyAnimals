@@ -66,16 +66,6 @@ public final class PartyAnimals extends JavaPlugin {
         Metrics metrics = new Metrics(this, 28389);
 
         NamespacedKeys.load(this);
-        this.messageUtils = new MessageUtils(configManager);
-        this.bossBarManager = new BossBarManager(this);
-        this.effectHandler = new EffectHandler(log);
-        this.actionHandler = new ActionHandler(this);
-        this.reflexHandler = new ReflexHandler(this);
-
-        this.databaseManager = new DatabaseManager(this);
-        this.databaseManager.connect();
-
-        setupModules();
 
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new PlaceholderAPIHook(this).register();
@@ -96,6 +86,18 @@ public final class PartyAnimals extends JavaPlugin {
             this.betterModelHook = null;
         }
 
+        this.messageUtils = new MessageUtils(configManager);
+        this.bossBarManager = new BossBarManager(this);
+        this.effectHandler = new EffectHandler(log);
+        this.actionHandler = new ActionHandler(this);
+
+        this.databaseManager = new DatabaseManager(this);
+        this.databaseManager.connect();
+
+        setupModules();
+
+        this.reflexHandler = new ReflexHandler(this);
+
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             PartyAnimalsCommand partyanimalsCommand = new PartyAnimalsCommand(this);
             event.registrar()
@@ -112,6 +114,7 @@ public final class PartyAnimals extends JavaPlugin {
             if (this.pinataManager == null) {
                 this.pinataManager = new PinataManager(this, this.modelEngineHook, this.betterModelHook);
                 this.hitCooldownHandler = new HitCooldownHandler(this);
+                this.reflexHandler = new ReflexHandler(this);
                 getServer().getPluginManager().registerEvents(new PinataListener(this), this);
                 log.info("Pinata module enabled.");
             }
@@ -120,6 +123,7 @@ public final class PartyAnimals extends JavaPlugin {
                 this.pinataManager.cleanup();
                 this.pinataManager = null;
                 this.hitCooldownHandler = null;
+                this.reflexHandler = null;
                 log.info("Pinata module disabled.");
             }
         }
