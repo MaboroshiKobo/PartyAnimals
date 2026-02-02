@@ -113,11 +113,14 @@ public class ReflexHandler {
             if (target != null) {
                 target.setYaw(location.getYaw());
                 target.setPitch(location.getPitch());
-                pinata.teleport(target);
-                if (!blink.actions.isEmpty()) {
-                    actionHandler.process(attacker, blink.actions.values(), cmd -> plugin.getMessageUtils()
-                            .parsePinataPlaceholders(pinata, cmd));
-                }
+                pinata.teleportAsync(target).thenAccept(success -> {
+                    if (success) {
+                        if (!blink.actions.isEmpty()) {
+                            actionHandler.process(attacker, blink.actions.values(), cmd -> plugin.getMessageUtils()
+                                    .parsePinataPlaceholders(pinata, cmd));
+                        }
+                    }
+                });
             }
         }
 
