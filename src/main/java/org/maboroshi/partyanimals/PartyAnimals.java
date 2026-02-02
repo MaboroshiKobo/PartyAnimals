@@ -26,6 +26,7 @@ import org.maboroshi.partyanimals.manager.PinataManager;
 import org.maboroshi.partyanimals.task.VoteReminder;
 import org.maboroshi.partyanimals.util.Logger;
 import org.maboroshi.partyanimals.util.MessageUtils;
+import org.maboroshi.partyanimals.util.NamespacedKeys;
 import org.maboroshi.partyanimals.util.UpdateChecker;
 
 public final class PartyAnimals extends JavaPlugin {
@@ -64,6 +65,7 @@ public final class PartyAnimals extends JavaPlugin {
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 28389);
 
+        NamespacedKeys.load(this);
         this.messageUtils = new MessageUtils(configManager);
         this.bossBarManager = new BossBarManager(this);
         this.effectHandler = new EffectHandler(log);
