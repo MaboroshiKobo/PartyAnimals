@@ -29,8 +29,8 @@ public class HelpCommand {
 
         sendHelpLine(sender, "pa reload", "Reload configuration", "partyanimals.reload");
 
-        sendHelpLine(sender, "pa pinata start <pinata> <loc>", "Start pinata countdown", "partyanimals.pinata.start");
-        sendHelpLine(sender, "pa pinata spawn <pinata> <loc>", "Spawn pinata immediately", "partyanimals.pinata.spawn");
+        sendHelpLine(sender, "pa pinata start <pinata> <location>", "Start pinata countdown", "partyanimals.pinata.start");
+        sendHelpLine(sender, "pa pinata spawn <pinata> <location>", "Spawn pinata immediately", "partyanimals.pinata.spawn");
         sendHelpLine(sender, "pa pinata killall", "Remove all active pinatas", "partyanimals.pinata.killall");
 
         sendHelpLine(
@@ -46,8 +46,7 @@ public class HelpCommand {
 
         sendHelpLine(sender, "pa vote check <player>", "Check player votes", "partyanimals.vote.check");
         sendHelpLine(sender, "pa vote <add|remove|set>", "Modify vote data", "partyanimals.vote.add/remove/set");
-        sendHelpLine(sender, "pa vote send", "Send a legitimate vote", "partyanimals.vote.send");
-        sendHelpLine(sender, "pa vote test", "Send a fake vote", "partyanimals.vote.test");
+        sendHelpLine(sender, "pa vote send <player> [service]", "Simulate a vote", "partyanimals.vote.send");
         sendHelpLine(
                 sender, "pa vote migrate <plugin>", "Migrate data from another plugin", "partyanimals.vote.migrate");
 
