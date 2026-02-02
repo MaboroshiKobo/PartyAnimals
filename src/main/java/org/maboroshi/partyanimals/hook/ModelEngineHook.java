@@ -27,6 +27,10 @@ public class ModelEngineHook {
 
     public void playAnimation(LivingEntity pinata, String animationId) {
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
+        if (modeledEntity == null) {
+            log.warn("No ModelEngine model found for entity to play animation: " + animationId);
+            return;
+        }
         for (ActiveModel model : modeledEntity.getModels().values()) {
             model.getAnimationHandler().playAnimation(animationId, 0, 0, 1, false);
         }
