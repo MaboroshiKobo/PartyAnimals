@@ -261,9 +261,16 @@ public class PinataManager {
             }
         }
 
+        livingEntity.setInvisible(modelApplied);
+
         if (livingEntity instanceof Mob mob) mob.setTarget(null);
 
-        livingEntity.setGlowing(pinataConfig.appearance.glowing);
+        if (!modelApplied) {
+            livingEntity.setGlowing(pinataConfig.appearance.glowing);
+        } else {
+            livingEntity.setGlowing(false);
+        }
+
         if (pinataConfig.appearance.glowing) {
             String colorName = pinataConfig.appearance.glowColor;
             NamedTextColor glowColor = NamedTextColor.NAMES.value(colorName.toLowerCase());
