@@ -81,24 +81,20 @@ public class PinataManager {
         effectHandler.playEffects(pinataConfig.timer.countdown.start, location, true);
 
         int totalSeconds = (int) countdownSeconds;
-        long durationMillis = (long) (countdownSeconds * 1000);
-        long endTime = System.currentTimeMillis() + durationMillis;
-
-        UUID countdownId = bossBarManager.createCountdownBossBar(location, pinataConfig, totalSeconds);
-
+        final int[] ticksRemaining = {(int) (countdownSeconds * 20)};
         final int[] lastSeconds = {totalSeconds};
         final int[] taskDurationTicks = {0};
+
+        UUID countdownId = bossBarManager.createCountdownBossBar(location, pinataConfig, totalSeconds);
 
         ScheduledTask scheduledTask = Bukkit.getRegionScheduler()
                 .runAtFixedRate(
                         plugin,
                         location,
                         (task) -> {
-                            long now = System.currentTimeMillis();
-                            long remainingMilis = endTime - now;
-                            int displaySeconds = (int) Math.ceil(remainingMilis / 1000.0);
-
-                            if (remainingMilis <= 0) {
+                            ticksRemaining[0]--;
+                            int displaySeconds = (int) Math.ceil(ticksRemaining[0] / 20.0);
+                            if (ticksRemaining[0] <= 0) {
                                 bossBarManager.removeCountdownBossBar(countdownId);
                                 effectHandler.playEffects(pinataConfig.timer.countdown.end, location, true);
                                 spawnPinata(location, templateId);
@@ -106,7 +102,6 @@ public class PinataManager {
                                 task.cancel();
                                 return;
                             }
-
                             bossBarManager.updateCountdownBar(
                                     countdownId, displaySeconds, totalSeconds, pinataConfig, ++taskDurationTicks[0]);
 
@@ -117,7 +112,6 @@ public class PinataManager {
                         },
                         1L,
                         1L);
-
         activeCountdowns.put(scheduledTask, countdownId);
     }
 
@@ -249,15 +243,10 @@ public class PinataManager {
         livingEntity.setRemainingAir(100000);
 
         boolean modelApplied = false;
-
-        if (modelEngineHook != null && variant.model != null && !variant.model.isEmpty()) {
-            if (modelEngineHook.applyModel(livingEntity, variant.model)) {
+        if (variant.model != null && !variant.model.isEmpty()) {
+            if (modelEngineHook != null && modelEngineHook.applyModel(livingEntity, variant.model)) {
                 modelApplied = true;
-            }
-        }
-
-        if (!modelApplied && betterModelHook != null && variant.model != null && !variant.model.isEmpty()) {
-            if (betterModelHook.applyModel(livingEntity, variant.model)) {
+            } else if (betterModelHook != null && betterModelHook.applyModel(livingEntity, variant.model)) {
                 modelApplied = true;
             }
         }
@@ -310,7 +299,7 @@ public class PinataManager {
         if (pinataConfig.appearance.nameTag.enabled) {
             boolean tagFound = false;
             if (pinata.getPassengers() != null) {
-                for (org.bukkit.entity.Entity passenger : pinata.getPassengers()) {
+                for (Entity passenger : pinata.getPassengers()) {
                     if (passenger instanceof TextDisplay textDisplay) {
                         startNameTagTask(pinata, textDisplay);
                         tagFound = true;
@@ -361,13 +350,12 @@ public class PinataManager {
 
     public void safelyRemovePinata(LivingEntity pinata) {
         if (pinata.getPassengers() != null) {
-            for (org.bukkit.entity.Entity passenger : new ArrayList<>(pinata.getPassengers())) {
+            for (Entity passenger : new ArrayList<>(pinata.getPassengers())) {
                 passenger.remove();
             }
         }
-
         removeActiveBossBar(pinata);
-
+        cleanupGlowTeam(pinata);
         if (pinata.isValid()) {
             pinata.remove();
         }
@@ -379,6 +367,14 @@ public class PinataManager {
 
         ScheduledTask task = timeoutTasks.remove(pinata.getUniqueId());
         if (task != null) task.cancel();
+    }
+
+    private void cleanupGlowTeam(LivingEntity pinata) {
+        Scoreboard mainBoard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team team = mainBoard.getEntryTeam(pinata.getUniqueId().toString());
+        if (team != null && team.getName().startsWith("PA_")) {
+            team.removeEntry(pinata.getUniqueId().toString());
+        }
     }
 
     public void applyPinataGoal(LivingEntity pinata) {
@@ -512,6 +508,13 @@ public class PinataManager {
     }
 
     private void spawnNameTag(LivingEntity pinata) {
+        if (pinata.getPassengers() != null) {
+            for (Entity passenger : pinata.getPassengers()) {
+                if (passenger instanceof TextDisplay) {
+                    return;
+                }
+            }
+        }
         PinataConfiguration pinataConfig = getPinataConfig(pinata);
         Location location = pinata.getLocation();
         TextDisplay nameTag = (TextDisplay) location.getWorld().spawnEntity(location, EntityType.TEXT_DISPLAY);
