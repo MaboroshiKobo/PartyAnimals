@@ -28,7 +28,7 @@ dependencies {
     compileOnly("com.mysql:mysql-connector-j:9.6.0")
     compileOnly("org.mariadb.jdbc:mariadb-java-client:3.5.7")
     implementation("org.bstats:bstats-bukkit:3.1.0")
-    compileOnly("me.clip:placeholderapi:2.11.7")
+    compileOnly("me.clip:placeholderapi:2.12.0")
     compileOnly("com.github.NuVotifier:NuVotifier:2.7.2")
 }
 
