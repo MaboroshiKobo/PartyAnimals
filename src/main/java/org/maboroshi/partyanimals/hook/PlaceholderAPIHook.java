@@ -6,9 +6,11 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.manager.PinataManager;
+import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final PartyAnimals plugin;
@@ -59,7 +61,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     return switch (subParam) {
                         case "health", "max_health" -> "0";
                         case "alive" -> "false";
-                        case "location" -> "N/A";
+                        case "location", "name" -> "N/A";
                         default -> null;
                     };
                 }
@@ -68,6 +70,9 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     case "alive" -> "true";
                     case "health" -> String.valueOf(pinataManager.getPinataHealth(pinata));
                     case "max_health" -> String.valueOf(pinataManager.getPinataMaxHealth(pinata));
+                    case "name" ->
+                        pinata.getPersistentDataContainer()
+                                .getOrDefault(NamespacedKeys.PINATA_NAME, PersistentDataType.STRING, "Unknown");
                     case "location" -> {
                         Location loc = pinata.getLocation();
                         yield loc.getWorld().getName()
