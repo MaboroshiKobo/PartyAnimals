@@ -12,8 +12,10 @@ import org.maboroshi.partyanimals.api.event.PartyAnimalsReloadEvent;
 import org.maboroshi.partyanimals.command.PartyAnimalsCommand;
 import org.maboroshi.partyanimals.config.ConfigManager;
 import org.maboroshi.partyanimals.handler.ActionHandler;
+import org.maboroshi.partyanimals.handler.BehaviorHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
 import org.maboroshi.partyanimals.handler.HitCooldownHandler;
+import org.maboroshi.partyanimals.handler.NameTagHandler;
 import org.maboroshi.partyanimals.handler.ReflexHandler;
 import org.maboroshi.partyanimals.hook.BetterModelHook;
 import org.maboroshi.partyanimals.hook.ModelEngineHook;
@@ -37,6 +39,8 @@ public final class PartyAnimals extends JavaPlugin {
     private DatabaseManager databaseManager;
     private PinataManager pinataManager;
     private BossBarManager bossBarManager;
+    private NameTagHandler nameTagHandler;
+    private BehaviorHandler behaviorHandler;
     private HitCooldownHandler hitCooldownHandler;
     private EffectHandler effectHandler;
     private ActionHandler actionHandler;
@@ -88,6 +92,8 @@ public final class PartyAnimals extends JavaPlugin {
 
         this.messageUtils = new MessageUtils(configManager);
         this.bossBarManager = new BossBarManager(this);
+        this.nameTagHandler = new NameTagHandler(this);
+        this.behaviorHandler = new BehaviorHandler(this);
         this.effectHandler = new EffectHandler(log);
         this.actionHandler = new ActionHandler(this);
 
@@ -249,6 +255,14 @@ public final class PartyAnimals extends JavaPlugin {
 
     public BossBarManager getBossBarManager() {
         return bossBarManager;
+    }
+
+    public NameTagHandler getNameTagHandler() {
+        return nameTagHandler;
+    }
+
+    public BehaviorHandler getBehaviorHandler() {
+        return behaviorHandler;
     }
 
     public HitCooldownHandler getHitCooldownHandler() {
