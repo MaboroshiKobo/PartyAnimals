@@ -98,7 +98,7 @@ public class DatabaseManager {
                 + "username VARCHAR(16) NOT NULL, "
                 + "amount INTEGER NOT NULL DEFAULT 1, "
                 + "service VARCHAR(64) NOT NULL, "
-                + "timestamp LONG NOT NULL"
+                + "timestamp BIGINT NOT NULL"
                 + ");";
 
         String createRewardsTable = "CREATE TABLE IF NOT EXISTS "
@@ -127,11 +127,25 @@ public class DatabaseManager {
             statement.execute(createRewardsTable);
             statement.execute(createServerDataTable);
             statement.execute(createIndex);
+
+            migrateDatabase(connection);
+
             log.info(
                     "Database tables initialized (" + votesTable + ", " + rewardsTable + ", " + serverDataTable + ").");
         } catch (SQLException e) {
             log.error("Failed to create database tables: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void migrateDatabase(Connection connection) {
+        if (isSQLite()) return;
+
+        try (Statement statement = connection.createStatement()) {
+            String alterSql = "ALTER TABLE " + votesTable + " MODIFY COLUMN timestamp BIGINT NOT NULL;";
+            statement.execute(alterSql);
+        } catch (SQLException e) {
+            log.debug("Migration check skipped: " + e.getMessage());
         }
     }
 
