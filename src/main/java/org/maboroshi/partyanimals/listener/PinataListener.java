@@ -47,10 +47,10 @@ public class PinataListener implements Listener {
         this.messageUtils = plugin.getMessageUtils();
         this.pinataManager = plugin.getPinataManager();
         this.bossBarManager = plugin.getBossBarManager();
-        this.hitCooldownHandler = plugin.getHitCooldownHandler();
+        this.hitCooldownHandler = pinataManager.getHitCooldownHandler();
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
-        this.reflexHandler = plugin.getReflexHandler();
+        this.reflexHandler = pinataManager.getReflexHandler();
     }
 
     @EventHandler

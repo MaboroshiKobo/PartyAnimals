@@ -16,8 +16,10 @@ import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.ConfigManager;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
 import org.maboroshi.partyanimals.handler.BehaviorHandler;
-import org.maboroshi.partyanimals.handler.EffectHandler;
+import org.maboroshi.partyanimals.handler.CountdownHandler;
+import org.maboroshi.partyanimals.handler.HitCooldownHandler;
 import org.maboroshi.partyanimals.handler.NameTagHandler;
+import org.maboroshi.partyanimals.handler.ReflexHandler;
 import org.maboroshi.partyanimals.hook.BetterModelHook;
 import org.maboroshi.partyanimals.hook.ModelEngineHook;
 import org.maboroshi.partyanimals.util.Logger;
@@ -28,32 +30,36 @@ public class PinataManager {
     private final PartyAnimals plugin;
     private final Logger log;
     private final ConfigManager config;
-    private final PinataFactory pinataFactory;
     private final BossBarManager bossBarManager;
-    private final NameTagHandler nameTagHandler;
-    private final BehaviorHandler behaviorHandler;
-    private final EffectHandler effectHandler;
     private final MessageUtils messageUtils;
-
     private final ModelEngineHook modelEngineHook;
     private final BetterModelHook betterModelHook;
 
+    private final PinataFactory pinataFactory;
+    private final NameTagHandler nameTagHandler;
+    private final BehaviorHandler behaviorHandler;
+    private final CountdownHandler countdownHandler;
+    private final HitCooldownHandler hitCooldownHandler;
+    private final ReflexHandler reflexHandler;
+
     private final Map<UUID, LivingEntity> activePinatas = new ConcurrentHashMap<>();
     private final Map<UUID, ScheduledTask> timeoutTasks = new ConcurrentHashMap<>();
-    private final Map<ScheduledTask, UUID> activeCountdowns = new ConcurrentHashMap<>();
 
     public PinataManager(PartyAnimals plugin, ModelEngineHook modelEngineHook, BetterModelHook betterModelHook) {
         this.plugin = plugin;
         this.log = plugin.getPluginLogger();
         this.config = plugin.getConfiguration();
-        this.pinataFactory = new PinataFactory(plugin, modelEngineHook, betterModelHook);
         this.bossBarManager = plugin.getBossBarManager();
-        this.nameTagHandler = plugin.getNameTagHandler();
-        this.behaviorHandler = plugin.getBehaviorHandler();
-        this.effectHandler = plugin.getEffectHandler();
         this.messageUtils = plugin.getMessageUtils();
         this.modelEngineHook = modelEngineHook;
         this.betterModelHook = betterModelHook;
+
+        this.pinataFactory = new PinataFactory(plugin, modelEngineHook, betterModelHook);
+        this.nameTagHandler = new NameTagHandler(plugin);
+        this.behaviorHandler = new BehaviorHandler(plugin);
+        this.countdownHandler = new CountdownHandler(plugin);
+        this.hitCooldownHandler = new HitCooldownHandler(plugin);
+        this.reflexHandler = new ReflexHandler(plugin);
     }
 
     public void spawnPinata(Location location, String templateId) {
@@ -62,52 +68,13 @@ public class PinataManager {
 
     public void startCountdown(Location location, String templateId) {
         PinataConfiguration pinataConfig = config.getPinataConfig(templateId);
+
         if (pinataConfig == null) {
             log.warn("Tried to start countdown for invalid pinata template: " + templateId);
             return;
         }
 
-        double countdownSeconds = pinataConfig.timer.countdown.duration;
-        if (countdownSeconds <= 0) {
-            pinataFactory.spawn(location, templateId);
-            return;
-        }
-
-        effectHandler.playEffects(pinataConfig.timer.countdown.start, location, true);
-
-        int totalSeconds = (int) countdownSeconds;
-        final int[] ticksRemaining = {(int) (countdownSeconds * 20)};
-        final int[] lastSeconds = {totalSeconds};
-        final int[] taskDurationTicks = {0};
-
-        UUID countdownId = bossBarManager.createCountdownBossBar(location, pinataConfig, totalSeconds);
-
-        ScheduledTask scheduledTask = Bukkit.getRegionScheduler()
-                .runAtFixedRate(
-                        plugin,
-                        location,
-                        (task) -> {
-                            ticksRemaining[0]--;
-                            int displaySeconds = (int) Math.ceil(ticksRemaining[0] / 20.0);
-                            if (ticksRemaining[0] <= 0) {
-                                bossBarManager.removeCountdownBossBar(countdownId);
-                                effectHandler.playEffects(pinataConfig.timer.countdown.end, location, true);
-                                pinataFactory.spawn(location, templateId);
-                                activeCountdowns.remove(task);
-                                task.cancel();
-                                return;
-                            }
-                            bossBarManager.updateCountdownBar(
-                                    countdownId, displaySeconds, totalSeconds, pinataConfig, ++taskDurationTicks[0]);
-
-                            if (displaySeconds != lastSeconds[0]) {
-                                effectHandler.playEffects(pinataConfig.timer.countdown.mid, location, true);
-                                lastSeconds[0] = displaySeconds;
-                            }
-                        },
-                        1L,
-                        1L);
-        activeCountdowns.put(scheduledTask, countdownId);
+        countdownHandler.start(location, pinataConfig, templateId, (loc, id) -> spawnPinata(loc, id));
     }
 
     public void activatePinata(LivingEntity pinata) {
@@ -117,7 +84,7 @@ public class PinataManager {
 
         activePinatas.put(pinata.getUniqueId(), pinata);
         behaviorHandler.apply(pinata, pinataConfig);
-        startUpdateTask(pinata);
+        bossBarManager.startTracking(pinata, pinataConfig);
         startTimeoutTask(pinata);
 
         if (pinataConfig.appearance.nameTag.enabled) {
@@ -168,8 +135,7 @@ public class PinataManager {
         timeoutTasks.values().forEach(ScheduledTask::cancel);
         timeoutTasks.clear();
 
-        activeCountdowns.keySet().forEach(ScheduledTask::cancel);
-        activeCountdowns.clear();
+        countdownHandler.cancelAll();
     }
 
     public void safelyRemovePinata(LivingEntity pinata) {
@@ -199,58 +165,6 @@ public class PinataManager {
         if (team != null && team.getName().startsWith("PA_")) {
             team.removeEntry(pinata.getUniqueId().toString());
         }
-    }
-
-    private void startUpdateTask(LivingEntity livingEntity) {
-        PinataConfiguration pinataConfig = getPinataConfig(livingEntity);
-
-        int currentHealth = livingEntity
-                .getPersistentDataContainer()
-                .getOrDefault(NamespacedKeys.PINATA_HEALTH, PersistentDataType.INTEGER, pinataConfig.health.baseHealth);
-        int maxHealthVal = livingEntity
-                .getPersistentDataContainer()
-                .getOrDefault(NamespacedKeys.PINATA_MAX_HEALTH, PersistentDataType.INTEGER, currentHealth);
-        int timeout = pinataConfig.timer.timeout.duration;
-
-        if (!bossBarManager.hasPinataBossBar(livingEntity.getUniqueId())) {
-            bossBarManager.createPinataBossBar(livingEntity, currentHealth, maxHealthVal, timeout, pinataConfig);
-        }
-
-        livingEntity
-                .getScheduler()
-                .runAtFixedRate(
-                        plugin,
-                        (task) -> {
-                            if (!livingEntity.isValid()) {
-                                if (livingEntity.isDead()) {
-                                    removeActiveBossBar(livingEntity);
-                                }
-                                task.cancel();
-                                return;
-                            }
-
-                            if (!bossBarManager.hasPinataBossBar(livingEntity.getUniqueId())) {
-                                task.cancel();
-                                return;
-                            }
-
-                            int currHealth = livingEntity
-                                    .getPersistentDataContainer()
-                                    .getOrDefault(NamespacedKeys.PINATA_HEALTH, PersistentDataType.INTEGER, 0);
-                            int maxHealth = livingEntity
-                                    .getPersistentDataContainer()
-                                    .getOrDefault(NamespacedKeys.PINATA_MAX_HEALTH, PersistentDataType.INTEGER, 0);
-
-                            bossBarManager.updatePinataBossBar(
-                                    livingEntity,
-                                    currHealth,
-                                    maxHealth,
-                                    NamespacedKeys.PINATA_SPAWN_TIME,
-                                    pinataConfig);
-                        },
-                        () -> {},
-                        20L,
-                        20L);
     }
 
     private void startTimeoutTask(LivingEntity pinata) {
@@ -340,5 +254,13 @@ public class PinataManager {
         if (pinata == null || !pinata.isValid()) return 0;
         return pinata.getPersistentDataContainer()
                 .getOrDefault(NamespacedKeys.PINATA_MAX_HEALTH, PersistentDataType.INTEGER, 0);
+    }
+
+    public HitCooldownHandler getHitCooldownHandler() {
+        return hitCooldownHandler;
+    }
+
+    public ReflexHandler getReflexHandler() {
+        return reflexHandler;
     }
 }

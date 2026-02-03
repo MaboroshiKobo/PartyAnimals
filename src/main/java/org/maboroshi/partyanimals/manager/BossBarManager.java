@@ -1,5 +1,6 @@
 package org.maboroshi.partyanimals.manager;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,11 +16,14 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
 import org.maboroshi.partyanimals.util.MessageUtils;
+import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class BossBarManager {
     private final MessageUtils messageUtils;
 
     private final Map<UUID, BossBar> pinataBossBars = new ConcurrentHashMap<>();
+    private final Map<UUID, ScheduledTask> bossBarTasks = new ConcurrentHashMap<>();
+
     private final Map<UUID, BossBar> countdownBossBars = new ConcurrentHashMap<>();
     private final Map<UUID, Location> countdownLocations = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> countdownGlobalSettings = new ConcurrentHashMap<>();
@@ -27,6 +31,43 @@ public class BossBarManager {
 
     public BossBarManager(PartyAnimals plugin) {
         this.messageUtils = plugin.getMessageUtils();
+    }
+
+    public void startTracking(LivingEntity pinata, PinataConfiguration config) {
+        if (bossBarTasks.containsKey(pinata.getUniqueId())) return;
+
+        int currentHealth = pinata.getPersistentDataContainer()
+                .getOrDefault(NamespacedKeys.PINATA_HEALTH, PersistentDataType.INTEGER, config.health.baseHealth);
+        int maxHealth = pinata.getPersistentDataContainer()
+                .getOrDefault(NamespacedKeys.PINATA_MAX_HEALTH, PersistentDataType.INTEGER, currentHealth);
+        int timeout = config.timer.timeout.duration;
+
+        createPinataBossBar(pinata, currentHealth, maxHealth, timeout, config);
+
+        ScheduledTask task = pinata.getScheduler()
+                .runAtFixedRate(
+                        PartyAnimals.getPlugin(),
+                        (t) -> {
+                            if (!pinata.isValid()) {
+                                if (pinata.isDead()) removePinataBossBar(pinata.getUniqueId());
+                                t.cancel();
+                                bossBarTasks.remove(pinata.getUniqueId());
+                                return;
+                            }
+
+                            if (!hasPinataBossBar(pinata.getUniqueId())) {
+                                t.cancel();
+                                bossBarTasks.remove(pinata.getUniqueId());
+                                return;
+                            }
+
+                            updatePinataBossBar(pinata, config);
+                        },
+                        () -> {},
+                        20L,
+                        20L);
+
+        bossBarTasks.put(pinata.getUniqueId(), task);
     }
 
     public UUID createCountdownBossBar(Location location, PinataConfiguration pinataConfig, int totalSeconds) {
@@ -101,6 +142,15 @@ public class BossBarManager {
         updateViewerList(bossBar, pinataConfig.health.bar.global, pinata.getWorld());
     }
 
+    private void updatePinataBossBar(LivingEntity pinata, PinataConfiguration config) {
+        int currentHealth = pinata.getPersistentDataContainer()
+                .getOrDefault(NamespacedKeys.PINATA_HEALTH, PersistentDataType.INTEGER, 0);
+        int maxHealth = pinata.getPersistentDataContainer()
+                .getOrDefault(NamespacedKeys.PINATA_MAX_HEALTH, PersistentDataType.INTEGER, 1);
+
+        updatePinataBossBar(pinata, currentHealth, maxHealth, NamespacedKeys.PINATA_SPAWN_TIME, config);
+    }
+
     public void updatePinataBossBar(
             LivingEntity pinata,
             int currentHealth,
@@ -140,6 +190,9 @@ public class BossBarManager {
     public void removePinataBossBar(UUID uuid) {
         BossBar bar = pinataBossBars.remove(uuid);
         hideBar(bar);
+
+        ScheduledTask task = bossBarTasks.remove(uuid);
+        if (task != null) task.cancel();
     }
 
     public Map<UUID, BossBar> getPinataBossBars() {
@@ -149,6 +202,9 @@ public class BossBarManager {
     public void removeAll() {
         pinataBossBars.values().forEach(this::hideBar);
         pinataBossBars.clear();
+
+        bossBarTasks.values().forEach(ScheduledTask::cancel);
+        bossBarTasks.clear();
 
         countdownBossBars.values().forEach(this::hideBar);
         countdownBossBars.clear();

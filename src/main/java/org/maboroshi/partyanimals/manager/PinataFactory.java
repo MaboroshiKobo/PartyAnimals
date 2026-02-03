@@ -20,7 +20,6 @@ import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfigurati
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataVariant;
 import org.maboroshi.partyanimals.handler.ActionHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
-import org.maboroshi.partyanimals.handler.NameTagHandler;
 import org.maboroshi.partyanimals.hook.BetterModelHook;
 import org.maboroshi.partyanimals.hook.ModelEngineHook;
 import org.maboroshi.partyanimals.util.Logger;
@@ -32,7 +31,6 @@ public class PinataFactory {
     private final ConfigManager config;
     private final Logger log;
     private final MessageUtils messageUtils;
-    private final NameTagHandler nameTagHandler;
     private final EffectHandler effectHandler;
     private final ActionHandler actionHandler;
     private final ModelEngineHook modelEngineHook;
@@ -43,7 +41,6 @@ public class PinataFactory {
         this.config = plugin.getConfiguration();
         this.log = plugin.getPluginLogger();
         this.messageUtils = plugin.getMessageUtils();
-        this.nameTagHandler = plugin.getNameTagHandler();
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
 
@@ -108,8 +105,6 @@ public class PinataFactory {
                 plugin.getServer().getPluginManager().callEvent(event);
 
                 if (!event.isCancelled()) {
-                    if (pinataConfig.appearance.nameTag.enabled) nameTagHandler.attach(livingEntity);
-
                     plugin.getPinataManager().activatePinata(livingEntity);
 
                     effectHandler.playEffects(pinataConfig.events.spawn.effects, location, false);
