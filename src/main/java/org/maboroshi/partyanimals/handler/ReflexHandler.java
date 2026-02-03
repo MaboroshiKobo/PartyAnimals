@@ -21,9 +21,9 @@ public class ReflexHandler {
     private final EffectHandler effectHandler;
     private final ActionHandler actionHandler;
 
-    public ReflexHandler(PartyAnimals plugin) {
+    public ReflexHandler(PartyAnimals plugin, PinataManager pinataManager) {
         this.plugin = plugin;
-        this.pinataManager = plugin.getPinataManager();
+        this.pinataManager = pinataManager;
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
     }

@@ -7,22 +7,23 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.ConfigManager;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
+import org.maboroshi.partyanimals.manager.PinataManager;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class HitCooldownHandler {
-    private final PartyAnimals plugin;
     private final ConfigManager config;
     private final MessageUtils messageUtils;
+    private final PinataManager pinataManager;
 
-    public HitCooldownHandler(PartyAnimals plugin) {
-        this.plugin = plugin;
+    public HitCooldownHandler(PartyAnimals plugin, PinataManager pinataManager) {
         this.config = plugin.getConfiguration();
         this.messageUtils = plugin.getMessageUtils();
+        this.pinataManager = pinataManager;
     }
 
     public boolean isOnCooldown(Player player, LivingEntity pinata) {
-        PinataConfiguration pinataConfig = plugin.getPinataManager().getPinataConfig(pinata);
+        PinataConfiguration pinataConfig = pinataManager.getPinataConfig(pinata);
         var cooldownConfig = pinataConfig.interaction.hitCooldown;
         double cooldownSeconds = cooldownConfig.duration;
         if (cooldownSeconds <= 0) return false;
@@ -44,7 +45,7 @@ public class HitCooldownHandler {
     }
 
     public void applyCooldown(Player player, LivingEntity pinata) {
-        PinataConfiguration pinataConfig = plugin.getPinataManager().getPinataConfig(pinata);
+        PinataConfiguration pinataConfig = pinataManager.getPinataConfig(pinata);
 
         var cooldownConfig = pinataConfig.interaction.hitCooldown;
         double cooldownSeconds = cooldownConfig.duration;
@@ -72,7 +73,7 @@ public class HitCooldownHandler {
         String displayType = pinataConfig.interaction.hitCooldown.notificationType;
 
         switch (displayType.toLowerCase()) {
-            case "action_bar", "actionbar" -> player.sendActionBar(component);
+            case "action_bar" -> player.sendActionBar(component);
             case "none" -> {}
             default -> player.sendMessage(component);
         }

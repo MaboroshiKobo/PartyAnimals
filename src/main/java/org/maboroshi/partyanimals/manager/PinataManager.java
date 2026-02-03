@@ -54,12 +54,12 @@ public class PinataManager {
         this.modelEngineHook = modelEngineHook;
         this.betterModelHook = betterModelHook;
 
-        this.pinataFactory = new PinataFactory(plugin, modelEngineHook, betterModelHook);
-        this.nameTagHandler = new NameTagHandler(plugin);
+        this.pinataFactory = new PinataFactory(plugin, this, modelEngineHook, betterModelHook);
+        this.nameTagHandler = new NameTagHandler(plugin, this);
         this.behaviorHandler = new BehaviorHandler(plugin);
         this.countdownHandler = new CountdownHandler(plugin);
-        this.hitCooldownHandler = new HitCooldownHandler(plugin);
-        this.reflexHandler = new ReflexHandler(plugin);
+        this.hitCooldownHandler = new HitCooldownHandler(plugin, this);
+        this.reflexHandler = new ReflexHandler(plugin, this);
     }
 
     public void spawnPinata(Location location, String templateId) {
@@ -144,6 +144,19 @@ public class PinataManager {
                 passenger.remove();
             }
         }
+
+        String nametagUuidStr =
+                pinata.getPersistentDataContainer().get(NamespacedKeys.PINATA_NAMETAG, PersistentDataType.STRING);
+        if (nametagUuidStr != null) {
+            try {
+                Entity nametag = Bukkit.getEntity(UUID.fromString(nametagUuidStr));
+                if (nametag != null && nametag.isValid()) {
+                    nametag.remove();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
         removeActiveBossBar(pinata);
         cleanupGlowTeam(pinata);
         if (pinata.isValid()) {

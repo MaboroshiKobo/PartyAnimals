@@ -31,16 +31,22 @@ public class PinataFactory {
     private final ConfigManager config;
     private final Logger log;
     private final MessageUtils messageUtils;
+    private final PinataManager pinataManager;
     private final EffectHandler effectHandler;
     private final ActionHandler actionHandler;
     private final ModelEngineHook modelEngineHook;
     private final BetterModelHook betterModelHook;
 
-    public PinataFactory(PartyAnimals plugin, ModelEngineHook modelEngineHook, BetterModelHook betterModelHook) {
+    public PinataFactory(
+            PartyAnimals plugin,
+            PinataManager pinataManager,
+            ModelEngineHook modelEngineHook,
+            BetterModelHook betterModelHook) {
         this.plugin = plugin;
         this.config = plugin.getConfiguration();
         this.log = plugin.getPluginLogger();
         this.messageUtils = plugin.getMessageUtils();
+        this.pinataManager = pinataManager;
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
 
@@ -90,7 +96,7 @@ public class PinataFactory {
         final PinataVariant selectedVariant = variant;
         final String selectedVariantId = variantId;
 
-        location.getWorld().spawn(spawnLocation, type.getEntityClass(), entity -> {
+        LivingEntity pinata = (LivingEntity) location.getWorld().spawn(spawnLocation, type.getEntityClass(), entity -> {
             if (entity instanceof LivingEntity livingEntity) {
                 configure(
                         livingEntity,
@@ -100,36 +106,43 @@ public class PinataFactory {
                         templateId,
                         finalHealth,
                         finalScale);
-
-                var event = new PinataSpawnEvent(livingEntity, spawnLocation);
-                plugin.getServer().getPluginManager().callEvent(event);
-
-                if (!event.isCancelled()) {
-                    plugin.getPinataManager().activatePinata(livingEntity);
-
-                    effectHandler.playEffects(pinataConfig.events.spawn.effects, location, false);
-                    actionHandler.process(null, pinataConfig.events.spawn.actions.values(), cmd -> {
-                        if (livingEntity instanceof LivingEntity livingPinata) {
-                            return messageUtils.parsePinataPlaceholders(livingPinata, cmd);
-                        } else {
-                            return cmd;
-                        }
-                    });
-                } else {
-                    log.debug("Pinata spawn event was cancelled by an API event; removing entity.");
-                    livingEntity.remove();
-                    return;
-                }
-
-                log.debug("Playing pinata spawn effect at location: "
-                        + location
-                        + " for entity: "
-                        + livingEntity.getType()
-                        + " (Template: "
-                        + templateId
-                        + ")");
             }
         });
+
+        if (pinata == null) return;
+
+        var event = new PinataSpawnEvent(pinata, spawnLocation);
+        plugin.getServer().getPluginManager().callEvent(event);
+
+        if (event.isCancelled()) {
+            log.debug("Pinata spawn event was cancelled by an API event; removing entity.");
+            pinata.remove();
+            return;
+        }
+
+        pinata.getScheduler()
+                .runDelayed(
+                        plugin,
+                        (task) -> {
+                            if (pinata.isValid()) {
+                                pinataManager.activatePinata(pinata);
+                            }
+                        },
+                        () -> {},
+                        10L);
+
+        effectHandler.playEffects(pinataConfig.events.spawn.effects, location, false);
+        actionHandler.process(null, pinataConfig.events.spawn.actions.values(), cmd -> {
+            return messageUtils.parsePinataPlaceholders(pinata, cmd);
+        });
+
+        log.debug("Playing pinata spawn effect at location: "
+                + location
+                + " for entity: "
+                + pinata.getType()
+                + " (Template: "
+                + templateId
+                + ")");
 
         String spawnMessage = config.getMessageConfig().pinata.events.spawnedNaturally;
         messageUtils.send(

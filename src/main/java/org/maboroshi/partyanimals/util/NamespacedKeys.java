@@ -8,6 +8,7 @@ public final class NamespacedKeys {
     public static NamespacedKey PINATA_TEMPLATE;
     public static NamespacedKey PINATA_VARIANT;
     public static NamespacedKey PINATA_NAME;
+    public static NamespacedKey PINATA_NAMETAG;
     public static NamespacedKey PINATA_HEALTH;
     public static NamespacedKey PINATA_MAX_HEALTH;
     public static NamespacedKey PINATA_SPAWN_TIME;
@@ -20,6 +21,7 @@ public final class NamespacedKeys {
         PINATA_TEMPLATE = new NamespacedKey(plugin, "pinata_template");
         PINATA_VARIANT = new NamespacedKey(plugin, "pinata_variant");
         PINATA_NAME = new NamespacedKey(plugin, "pinata_name");
+        PINATA_NAMETAG = new NamespacedKey(plugin, "pinata_nametag");
         PINATA_HEALTH = new NamespacedKey(plugin, "pinata_health");
         PINATA_MAX_HEALTH = new NamespacedKey(plugin, "pinata_max_health");
         PINATA_SPAWN_TIME = new NamespacedKey(plugin, "pinata_spawn_time");

@@ -2,8 +2,10 @@ package org.maboroshi.partyanimals.handler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -14,33 +16,52 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
+import org.maboroshi.partyanimals.manager.PinataManager;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class NameTagHandler {
     private final PartyAnimals plugin;
     private final MessageUtils messageUtils;
+    private final PinataManager pinataManager;
 
-    public NameTagHandler(PartyAnimals plugin) {
+    public NameTagHandler(PartyAnimals plugin, PinataManager pinataManager) {
         this.plugin = plugin;
         this.messageUtils = plugin.getMessageUtils();
+        this.pinataManager = pinataManager;
     }
 
     public void attach(LivingEntity pinata) {
+        String existingUuidStr =
+                pinata.getPersistentDataContainer().get(NamespacedKeys.PINATA_NAMETAG, PersistentDataType.STRING);
+
+        if (existingUuidStr != null) {
+            Entity existing = Bukkit.getEntity(UUID.fromString(existingUuidStr));
+            if (existing instanceof TextDisplay textDisplay && existing.isValid()) {
+                scheduleNameTagUpdate(pinata, textDisplay);
+                return;
+            }
+        }
+
         if (pinata.getPassengers() != null) {
             for (Entity passenger : pinata.getPassengers()) {
-                if (passenger instanceof TextDisplay) {
+                if (passenger instanceof TextDisplay display) {
+                    saveNametagUuid(pinata, display.getUniqueId());
+                    scheduleNameTagUpdate(pinata, display);
                     return;
                 }
             }
         }
 
-        PinataConfiguration pinataConfig = plugin.getPinataManager().getPinataConfig(pinata);
+        PinataConfiguration pinataConfig = pinataManager.getPinataConfig(pinata);
 
-        Location location = pinata.getLocation();
+        Location location = pinata.getLocation().add(0, pinata.getHeight(), 0);
         TextDisplay nameTag = (TextDisplay) location.getWorld().spawnEntity(location, EntityType.TEXT_DISPLAY);
 
         nameTag.setPersistent(false);
+
+        nameTag.setInterpolationDuration(3);
+        nameTag.setTeleportDuration(3);
 
         int totalSeconds = pinataConfig.timer.timeout.duration;
         String initialTimeStr = "∞";
@@ -92,57 +113,68 @@ public class NameTagHandler {
 
         nameTag.setTransformation(nameTransform);
 
+        saveNametagUuid(pinata, nameTag.getUniqueId());
+
         pinata.addPassenger(nameTag);
 
         scheduleNameTagUpdate(pinata, nameTag);
     }
 
-    public void scheduleNameTagUpdate(LivingEntity livingEntity, TextDisplay nameTag) {
-        PinataConfiguration pinataConfig = plugin.getPinataManager().getPinataConfig(livingEntity);
-        int interval = pinataConfig.appearance.nameTag.updateTextInterval;
-        if (interval <= 0) return;
+    private void saveNametagUuid(LivingEntity pinata, UUID uuid) {
+        pinata.getPersistentDataContainer()
+                .set(NamespacedKeys.PINATA_NAMETAG, PersistentDataType.STRING, uuid.toString());
+    }
 
-        long intervalTicks = (long) interval;
+    public void scheduleNameTagUpdate(LivingEntity livingEntity, TextDisplay nameTag) {
+        PinataConfiguration pinataConfig = pinataManager.getPinataConfig(livingEntity);
+        int updateInterval = Math.max(1, pinataConfig.appearance.nameTag.updateTextInterval);
+        final int[] tickCounter = {0};
+
         livingEntity
                 .getScheduler()
                 .runAtFixedRate(
                         plugin,
                         (task) -> {
-                            if (!nameTag.isValid() || !livingEntity.isValid()) {
+                            if (!nameTag.isValid() || !livingEntity.isValid() || livingEntity.isDead()) {
                                 task.cancel();
                                 if (nameTag.isValid()) nameTag.remove();
                                 return;
                             }
 
-                            String timeStr = "∞";
-                            if (pinataConfig.timer.timeout.enabled && pinataConfig.timer.timeout.duration > 0) {
-                                long spawnTime = livingEntity
-                                        .getPersistentDataContainer()
-                                        .getOrDefault(
-                                                NamespacedKeys.PINATA_SPAWN_TIME,
-                                                PersistentDataType.LONG,
-                                                System.currentTimeMillis());
-                                int totalTimeout = pinataConfig.timer.timeout.duration;
-                                int remaining = Math.max(
-                                        0, totalTimeout - (int) ((System.currentTimeMillis() - spawnTime) / 1000));
-                                timeStr = String.format("%02d:%02d", remaining / 60, remaining % 60);
+                            if (nameTag.getVehicle() == null) {
+                                Location target = livingEntity.getLocation().add(0, livingEntity.getHeight(), 0);
+                                nameTag.teleport(target);
                             }
 
-                            List<String> lines = pinataConfig.appearance.nameTag.text;
-                            List<Component> components = new ArrayList<>();
-                            if (lines != null) {
-                                for (String line : lines) {
-                                    components.add(messageUtils.parse(
-                                            null,
-                                            line,
-                                            messageUtils.getPinataTags(livingEntity),
-                                            messageUtils.tag("timer", timeStr)));
-                                }
+                            if (tickCounter[0]++ % updateInterval == 0) {
+                                updateText(livingEntity, nameTag, pinataConfig);
                             }
-                            nameTag.text(Component.join(JoinConfiguration.newlines(), components));
                         },
                         () -> {},
-                        intervalTicks,
-                        intervalTicks);
+                        1L,
+                        1L);
+    }
+
+    private void updateText(LivingEntity livingEntity, TextDisplay nameTag, PinataConfiguration pinataConfig) {
+        String timeStr = "∞";
+        if (pinataConfig.timer.timeout.enabled && pinataConfig.timer.timeout.duration > 0) {
+            long spawnTime = livingEntity
+                    .getPersistentDataContainer()
+                    .getOrDefault(
+                            NamespacedKeys.PINATA_SPAWN_TIME, PersistentDataType.LONG, System.currentTimeMillis());
+            int totalTimeout = pinataConfig.timer.timeout.duration;
+            int remaining = Math.max(0, totalTimeout - (int) ((System.currentTimeMillis() - spawnTime) / 1000));
+            timeStr = String.format("%02d:%02d", remaining / 60, remaining % 60);
+        }
+
+        List<String> lines = pinataConfig.appearance.nameTag.text;
+        List<Component> components = new ArrayList<>();
+        if (lines != null) {
+            for (String line : lines) {
+                components.add(messageUtils.parse(
+                        null, line, messageUtils.getPinataTags(livingEntity), messageUtils.tag("timer", timeStr)));
+            }
+        }
+        nameTag.text(Component.join(JoinConfiguration.newlines(), components));
     }
 }
