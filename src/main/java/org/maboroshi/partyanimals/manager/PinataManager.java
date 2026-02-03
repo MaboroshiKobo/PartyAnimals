@@ -24,6 +24,7 @@ import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.api.event.pinata.PinataSpawnEvent;
 import org.maboroshi.partyanimals.behavior.PinataFleeGoal;
 import org.maboroshi.partyanimals.behavior.PinataFloatGoal;
+import org.maboroshi.partyanimals.behavior.PinataFreezeGoal;
 import org.maboroshi.partyanimals.behavior.PinataRoamGoal;
 import org.maboroshi.partyanimals.config.ConfigManager;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
@@ -382,7 +383,6 @@ public class PinataManager {
 
     public void applyPinataGoal(LivingEntity pinata) {
         PinataConfiguration pinataConfig = getPinataConfig(pinata);
-
         if (!pinataConfig.behavior.enabled) {
             pinata.setAI(false);
             return;
@@ -391,25 +391,25 @@ public class PinataManager {
         if (pinata instanceof Mob mob) {
             Bukkit.getMobGoals().removeAllGoals(mob);
             Bukkit.getMobGoals().addGoal(mob, 0, new PinataFloatGoal(plugin, mob));
-
             String rawType = pinataConfig.behavior.movement.type;
-            String activeMovementType = (rawType != null) ? rawType.toUpperCase() : "BOTH";
-
-            if (!java.util.List.of("FLEE", "ROAM", "NONE", "BOTH").contains(activeMovementType)) {
-                plugin.getPluginLogger()
-                        .warn("Unknown movement type '" + activeMovementType + "' for pinata "
-                                + mob.getUniqueId()
-                                + ". Defaulting to BOTH.");
-                activeMovementType = "BOTH";
+            String mode = (rawType != null) ? rawType.toUpperCase() : "ACTIVE";
+            if (!List.of("ACTIVE", "PASSIVE", "STATIONARY").contains(mode)) {
+                log.warn("Unknown movement type '" + mode + "' for pinata " + mob.getUniqueId()
+                        + ". Defaulting to ACTIVE.");
+                mode = "ACTIVE";
             }
-
-            switch (activeMovementType) {
-                case "FLEE" -> Bukkit.getMobGoals().addGoal(mob, 2, new PinataFleeGoal(plugin, mob));
-                case "ROAM" -> Bukkit.getMobGoals().addGoal(mob, 2, new PinataRoamGoal(plugin, mob));
-                case "NONE" -> {}
-                case "BOTH" -> {
-                    Bukkit.getMobGoals().addGoal(mob, 2, new PinataFleeGoal(plugin, mob));
+            switch (mode) {
+                case "ACTIVE" -> {
+                    Bukkit.getMobGoals().addGoal(mob, 1, new PinataFleeGoal(plugin, mob));
+                    Bukkit.getMobGoals().addGoal(mob, 2, new PinataFreezeGoal(plugin, mob));
                     Bukkit.getMobGoals().addGoal(mob, 3, new PinataRoamGoal(plugin, mob));
+                }
+                case "PASSIVE" -> {
+                    Bukkit.getMobGoals().addGoal(mob, 2, new PinataFreezeGoal(plugin, mob));
+                    Bukkit.getMobGoals().addGoal(mob, 3, new PinataRoamGoal(plugin, mob));
+                }
+                case "STATIONARY" -> {
+                    Bukkit.getMobGoals().addGoal(mob, 2, new PinataFreezeGoal(plugin, mob));
                 }
             }
         }

@@ -140,12 +140,12 @@ public final class PinataConfig {
         @Comment("If true, all players see the bar. If false, only those near the pinata.")
         public boolean global = true;
 
-        @Comment({"Bar color.", "See: https://jd.advntr.dev/api/4.25.0/net/kyori/adventure/bossbar/BossBar.Color.html"})
+        @Comment({"Bar color.", "See: https://jd.advntr.dev/api/4.26.1/net/kyori/adventure/bossbar/BossBar.Color.html"})
         public String color = "PURPLE";
 
         @Comment({
             "Bar overlay.",
-            "See: https://jd.advntr.dev/api/4.25.0/net/kyori/adventure/bossbar/BossBar.Overlay.html"
+            "See: https://jd.advntr.dev/api/4.26.1/net/kyori/adventure/bossbar/BossBar.Overlay.html"
         })
         public BossBar.Overlay overlay = BossBar.Overlay.PROGRESS;
 
@@ -223,7 +223,7 @@ public final class PinataConfig {
         public double knockbackResistance = 1.0;
 
         @Comment("Movement logic settings.")
-        public MovementSettings movement = new MovementSettings("FLEE", new PathfindingRange(15.0, 5.0, 15.0), 1.75);
+        public MovementSettings movement = new MovementSettings();
 
         @Comment("Defensive reactions to being attacked or stuck.")
         public ReflexSettings reflexes = new ReflexSettings();
@@ -231,22 +231,47 @@ public final class PinataConfig {
 
     @Configuration
     public static class MovementSettings {
-        @Comment({"Active movement type.", "Options: ROAM, FLEE, BOTH, NONE"})
-        public String type = "FLEE";
+        @Comment({
+            "AI Movement Mode.",
+            "1. ACTIVE - Wanders, looks at players, and flees when attacked. (Combines Roam, Flee, and Freeze behaviors)",
+            "2. PASSIVE - Wanders and looks at players. (Combines Roam and Freeze behaviors)",
+            "3. STATIONARY - Never moves, but will look at nearby players. (Freeze behavior only)",
+        })
+        public String type = "ACTIVE";
 
-        @Comment("Radius for random movement.")
+        public RoamSettings roam = new RoamSettings();
+        public FleeSettings flee = new FleeSettings();
+        public FreezeSettings freeze = new FreezeSettings();
+    }
+
+    @Configuration
+    public static class RoamSettings {
+        @Comment("Speed when wandering peacefully.")
+        public double speed = 1.5;
+
+        @Comment("Chance to start wandering each tick while idle.")
+        public int chance = 2;
+
+        @Comment("Maximum distance from spawn point to wander.")
         public PathfindingRange radius = new PathfindingRange(15.0, 5.0, 15.0);
+    }
 
-        @Comment("Movement speed multiplier.")
-        public double speed = 1.75;
+    @Configuration
+    public static class FleeSettings {
+        @Comment("Speed when sprinting away from danger.")
+        public double speed = 1.6;
 
-        public MovementSettings() {}
+        @Comment("Distance in blocks a player must be within to trigger fleeing.")
+        public double triggerRadius = 3.0;
 
-        public MovementSettings(String type, PathfindingRange radius, double speed) {
-            this.type = type;
-            this.radius = radius;
-            this.speed = speed;
-        }
+        @Comment("Distance in blocks away from player to consider 'safe' and stop running.")
+        public double safetyRadius = 15.0;
+    }
+
+    @Configuration
+    public static class FreezeSettings {
+        @Comment("Radius in blocks to detect and look at nearby players.")
+        public double radius = 15.0;
     }
 
     @Configuration
