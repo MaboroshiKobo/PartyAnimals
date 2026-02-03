@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
@@ -19,10 +20,10 @@ public class BossBarManager {
     private final MessageUtils messageUtils;
 
     private final Map<UUID, BossBar> pinataBossBars = new ConcurrentHashMap<>();
-
     private final Map<UUID, BossBar> countdownBossBars = new ConcurrentHashMap<>();
     private final Map<UUID, Location> countdownLocations = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> countdownGlobalSettings = new ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> countdownRainbowSettings = new ConcurrentHashMap<>();
 
     public BossBarManager(PartyAnimals plugin) {
         this.messageUtils = plugin.getMessageUtils();
@@ -31,6 +32,11 @@ public class BossBarManager {
     public UUID createCountdownBossBar(Location location, PinataConfiguration pinataConfig, int totalSeconds) {
         UUID uuid = UUID.randomUUID();
         var barSettings = pinataConfig.timer.countdown.bar;
+
+        if (!barSettings.enabled) {
+            return uuid;
+        }
+
         boolean isRainbow = barSettings.color.equalsIgnoreCase("RAINBOW");
 
         BossBar bossBar = BossBar.bossBar(
@@ -39,12 +45,12 @@ public class BossBarManager {
                 isRainbow ? BossBar.Color.PINK : BossBar.Color.valueOf(barSettings.color),
                 barSettings.overlay);
 
-        if (barSettings.enabled) {
-            countdownBossBars.put(uuid, bossBar);
-            countdownLocations.put(uuid, location);
-            countdownGlobalSettings.put(uuid, barSettings.global);
-            updateViewerList(bossBar, barSettings.global, location.getWorld().getName());
-        }
+        countdownBossBars.put(uuid, bossBar);
+        countdownLocations.put(uuid, location);
+        countdownGlobalSettings.put(uuid, barSettings.global);
+        countdownRainbowSettings.put(uuid, isRainbow);
+
+        updateViewerList(bossBar, barSettings.global, location.getWorld());
 
         return uuid;
     }
@@ -61,17 +67,14 @@ public class BossBarManager {
         bossBar.name(
                 messageUtils.parse(null, countdownBarSettings.text, messageUtils.tag("countdown", remainingSeconds)));
 
-        if (countdownBarSettings.color.equalsIgnoreCase("rainbow") && tickCounter % 5 == 0) {
+        if (countdownRainbowSettings.getOrDefault(uuid, false) && tickCounter % 5 == 0) {
             int next = (bossBar.color().ordinal() + 1) % BossBar.Color.values().length;
             bossBar.color(BossBar.Color.values()[next]);
         }
 
         Location location = countdownLocations.get(uuid);
         if (location != null) {
-            updateViewerList(
-                    bossBar,
-                    countdownGlobalSettings.get(uuid),
-                    location.getWorld().getName());
+            updateViewerList(bossBar, countdownGlobalSettings.get(uuid), location.getWorld());
         }
     }
 
@@ -79,26 +82,23 @@ public class BossBarManager {
         BossBar bar = countdownBossBars.remove(uuid);
         countdownLocations.remove(uuid);
         countdownGlobalSettings.remove(uuid);
+        countdownRainbowSettings.remove(uuid);
 
-        if (bar != null) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                p.hideBossBar(bar);
-            }
-        }
+        hideBar(bar);
     }
 
     public void createPinataBossBar(
             LivingEntity pinata, int health, int maxHealth, int timeout, PinataConfiguration pinataConfig) {
-        String rawMsg = pinataConfig.health.bar.text;
+        if (!pinataConfig.health.bar.enabled) return;
 
+        String rawMsg = pinataConfig.health.bar.text;
         Component barName = messageUtils.parse(null, rawMsg, messageUtils.getPinataTags(pinata));
 
         BossBar bossBar = BossBar.bossBar(
                 barName, 1.0f, BossBar.Color.valueOf(pinataConfig.health.bar.color), pinataConfig.health.bar.overlay);
 
         pinataBossBars.put(pinata.getUniqueId(), bossBar);
-        updateViewerList(
-                bossBar, pinataConfig.health.bar.global, pinata.getWorld().getName());
+        updateViewerList(bossBar, pinataConfig.health.bar.global, pinata.getWorld());
     }
 
     public void updatePinataBossBar(
@@ -130,8 +130,7 @@ public class BossBarManager {
                 messageUtils.getPinataTags(pinata),
                 messageUtils.tag("timer", timeStr)));
 
-        updateViewerList(
-                bossBar, pinataConfig.health.bar.global, pinata.getWorld().getName());
+        updateViewerList(bossBar, pinataConfig.health.bar.global, pinata.getWorld());
     }
 
     public boolean hasPinataBossBar(UUID uuid) {
@@ -140,11 +139,7 @@ public class BossBarManager {
 
     public void removePinataBossBar(UUID uuid) {
         BossBar bar = pinataBossBars.remove(uuid);
-        if (bar != null) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                p.hideBossBar(bar);
-            }
-        }
+        hideBar(bar);
     }
 
     public Map<UUID, BossBar> getPinataBossBars() {
@@ -152,13 +147,14 @@ public class BossBarManager {
     }
 
     public void removeAll() {
-        pinataBossBars.values().forEach(bar -> Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(bar)));
+        pinataBossBars.values().forEach(this::hideBar);
         pinataBossBars.clear();
 
-        countdownBossBars.values().forEach(bar -> Bukkit.getOnlinePlayers().forEach(p -> p.hideBossBar(bar)));
+        countdownBossBars.values().forEach(this::hideBar);
         countdownBossBars.clear();
         countdownLocations.clear();
         countdownGlobalSettings.clear();
+        countdownRainbowSettings.clear();
     }
 
     public void handleJoin(Player player) {
@@ -181,21 +177,24 @@ public class BossBarManager {
         });
     }
 
-    private void updateViewerList(BossBar bar, boolean global, String worldName) {
+    private void updateViewerList(BossBar bar, boolean global, World world) {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            boolean inSameWorld = p.getWorld().getName().equals(worldName);
-            if (global || inSameWorld) {
-                p.showBossBar(bar);
-            } else {
+            boolean inSameWorld = p.getWorld().equals(world);
+            if (global || inSameWorld) p.showBossBar(bar);
+            else p.hideBossBar(bar);
+        }
+    }
+
+    private void hideBar(BossBar bar) {
+        if (bar != null) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
                 p.hideBossBar(bar);
             }
         }
     }
 
     private String formatTime(int seconds, PinataConfiguration pinataConfig) {
-        if (!pinataConfig.timer.timeout.enabled || seconds <= 0) {
-            return "∞";
-        }
+        if (!pinataConfig.timer.timeout.enabled || seconds <= 0) return "∞";
         return String.format("%02d:%02d", seconds / 60, seconds % 60);
     }
 }
