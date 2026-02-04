@@ -8,24 +8,30 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
+import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataVariant;
+import org.maboroshi.partyanimals.hook.ModelEngineHook;
 import org.maboroshi.partyanimals.manager.PinataManager;
+import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class ReflexHandler {
     private final PartyAnimals plugin;
     private final PinataManager pinataManager;
     private final EffectHandler effectHandler;
     private final ActionHandler actionHandler;
+    private final ModelEngineHook modelEngineHook;
 
-    public ReflexHandler(PartyAnimals plugin, PinataManager pinataManager) {
+    public ReflexHandler(PartyAnimals plugin, PinataManager pinataManager, ModelEngineHook modelEngineHook) {
         this.plugin = plugin;
         this.pinataManager = pinataManager;
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
+        this.modelEngineHook = modelEngineHook;
     }
 
     public void onDamage(LivingEntity pinata, Player attacker, PinataConfiguration config) {
@@ -79,26 +85,36 @@ public class ReflexHandler {
             } else if (morph.type.equalsIgnoreCase("SCALE")) {
                 var scaleAttribute = pinata.getAttribute(Attribute.SCALE);
                 if (scaleAttribute != null) {
-                    var originalScale = scaleAttribute.getBaseValue();
-                    double min = Math.min(morph.scale.min, morph.scale.max);
-                    double max = Math.max(morph.scale.min, morph.scale.max);
-                    double newScale =
-                            (min == max) ? min : ThreadLocalRandom.current().nextDouble(min, max);
-                    scaleAttribute.setBaseValue(newScale);
+                    double minMorph = Math.min(morph.scale.min, morph.scale.max);
+                    double maxMorph = Math.max(morph.scale.min, morph.scale.max);
+                    double morphScale = (minMorph == maxMorph)
+                            ? minMorph
+                            : ThreadLocalRandom.current().nextDouble(minMorph, maxMorph);
+
+                    scaleAttribute.setBaseValue(morphScale);
+                    if (modelEngineHook != null) modelEngineHook.setScale(pinata, morphScale);
+
                     pinata.getScheduler()
                             .runDelayed(
                                     plugin,
                                     (task) -> {
                                         if (pinata.isValid()) {
+                                            String variantId = pinata.getPersistentDataContainer()
+                                                    .get(NamespacedKeys.PINATA_VARIANT, PersistentDataType.STRING);
+                                            PinataVariant variant = config.appearance.variants.get(variantId);
+
+                                            double originalScale = (variant != null) ? variant.scale.max : 1.0;
+
                                             scaleAttribute.setBaseValue(originalScale);
+                                            if (modelEngineHook != null)
+                                                modelEngineHook.setScale(pinata, originalScale);
                                         }
                                     },
                                     null,
                                     morph.duration);
                 }
-            } else {
-                plugin.getPluginLogger().warn("Unknown morph type: " + morph.type);
             }
+
             if (!morph.actions.isEmpty()) {
                 actionHandler.process(attacker, morph.actions.values(), cmd -> plugin.getMessageUtils()
                         .parsePinataPlaceholders(pinata, cmd));

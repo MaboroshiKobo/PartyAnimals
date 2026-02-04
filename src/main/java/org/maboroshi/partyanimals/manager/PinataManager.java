@@ -55,11 +55,11 @@ public class PinataManager {
         this.betterModelHook = betterModelHook;
 
         this.pinataFactory = new PinataFactory(plugin, this, modelEngineHook, betterModelHook);
-        this.nameTagHandler = new NameTagHandler(plugin, this);
+        this.nameTagHandler = new NameTagHandler(plugin, this, modelEngineHook);
         this.behaviorHandler = new BehaviorHandler(plugin);
         this.countdownHandler = new CountdownHandler(plugin);
         this.hitCooldownHandler = new HitCooldownHandler(plugin, this);
-        this.reflexHandler = new ReflexHandler(plugin, this);
+        this.reflexHandler = new ReflexHandler(plugin, this, modelEngineHook);
     }
 
     public void spawnPinata(Location location, String templateId) {

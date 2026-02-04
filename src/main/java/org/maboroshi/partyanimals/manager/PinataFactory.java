@@ -55,6 +55,7 @@ public class PinataFactory {
     }
 
     public void spawn(Location location, String templateId) {
+        log.debug("Attempting to spawn pinata with template: " + templateId + " at " + location);
         PinataConfiguration pinataConfig = config.getPinataConfig(templateId);
         if (pinataConfig == null) {
             log.error("Cannot spawn pinata! Template '" + templateId + "' not found.");
@@ -64,6 +65,7 @@ public class PinataFactory {
         Map.Entry<String, PinataVariant> variantEntry = pick(pinataConfig.appearance.variants);
         String variantId = variantEntry.getKey();
         PinataVariant variant = variantEntry.getValue();
+        log.debug("Selected variant: " + variantId);
 
         String chosenType;
         if (variant.types == null || variant.types.isEmpty()) {
@@ -109,7 +111,10 @@ public class PinataFactory {
             }
         });
 
-        if (pinata == null) return;
+        if (pinata == null) {
+            log.warn("Failed to spawn pinata entity.");
+            return;
+        }
 
         var event = new PinataSpawnEvent(pinata, spawnLocation);
         plugin.getServer().getPluginManager().callEvent(event);
@@ -136,13 +141,7 @@ public class PinataFactory {
             return messageUtils.parsePinataPlaceholders(pinata, cmd);
         });
 
-        log.debug("Playing pinata spawn effect at location: "
-                + location
-                + " for entity: "
-                + pinata.getType()
-                + " (Template: "
-                + templateId
-                + ")");
+        log.debug("Pinata spawned successfully. Entity ID: " + pinata.getEntityId() + " UUID: " + pinata.getUniqueId());
 
         String spawnMessage = config.getMessageConfig().pinata.events.spawnedNaturally;
         messageUtils.send(
@@ -161,6 +160,8 @@ public class PinataFactory {
             String templateId,
             int health,
             double scale) {
+        log.debug("Configuring entity " + livingEntity.getUniqueId() + " for template " + templateId);
+
         livingEntity
                 .getPersistentDataContainer()
                 .set(NamespacedKeys.PINATA_TEMPLATE, PersistentDataType.STRING, templateId);
@@ -178,7 +179,6 @@ public class PinataFactory {
         livingEntity
                 .getPersistentDataContainer()
                 .set(NamespacedKeys.PINATA_SPAWN_TIME, PersistentDataType.LONG, System.currentTimeMillis());
-        livingEntity.getAttribute(Attribute.SCALE).setBaseValue(scale);
         livingEntity.setMaximumNoDamageTicks(0);
         livingEntity.setSilent(true);
         livingEntity.setInvulnerable(false);
@@ -188,26 +188,37 @@ public class PinataFactory {
 
         boolean modelApplied = false;
         if (variant.model != null && !variant.model.isEmpty()) {
+            log.debug("Applying custom model: " + variant.model);
             if (modelEngineHook != null && modelEngineHook.applyModel(livingEntity, variant.model)) {
+                log.debug("ModelEngine model applied.");
                 modelApplied = true;
+                modelEngineHook.setScale(livingEntity, scale);
             } else if (betterModelHook != null && betterModelHook.applyModel(livingEntity, variant.model)) {
+                log.debug("BetterModel model applied.");
                 modelApplied = true;
+                livingEntity.getAttribute(Attribute.SCALE).setBaseValue(scale);
+            } else {
+                log.warn("Failed to apply model " + variant.model + " (Hooks missing or returned false)");
             }
+        }
+
+        if (!modelApplied) {
+            log.debug("No custom model applied. Setting vanilla scale: " + scale);
+            livingEntity.getAttribute(Attribute.SCALE).setBaseValue(scale);
         }
 
         livingEntity.setInvisible(modelApplied);
 
         if (livingEntity instanceof Mob mob) mob.setTarget(null);
 
-        if (!modelApplied) {
-            livingEntity.setGlowing(pinataConfig.appearance.glowing);
-        } else {
-            livingEntity.setGlowing(false);
-        }
+        boolean shouldGlow = pinataConfig.appearance.glowing;
+        log.debug("Glow enabled: " + shouldGlow);
 
-        if (pinataConfig.appearance.glowing) {
+        if (shouldGlow) {
             String colorName = pinataConfig.appearance.glowColor;
             NamedTextColor glowColor = NamedTextColor.NAMES.value(colorName.toLowerCase());
+            log.debug("Glow color resolved: " + glowColor);
+
             if (glowColor != null) {
                 Scoreboard mainBoard = Bukkit.getScoreboardManager().getMainScoreboard();
                 String teamName = "PA_" + glowColor.toString().toUpperCase();
@@ -215,6 +226,19 @@ public class PinataFactory {
                 if (team == null) team = mainBoard.registerNewTeam(teamName);
                 team.color(glowColor);
                 team.addEntry(livingEntity.getUniqueId().toString());
+                log.debug("Added entity to team: " + teamName);
+
+                if (modelApplied) {
+                    livingEntity.setGlowing(false);
+                    if (modelEngineHook != null) {
+                        log.debug("Delegating glow to ModelEngine hook.");
+                        modelEngineHook.setGlowing(livingEntity, true, glowColor);
+                    }
+                } else {
+                    livingEntity.setGlowing(true);
+                }
+            } else {
+                log.warn("Invalid glow color name: " + colorName);
             }
         }
 

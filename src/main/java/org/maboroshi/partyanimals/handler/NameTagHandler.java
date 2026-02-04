@@ -16,6 +16,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
+import org.maboroshi.partyanimals.hook.ModelEngineHook;
 import org.maboroshi.partyanimals.manager.PinataManager;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
@@ -24,11 +25,13 @@ public class NameTagHandler {
     private final PartyAnimals plugin;
     private final MessageUtils messageUtils;
     private final PinataManager pinataManager;
+    private final ModelEngineHook modelEngineHook;
 
-    public NameTagHandler(PartyAnimals plugin, PinataManager pinataManager) {
+    public NameTagHandler(PartyAnimals plugin, PinataManager pinataManager, ModelEngineHook modelEngineHook) {
         this.plugin = plugin;
         this.messageUtils = plugin.getMessageUtils();
         this.pinataManager = pinataManager;
+        this.modelEngineHook = modelEngineHook;
     }
 
     public void attach(LivingEntity pinata) {
@@ -115,7 +118,13 @@ public class NameTagHandler {
 
         saveNametagUuid(pinata, nameTag.getUniqueId());
 
-        pinata.addPassenger(nameTag);
+        if (modelEngineHook != null) {
+            modelEngineHook.addPassenger(pinata, nameTag, "p_mount");
+        }
+
+        if (nameTag.getVehicle() == null) {
+            pinata.addPassenger(nameTag);
+        }
 
         scheduleNameTagUpdate(pinata, nameTag);
     }
