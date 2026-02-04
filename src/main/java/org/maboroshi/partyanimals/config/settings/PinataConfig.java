@@ -63,7 +63,10 @@ public final class PinataConfig {
         @Comment("Show glowing outline.")
         public boolean glowing = true;
 
-        @Comment("Color of the glowing outline.")
+        @Comment({
+            "Color of the glowing outline.",
+            "https://jd.advntr.dev/api/latest/net/kyori/adventure/text/format/NamedTextColor.html"
+        })
         public String glowColor = "LIGHT_PURPLE";
 
         public Appearance() {
@@ -77,7 +80,7 @@ public final class PinataConfig {
     public static class PinataVariant {
         @Comment({
             "Entity type to use for the pinata.",
-            "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/entity/EntityType.html"
+            "See: https://jd.papermc.io/paper/latest/org/bukkit/entity/EntityType.html"
         })
         public List<String> types = List.of("LLAMA", "MULE");
 
@@ -141,12 +144,12 @@ public final class PinataConfig {
         @Comment("If true, all players see the bar. If false, only those near the pinata.")
         public boolean global = true;
 
-        @Comment({"Bar color.", "See: https://jd.advntr.dev/api/4.26.1/net/kyori/adventure/bossbar/BossBar.Color.html"})
+        @Comment({"Bar color.", "See: https://jd.advntr.dev/api/latest/net/kyori/adventure/bossbar/BossBar.Color.html"})
         public String color = "PURPLE";
 
         @Comment({
             "Bar overlay.",
-            "See: https://jd.advntr.dev/api/4.26.1/net/kyori/adventure/bossbar/BossBar.Overlay.html"
+            "See: https://jd.advntr.dev/api/latest/net/kyori/adventure/bossbar/BossBar.Overlay.html"
         })
         public BossBar.Overlay overlay = BossBar.Overlay.PROGRESS;
 
@@ -180,7 +183,7 @@ public final class PinataConfig {
     public static class ItemWhitelist {
         public boolean enabled = false;
 
-        @Comment({"List of allowed material names.", "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/Material.html"
+        @Comment({"List of allowed material names.", "See: https://jd.papermc.io/paper/latest/org/bukkit/Material.html"
         })
         public Set<String> materialNames = Set.of("STICK", "BLAZE_ROD");
 
@@ -197,7 +200,7 @@ public final class PinataConfig {
         public boolean enabled = true;
 
         @Comment("Cooldown duration in seconds.")
-        public double duration = 0.75;
+        public double duration = 1.0;
 
         @Comment("If true, the cooldown is global (all players share the timer).")
         public boolean global = false;
@@ -234,21 +237,39 @@ public final class PinataConfig {
     public static class MovementSettings {
         @Comment({
             "AI Movement Mode.",
-            "1. ACTIVE - Wanders, looks at players, and flees when attacked. (Combines Roam, Flee, and Freeze behaviors)",
-            "2. PASSIVE - Wanders and looks at players. (Combines Roam and Freeze behaviors)",
-            "3. STATIONARY - Never moves, but will look at nearby players. (Freeze behavior only)",
+            "1. ACTIVE - Wanders, looks at players, and flees when attacked.",
+            "2. PASSIVE - Wanders and looks at players.",
+            "3. STATIONARY - Never moves, but will look at nearby players.",
         })
         public String type = "ACTIVE";
 
         public RoamSettings roam = new RoamSettings();
         public FleeSettings flee = new FleeSettings();
         public FreezeSettings freeze = new FreezeSettings();
+
+        @PostProcess
+        private void migrateLegacyValues() {
+            if (type == null) return;
+
+            switch (type.toUpperCase()) {
+                case "BOTH":
+                case "FLEE":
+                    this.type = "ACTIVE";
+                    break;
+                case "ROAM":
+                    this.type = "PASSIVE";
+                    break;
+                case "NONE":
+                    this.type = "STATIONARY";
+                    break;
+            }
+        }
     }
 
     @Configuration
     public static class RoamSettings {
         @Comment("Speed when wandering peacefully.")
-        public double speed = 1.5;
+        public double speed = 1.25;
 
         @Comment("Chance to start wandering each tick while idle.")
         public int chance = 2;
@@ -260,12 +281,12 @@ public final class PinataConfig {
     @Configuration
     public static class FleeSettings {
         @Comment("Speed when sprinting away from danger.")
-        public double speed = 1.6;
+        public double speed = 1.5;
 
         @Comment("Distance in blocks a player must be within to trigger fleeing.")
         public double triggerRadius = 3.0;
 
-        @Comment("Distance in blocks away from player to consider 'safe' and stop running.")
+        @Comment("Distance in blocks away from player to consider safe and stop running.")
         public double safetyRadius = 15.0;
     }
 

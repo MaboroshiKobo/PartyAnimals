@@ -20,7 +20,7 @@ public class NameTagSettings {
     public List<String> text = new ArrayList<>(
             List.of("<pinata_name>", "<pinata_health> <gray>/</gray> <pinata_max_health> <red>❤</red>", "<timer>"));
 
-    @Comment("Text alignment. Options: LEFT, RIGHT, CENTER.")
+    @Comment({"Text alignment", "Options: LEFT, RIGHT, CENTER."})
     public TextDisplay.TextAlignment textAlignment = TextDisplay.TextAlignment.CENTER;
 
     @Comment("Background settings.")
@@ -29,13 +29,13 @@ public class NameTagSettings {
     @Comment("Shadow settings.")
     public TextShadowSettings shadow = new TextShadowSettings();
 
-    @Comment("How the text rotates relative to the player. Options: FIXED, VERTICAL, HORIZONTAL, CENTER.")
+    @Comment({"How the text rotates relative to the player.", "Options: FIXED, VERTICAL, HORIZONTAL, CENTER."})
     public Display.Billboard billboard = Display.Billboard.VERTICAL;
 
     @Comment("Visible through walls.")
     public boolean seeThrough = true;
 
-    @Comment("How often to update placeholders (in ticks). Set to -1 to disable updates.")
+    @Comment("How often to update placeholders in ticks. Set to -1 to disable updates.")
     public int updateTextInterval = 20;
 
     @Comment("Position and Scale offsets relative to the Pinata.")
