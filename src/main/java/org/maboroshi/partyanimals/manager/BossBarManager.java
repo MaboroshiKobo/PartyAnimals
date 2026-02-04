@@ -132,8 +132,19 @@ public class BossBarManager {
             LivingEntity pinata, int health, int maxHealth, int timeout, PinataConfiguration pinataConfig) {
         if (!pinataConfig.health.bar.enabled) return;
 
+        String timeStr = "∞";
+        if (pinataConfig.timer.timeout.enabled) {
+            long spawnTime = pinata.getPersistentDataContainer()
+                    .getOrDefault(
+                            NamespacedKeys.PINATA_SPAWN_TIME, PersistentDataType.LONG, System.currentTimeMillis());
+            int totalTimeout = pinataConfig.timer.timeout.duration;
+            int remaining = Math.max(0, totalTimeout - (int) ((System.currentTimeMillis() - spawnTime) / 1000));
+            timeStr = formatTime(remaining, pinataConfig);
+        }
+
         String rawMsg = pinataConfig.health.bar.text;
-        Component barName = messageUtils.parse(null, rawMsg, messageUtils.getPinataTags(pinata));
+        Component barName = messageUtils.parse(
+                null, rawMsg, messageUtils.getPinataTags(pinata), messageUtils.tag("timer", timeStr));
 
         BossBar bossBar = BossBar.bossBar(
                 barName, 1.0f, BossBar.Color.valueOf(pinataConfig.health.bar.color), pinataConfig.health.bar.overlay);
