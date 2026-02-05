@@ -1,34 +1,33 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/partyanimals/partyanimals.avif" width="180" alt="PartyAnimals Logo">
   <h1>PartyAnimals</h1>
-  <p>The modular player engagement and voting solution for Paper servers</p>
+  <p>A modular player engagement plugin for Paper servers designed to reward your community through voting and interactive pinatas.</p>
 </div>
-
-**PartyAnimals** is a modular **player engagement plugin** for **Paper** servers designed to reward your community through **voting** and interactive, **loot-filled Pinatas**. The purpose of the plugin is to boost engagement, reward voters, and automate excitement with community-driven events.
 
 ### Features
 
-PartyAnimals handles player retention with a focus on these core functions:
+PartyAnimals strives to increase player retention with a focus on these core functions:
 
-* It spawns interactive **pinata** entities (can be any mob!) that players can strike to receive configurable rewards.
-* You can configure their behaviors, allowing pinatas to roam, flee from players, or defend themselves with **reflexes** like *Shockwave* (knockback), *Blink* (teleportation), and more!
-* It features a complete **voting module** that integrates with **NuVotifier** to track votes, handle offline queuing, and manage **community goals**.
+* It spawns interactive **pinata** entities that players can hit to receive configurable rewards. Supports standard vanilla mobs or custom models via **ModelEngine** or **BetterModel**!
+* You can configure their behaviors, allowing pinatas to roam, flee from players, or defend themselves with **reflexes** like *Shockwave* (knockback), *Blink* (teleportation), *Morph* (shapeshifting), and more.
+* It features a complete voting module that integrates with **NuVotifier** to track votes, handle offline queuing, and manage community goals.
 * It includes extensive customization for rewards, messages, and interaction rules, with optional **PlaceholderAPI** support.
 
 ### Prerequisites
 
-To use this plugin, your server must be running **Paper** on `1.21` or higher.
+To use this plugin, your server must be running **Paper** on `1.21` or higher, and Java 21 or higher.
 
 #### Dependencies
 
-Both dependencies are optional, but highly recommended:
+These dependencies are optional but highly recommended to unlock full functionality:
 
-* [NuVotifier](https://github.com/NuVotifier/NuVotifier)
+* [NuVotifier](https://github.com/NuVotifier/NuVotifier) (Required for voting features)
 * [PlaceholderAPI](https://placeholderapi.com/)
+* [ModelEngine](https://github.com/Ticxo/ModelEngine) / [BetterModel](https://github.com/Toxicity188/BetterModel) (For custom entity models)
 
 ### Documentation & Support
 
-For a complete guide on features, commands, and configuration, please visit our [Wiki](https://docs.maboroshi.org/). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
+For a complete guide on features, commands, and configuration, please visit our [wiki](https://docs.maboroshi.org/). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
 
 ### Statistics
 
