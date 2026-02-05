@@ -16,19 +16,20 @@ public class PinataRoamGoal implements Goal<Mob> {
     private final PartyAnimals plugin;
     private final Mob mob;
     private final GoalKey<Mob> key;
-    private final double speed;
+    private final Location anchor;
 
     public PinataRoamGoal(PartyAnimals plugin, Mob mob) {
         this.plugin = plugin;
         this.mob = mob;
-        PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
+        this.anchor = mob.getLocation().clone();
         this.key = GoalKey.of(Mob.class, new NamespacedKey(plugin, "pinata_roam"));
-        this.speed = config.behavior.movement.speed;
     }
 
     @Override
     public boolean shouldActivate() {
-        return !mob.getPathfinder().hasPath();
+        if (mob.getPathfinder().hasPath()) return false;
+        PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
+        return ThreadLocalRandom.current().nextInt(100) < config.behavior.movement.roam.chance;
     }
 
     @Override
@@ -40,17 +41,17 @@ public class PinataRoamGoal implements Goal<Mob> {
     public void start() {
         PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
 
-        double rangeX = config.behavior.movement.radius.x;
-        int rangeY = (int) config.behavior.movement.radius.y;
-        double rangeZ = config.behavior.movement.radius.z;
+        double rangeX = config.behavior.movement.roam.radius.x;
+        int rangeY = (int) config.behavior.movement.roam.radius.y;
+        double rangeZ = config.behavior.movement.roam.radius.z;
+        double speed = config.behavior.movement.roam.speed;
 
         double x = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeX;
         double z = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeZ;
 
-        Location currentLoc = mob.getLocation();
-        int targetX = currentLoc.getBlockX() + (int) x;
-        int targetZ = currentLoc.getBlockZ() + (int) z;
-        int currentY = currentLoc.getBlockY();
+        int targetX = anchor.getBlockX() + (int) x;
+        int targetZ = anchor.getBlockZ() + (int) z;
+        int currentY = mob.getLocation().getBlockY();
 
         Block validTargetBlock = null;
 
@@ -64,19 +65,16 @@ public class PinataRoamGoal implements Goal<Mob> {
                     && above.isPassable()
                     && !above.isLiquid()
                     && twoAbove.isPassable()) {
-
                 validTargetBlock = candidate;
                 break;
             }
         }
 
-        if (validTargetBlock == null) {
-            return;
-        }
-
-        Location target = validTargetBlock.getLocation().add(0.5, 1.1, 0.5);
-        if (target.getBlock().isPassable()) {
-            mob.getPathfinder().moveTo(target, speed);
+        if (validTargetBlock != null) {
+            Location target = validTargetBlock.getLocation().add(0.5, 1.1, 0.5);
+            if (target.getBlock().isPassable()) {
+                mob.getPathfinder().moveTo(target, speed);
+            }
         }
     }
 

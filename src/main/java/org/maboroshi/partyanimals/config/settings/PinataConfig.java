@@ -4,6 +4,7 @@ import de.exlll.configlib.Comment;
 import de.exlll.configlib.ConfigLib;
 import de.exlll.configlib.Configuration;
 import de.exlll.configlib.NameFormatters;
+import de.exlll.configlib.PostProcess;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import java.io.File;
@@ -33,44 +34,21 @@ public final class PinataConfig {
         public Appearance appearance = new Appearance();
         public HealthSettings health = new HealthSettings();
         public InteractionSettings interaction = new InteractionSettings();
-        public TimerSettings timer = new TimerSettings();
         public BehaviorSettings behavior = new BehaviorSettings();
+        public TimerSettings timer = new TimerSettings();
         public EventRegistry events = new EventRegistry();
     }
 
     @Configuration
-    public static class ScaleSettings {
-        @Comment("Minimum size multiplier.")
-        public double min = 0.75;
-
-        @Comment("Maximum size multiplier.")
-        public double max = 1.25;
-
-        public ScaleSettings() {}
-
-        public ScaleSettings(double min, double max) {
-            this.min = min;
-            this.max = max;
-        }
-    }
-
-    @Configuration
     public static class Appearance {
-        @Comment({
-            "Entity types to use for the pinata.",
-            "If multiple types are provided, one is chosen randomly.",
-            "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/entity/EntityType.html"
-        })
-        public List<String> entityTypes = List.of("LLAMA", "MULE");
-
-        @Comment("Custom name of the pinata entity.")
-        public String name = "<gradient:#FF5555:#FF55FF>🪅 <bold>Party Pinata</bold></gradient>";
+        @Comment("Pinata variant settings.")
+        public Map<String, PinataVariant> variants = new HashMap<>();
 
         @Comment("Custom name displayed above the pinata.")
         public NameTagSettings nameTag = new NameTagSettings(
                 true,
                 "TEXT",
-                List.of("<pinata>", "<health> <gray>/</gray> <max-health> <red>❤</red>", "<timer>"),
+                List.of("<pinata_name>", "<pinata_health> <gray>/</gray> <pinata_max_health> <red>❤</red>", "<timer>"),
                 TextAlignment.CENTER,
                 new BackgroundSettings(false, 64, 0, 0, 0),
                 new TextShadowSettings(true, 0, 0),
@@ -79,47 +57,62 @@ public final class PinataConfig {
                 20,
                 new TransformSettings(new TranslationSettings(0, 0.5, 0), new NameTagSettings.ScaleSettings(1, 1, 1)));
 
-        @Comment("Size randomization settings.")
-        public ScaleSettings scale = new ScaleSettings(0.75, 1.25);
-
         @Comment("Flash red when taking damage.")
         public boolean damageFlash = false;
 
         @Comment("Show glowing outline.")
         public boolean glowing = true;
 
-        @Comment("Color of the glowing outline.")
+        @Comment({
+            "Color of the glowing outline.",
+            "https://jd.advntr.dev/api/latest/net/kyori/adventure/text/format/NamedTextColor.html"
+        })
         public String glowColor = "LIGHT_PURPLE";
+
+        public Appearance() {
+            PinataVariant defaultVariant = new PinataVariant();
+            defaultVariant.scale = new ScaleSettings(0.75, 1.25);
+            variants.put("default", defaultVariant);
+        }
     }
 
     @Configuration
-    public static class BossBarSettings {
-        @Comment("Show a boss bar for this phase.")
-        public boolean enabled = true;
-
-        @Comment("If true, all players see the bar. If false, only those near the pinata.")
-        public boolean global = true;
-
-        @Comment({"Bar color.", "See: https://jd.advntr.dev/api/4.25.0/net/kyori/adventure/bossbar/BossBar.Color.html"})
-        public String color = "PURPLE";
-
+    public static class PinataVariant {
         @Comment({
-            "Bar overlay.",
-            "See: https://jd.advntr.dev/api/4.25.0/net/kyori/adventure/bossbar/BossBar.Overlay.html"
+            "Entity type to use for the pinata.",
+            "See: https://jd.papermc.io/paper/latest/org/bukkit/entity/EntityType.html"
         })
-        public BossBar.Overlay overlay = BossBar.Overlay.PROGRESS;
+        public List<String> types = List.of("LLAMA", "MULE");
 
-        @Comment("Text displayed on the boss bar.")
-        public String text = "";
+        @Comment("Model ID for ModelEngine or BetterModel. Leave empty to use vanilla mobs.")
+        public String model = "";
 
-        public BossBarSettings() {}
+        @Comment("Custom name of the pinata entity.")
+        public String name = "<gradient:#FF5555:#FF55FF>🪅 <bold>Party Pinata</bold></gradient>";
 
-        public BossBarSettings(boolean enabled, boolean global, String color, BossBar.Overlay overlay, String text) {
-            this.enabled = enabled;
-            this.global = global;
-            this.color = color;
-            this.overlay = overlay;
-            this.text = text;
+        @Comment("Size randomization settings.")
+        public ScaleSettings scale = new ScaleSettings(1.0, 1.0);
+
+        @Comment("Raw NBT data for the pinata entity.")
+        public String nbt = "";
+
+        @Comment("Weight for random selection (Higher number = higher chance).")
+        public double weight = 10.0;
+    }
+
+    @Configuration
+    public static class ScaleSettings {
+        @Comment("Minimum size multiplier.")
+        public double min = 1.0;
+
+        @Comment("Maximum size multiplier.")
+        public double max = 1.0;
+
+        public ScaleSettings() {}
+
+        public ScaleSettings(double min, double max) {
+            this.min = min;
+            this.max = max;
         }
     }
 
@@ -140,14 +133,57 @@ public final class PinataConfig {
                 true,
                 "GREEN",
                 BossBar.Overlay.NOTCHED_10,
-                "<pinata> <health> <gray>/</gray> <max-health> <red>❤</red> <gray>[<timer>]</gray>");
+                "<pinata_name> <pinata_health> <gray>/</gray> <pinata_max_health> <red>❤</red> <gray>[<timer>]</gray>");
+    }
+
+    @Configuration
+    public static class BossBarSettings {
+        @Comment("Show a boss bar for this phase.")
+        public boolean enabled = true;
+
+        @Comment("If true, all players see the bar. If false, only those near the pinata.")
+        public boolean global = true;
+
+        @Comment({"Bar color.", "See: https://jd.advntr.dev/api/latest/net/kyori/adventure/bossbar/BossBar.Color.html"})
+        public String color = "PURPLE";
+
+        @Comment({
+            "Bar overlay.",
+            "See: https://jd.advntr.dev/api/latest/net/kyori/adventure/bossbar/BossBar.Overlay.html"
+        })
+        public BossBar.Overlay overlay = BossBar.Overlay.PROGRESS;
+
+        @Comment("Text displayed on the boss bar.")
+        public String text = "";
+
+        public BossBarSettings() {}
+
+        public BossBarSettings(boolean enabled, boolean global, String color, BossBar.Overlay overlay, String text) {
+            this.enabled = enabled;
+            this.global = global;
+            this.color = color;
+            this.overlay = overlay;
+            this.text = text;
+        }
+    }
+
+    @Configuration
+    public static class InteractionSettings {
+        @Comment("Permission required to hit the pinata.")
+        public String permission = "";
+
+        @Comment("Item whitelist settings.")
+        public ItemWhitelist allowedItems = new ItemWhitelist(false, Set.of("STICK", "BLAZE_ROD"));
+
+        @Comment("Hit cooldown.")
+        public HitCooldown hitCooldown = new HitCooldown(true, 0.75, false, "ACTION_BAR");
     }
 
     @Configuration
     public static class ItemWhitelist {
         public boolean enabled = false;
 
-        @Comment({"List of allowed material names.", "See: https://jd.papermc.io/paper/1.21.11/org/bukkit/Material.html"
+        @Comment({"List of allowed material names.", "See: https://jd.papermc.io/paper/latest/org/bukkit/Material.html"
         })
         public Set<String> materialNames = Set.of("STICK", "BLAZE_ROD");
 
@@ -164,7 +200,7 @@ public final class PinataConfig {
         public boolean enabled = true;
 
         @Comment("Cooldown duration in seconds.")
-        public double duration = 0.75;
+        public double duration = 1.0;
 
         @Comment("If true, the cooldown is global (all players share the timer).")
         public boolean global = false;
@@ -183,30 +219,362 @@ public final class PinataConfig {
     }
 
     @Configuration
-    public static class InteractionSettings {
-        @Comment("Permission required to hit the pinata.")
-        public String permission = "";
+    public static class BehaviorSettings {
+        @Comment("If false, the pinata acts like a statue.")
+        public boolean enabled = true;
 
-        @Comment("Item restriction settings.")
-        public ItemWhitelist allowedItems = new ItemWhitelist(false, Set.of("STICK", "BLAZE_ROD"));
+        @Comment({"Resistance to being pushed.", "Range: 0.0 to 1.0"})
+        public double knockbackResistance = 1.0;
 
-        @Comment("Anti-spam click settings.")
-        public HitCooldown hitCooldown = new HitCooldown(true, 0.75, false, "ACTION_BAR");
+        @Comment("Movement logic settings.")
+        public MovementSettings movement = new MovementSettings();
+
+        @Comment("Defensive reactions to being attacked or stuck.")
+        public ReflexSettings reflexes = new ReflexSettings();
     }
 
     @Configuration
-    public static class TimeoutSettings {
-        @Comment("Enable despawning if not killed in time.")
+    public static class MovementSettings {
+        @Comment({
+            "AI Movement Mode.",
+            "1. ACTIVE - Wanders, looks at players, and flees when attacked.",
+            "2. PASSIVE - Wanders and looks at players.",
+            "3. STATIONARY - Never moves, but will look at nearby players.",
+        })
+        public String type = "ACTIVE";
+
+        public RoamSettings roam = new RoamSettings();
+        public FleeSettings flee = new FleeSettings();
+        public FreezeSettings freeze = new FreezeSettings();
+
+        @PostProcess
+        private void migrateLegacyValues() {
+            if (type == null) return;
+
+            switch (type.toUpperCase()) {
+                case "BOTH":
+                case "FLEE":
+                    this.type = "ACTIVE";
+                    break;
+                case "ROAM":
+                    this.type = "PASSIVE";
+                    break;
+                case "NONE":
+                    this.type = "STATIONARY";
+                    break;
+            }
+        }
+    }
+
+    @Configuration
+    public static class RoamSettings {
+        @Comment("Speed when wandering peacefully.")
+        public double speed = 1.25;
+
+        @Comment("Chance to start wandering each tick while idle.")
+        public int chance = 2;
+
+        @Comment("Maximum distance from spawn point to wander.")
+        public PathfindingRange radius = new PathfindingRange(15.0, 5.0, 15.0);
+    }
+
+    @Configuration
+    public static class FleeSettings {
+        @Comment("Speed when sprinting away from danger.")
+        public double speed = 1.5;
+
+        @Comment("Distance in blocks a player must be within to trigger fleeing.")
+        public double triggerRadius = 3.0;
+
+        @Comment("Distance in blocks away from player to consider safe and stop running.")
+        public double safetyRadius = 15.0;
+    }
+
+    @Configuration
+    public static class FreezeSettings {
+        @Comment("Radius in blocks to detect and look at nearby players.")
+        public double radius = 15.0;
+    }
+
+    @Configuration
+    public static class PathfindingRange {
+        public double x = 15.0;
+        public double y = 5.0;
+        public double z = 15.0;
+
+        public PathfindingRange() {}
+
+        public PathfindingRange(double x, double y, double z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+    }
+
+    @Configuration
+    public static class ReflexSettings {
+        public ShockwaveReflex shockwave = new ShockwaveReflex();
+        public MorphReflex morph = new MorphReflex();
+        public BlinkReflex blink = new BlinkReflex();
+        public LeapReflex leap = new LeapReflex();
+        public SugarRushReflex sugarRush = new SugarRushReflex();
+        public DazzleReflex dazzle = new DazzleReflex();
+    }
+
+    @Configuration
+    public static class ShockwaveReflex {
         public boolean enabled = true;
 
-        @Comment("Seconds before despawning.")
-        public int duration = 300;
+        @Comment("Chance to trigger on hit.")
+        public double chance = 20.0;
 
-        public TimeoutSettings() {}
+        @Comment("Strength multiplier.")
+        public double strength = 1.5;
 
-        public TimeoutSettings(boolean enabled, int duration) {
-            this.enabled = enabled;
-            this.duration = duration;
+        @Comment("Vertical boost applied to affected players.")
+        public double verticalBoost = 0.5;
+
+        @Comment("Radius in blocks to find players to affect.")
+        public double radius = 5.0;
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
+        @Comment("Visual/Audio effects.")
+        public EffectGroup effects = new EffectGroup();
+
+        @Comment("Actions to execute when triggered.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        @Deprecated
+        public Map<String, CommandAction> rewards = null;
+
+        @Deprecated
+        public Map<String, CommandAction> commands = null;
+
+        @PostProcess
+        private void migrate() {
+            if (rewards != null && !rewards.isEmpty()) {
+                actions.putAll(rewards);
+                rewards = null;
+            }
+
+            if (commands != null && !commands.isEmpty()) {
+                actions.putAll(commands);
+                commands = null;
+            }
+        }
+    }
+
+    @Configuration
+    public static class MorphReflex {
+        public boolean enabled = true;
+
+        @Comment("Chance to trigger on hit.")
+        public double chance = 20.0;
+
+        @Comment("Duration in ticks.")
+        public int duration = 60;
+
+        @Comment({"Toggle whether to morph into a different age or scale randomly.", "Options: AGE, SCALE"})
+        public String type = "AGE";
+
+        @Comment({
+            "Scale settings.",
+            "Set 'type' to SCALE to use these. If both scale values are the same, a fixed size is used."
+        })
+        public ScaleSettings scale = new ScaleSettings(0.5, 1.5);
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
+        @Comment("Visual/Audio effects.")
+        public EffectGroup effects = new EffectGroup();
+
+        @Comment("Actions to execute when triggered.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        @Deprecated
+        public Map<String, CommandAction> rewards = null;
+
+        @Deprecated
+        public Map<String, CommandAction> commands = null;
+
+        @PostProcess
+        private void migrate() {
+            if (rewards != null && !rewards.isEmpty()) {
+                actions.putAll(rewards);
+                rewards = null;
+            }
+
+            if (commands != null && !commands.isEmpty()) {
+                actions.putAll(commands);
+                commands = null;
+            }
+        }
+    }
+
+    @Configuration
+    public static class BlinkReflex {
+        public boolean enabled = true;
+
+        @Comment("Chance to trigger on hit.")
+        public double chance = 10.0;
+
+        @Comment("Teleportation distance in blocks.")
+        public double distance = 10.0;
+
+        @Comment("If true, y-coordinates are ignored from the teleportation calculation.")
+        public boolean ignoreYLevel = true;
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
+        @Comment("Visual/Audio effects.")
+        public EffectGroup effects = new EffectGroup();
+
+        @Comment("Actions to execute when triggered.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        @Deprecated
+        public Map<String, CommandAction> rewards = null;
+
+        @Deprecated
+        public Map<String, CommandAction> commands = null;
+
+        @PostProcess
+        private void migrate() {
+            if (rewards != null && !rewards.isEmpty()) {
+                actions.putAll(rewards);
+                rewards = null;
+            }
+
+            if (commands != null && !commands.isEmpty()) {
+                actions.putAll(commands);
+                commands = null;
+            }
+        }
+    }
+
+    @Configuration
+    public static class LeapReflex {
+        public boolean enabled = true;
+
+        @Comment("Chance to trigger on hit.")
+        public double chance = 20.0;
+
+        @Comment("Strength multiplier.")
+        public double strength = 1.0;
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
+        @Comment("Visual/Audio effects.")
+        public EffectGroup effects = new EffectGroup();
+
+        @Comment("Actions to execute when triggered.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        @Deprecated
+        public Map<String, CommandAction> rewards = null;
+
+        @Deprecated
+        public Map<String, CommandAction> commands = null;
+
+        @PostProcess
+        private void migrate() {
+            if (rewards != null && !rewards.isEmpty()) {
+                actions.putAll(rewards);
+                rewards = null;
+            }
+
+            if (commands != null && !commands.isEmpty()) {
+                actions.putAll(commands);
+                commands = null;
+            }
+        }
+    }
+
+    @Configuration
+    public static class SugarRushReflex {
+        public boolean enabled = true;
+
+        @Comment("Chance to trigger when hit.")
+        public double chance = 20.0;
+
+        @Comment("Duration of speed burst (ticks).")
+        public int duration = 40;
+
+        @Comment("Speed level (0 = Speed I, 1 = Speed II, 2 = Speed III).")
+        public int amplifier = 2;
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
+        @Comment("Visual/Audio effects.")
+        public EffectGroup effects = new EffectGroup();
+
+        @Comment("Actions to execute when triggered.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        @Deprecated
+        public Map<String, CommandAction> rewards = null;
+
+        @Deprecated
+        public Map<String, CommandAction> commands = null;
+
+        @PostProcess
+        private void migrate() {
+            if (rewards != null && !rewards.isEmpty()) {
+                actions.putAll(rewards);
+                rewards = null;
+            }
+
+            if (commands != null && !commands.isEmpty()) {
+                actions.putAll(commands);
+                commands = null;
+            }
+        }
+    }
+
+    @Configuration
+    public static class DazzleReflex {
+        public boolean enabled = true;
+
+        @Comment("Chance to trigger when hit.")
+        public double chance = 20.0;
+
+        @Comment("Duration in ticks.")
+        public int duration = 60;
+
+        @Comment("Animation ID to play when triggered. Requires ModelEngine or BetterModel.")
+        public String animation = "";
+
+        @Comment({"Visual/Audio effects.", "These apply to the players' FOV."})
+        public EffectGroup effects = new EffectGroup(
+                Map.of(),
+                Map.of("blind-flash", new ParticleEffect("GLOW", 10, new ParticleOffset(0.2, 0.2, 0.2), 0.1)));
+
+        @Comment("Actions to execute when triggered.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        @Deprecated
+        public Map<String, CommandAction> rewards = null;
+
+        @Deprecated
+        public Map<String, CommandAction> commands = null;
+
+        @PostProcess
+        private void migrate() {
+            if (rewards != null && !rewards.isEmpty()) {
+                actions.putAll(rewards);
+                rewards = null;
+            }
+
+            if (commands != null && !commands.isEmpty()) {
+                actions.putAll(commands);
+                commands = null;
+            }
         }
     }
 
@@ -238,202 +606,6 @@ public final class PinataConfig {
     }
 
     @Configuration
-    public static class PathfindingRange {
-        public double x = 15.0;
-        public double y = 5.0;
-        public double z = 15.0;
-
-        public PathfindingRange() {}
-
-        public PathfindingRange(double x, double y, double z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-    }
-
-    @Configuration
-    public static class MovementSettings {
-        @Comment({"Active movement type.", "Options: ROAM, FLEE, BOTH, NONE"})
-        public String type = "FLEE";
-
-        @Comment("Radius for random movement.")
-        public PathfindingRange radius = new PathfindingRange(15.0, 5.0, 15.0);
-
-        @Comment("Movement speed multiplier.")
-        public double speed = 1.75;
-
-        public MovementSettings() {}
-
-        public MovementSettings(String type, PathfindingRange radius, double speed) {
-            this.type = type;
-            this.radius = radius;
-            this.speed = speed;
-        }
-    }
-
-    @Configuration
-    public static class ShockwaveReflex {
-        public boolean enabled = true;
-
-        @Comment("Chance to trigger on hit.")
-        public double chance = 20.0;
-
-        @Comment("Strength multiplier.")
-        public double strength = 1.5;
-
-        @Comment("Vertical boost applied to affected players.")
-        public double verticalBoost = 0.5;
-
-        @Comment("Radius in blocks to find players to affect.")
-        public double radius = 5.0;
-
-        @Comment("Visual/Audio effects.")
-        public EffectGroup effects = new EffectGroup();
-
-        @Comment("Commands to execute when triggered.")
-        public Map<String, CommandAction> commands = new HashMap<>();
-    }
-
-    @Configuration
-    public static class MorphReflex {
-        public boolean enabled = true;
-
-        @Comment("Chance to trigger on hit.")
-        public double chance = 20.0;
-
-        @Comment("Duration in ticks.")
-        public int duration = 60;
-
-        @Comment({"Toggle whether to morph into a different age or scale randomly.", "Options: AGE, SCALE"})
-        public String type = "AGE";
-
-        @Comment({
-            "Scale settings.",
-            "Set 'type' to SCALE to use these. If both scale values are the same, a fixed size is used."
-        })
-        public ScaleSettings scale = new ScaleSettings(0.5, 1.5);
-
-        @Comment("Visual/Audio effects.")
-        public EffectGroup effects = new EffectGroup();
-
-        @Comment("Commands to execute when triggered.")
-        public Map<String, CommandAction> commands = new HashMap<>();
-    }
-
-    @Configuration
-    public static class BlinkReflex {
-        public boolean enabled = true;
-
-        @Comment("Chance to trigger on hit.")
-        public double chance = 10.0;
-
-        @Comment("Teleportation distance in blocks.")
-        public double distance = 10.0;
-
-        @Comment("If true, y-coordinates are ignored from the teleportation calculation.")
-        public boolean ignoreYLevel = true;
-
-        @Comment("Visual/Audio effects.")
-        public EffectGroup effects = new EffectGroup();
-
-        @Comment("Commands to execute when triggered.")
-        public Map<String, CommandAction> commands = new HashMap<>();
-    }
-
-    @Configuration
-    public static class LeapReflex {
-        public boolean enabled = true;
-
-        @Comment("Chance to trigger on hit.")
-        public double chance = 20.0;
-
-        @Comment("Strength multiplier.")
-        public double strength = 1.0;
-
-        @Comment("Visual/Audio effects.")
-        public EffectGroup effects = new EffectGroup();
-
-        @Comment("Commands to execute when triggered.")
-        public Map<String, CommandAction> commands = new HashMap<>();
-    }
-
-    @Configuration
-    public static class SugarRushReflex {
-        public boolean enabled = true;
-
-        @Comment("Chance to trigger when hit.")
-        public double chance = 20.0;
-
-        @Comment("Duration of speed burst (ticks).")
-        public int duration = 40;
-
-        @Comment("Speed level (0 = Speed I, 1 = Speed II, 2 = Speed III).")
-        public int amplifier = 2;
-
-        @Comment("Visual/Audio effects.")
-        public EffectGroup effects = new EffectGroup();
-
-        @Comment("Commands to execute when triggered.")
-        public Map<String, CommandAction> commands = new HashMap<>();
-    }
-
-    @Configuration
-    public static class DazzleReflex {
-        public boolean enabled = true;
-
-        @Comment("Chance to trigger when hit.")
-        public double chance = 20.0;
-
-        @Comment("Duration of blindness (ticks).")
-        public int duration = 30;
-
-        @Comment({"Visual/Audio effects.", "These apply to the players' view."})
-        public EffectGroup effects = new EffectGroup(
-                Map.of(),
-                Map.of("blind-flash", new ParticleEffect("GLOW", 10, new ParticleOffset(0.2, 0.2, 0.2), 0.1)));
-
-        @Comment("Commands to execute when triggered.")
-        public Map<String, CommandAction> commands = new HashMap<>();
-    }
-
-    @Configuration
-    public static class ReflexSettings {
-        @Comment("Shockwave settings.")
-        public ShockwaveReflex shockwave = new ShockwaveReflex();
-
-        @Comment("Morph settings.")
-        public MorphReflex morph = new MorphReflex();
-
-        @Comment("Blink settings.")
-        public BlinkReflex blink = new BlinkReflex();
-
-        @Comment("Leap settings.")
-        public LeapReflex leap = new LeapReflex();
-
-        @Comment("Sugar Rush settings.")
-        public SugarRushReflex sugarRush = new SugarRushReflex();
-
-        @Comment("Dazzle settings.")
-        public DazzleReflex dazzle = new DazzleReflex();
-    }
-
-    @Configuration
-    public static class BehaviorSettings {
-        @Comment("If false, the pinata acts like a statue.")
-        public boolean enabled = true;
-
-        @Comment({"Resistance to being pushed.", "Range: 0.0 to 1.0"})
-        public double knockbackResistance = 1.0;
-
-        @Comment("Movement logic settings.")
-        public MovementSettings movement = new MovementSettings("FLEE", new PathfindingRange(15.0, 5.0, 15.0), 1.75);
-
-        @Comment("Defensive reactions to being attacked or stuck.")
-        public ReflexSettings reflexes = new ReflexSettings();
-    }
-
-    @Configuration
     public static class PhaseSettings {
         @Comment("Duration in seconds.")
         public int duration = 10;
@@ -462,22 +634,17 @@ public final class PinataConfig {
     }
 
     @Configuration
-    public static class GameEvent {
-        @Comment("Enable this event.")
+    public static class TimeoutSettings {
         public boolean enabled = true;
 
-        @Comment("Visual/Audio effects.")
-        public EffectGroup effects = new EffectGroup();
+        @Comment("Duration in seconds before pinata despawns.")
+        public int duration = 300;
 
-        @Comment("Rewards to give. Key is the internal ID of the reward.")
-        public Map<String, CommandAction> rewards = new HashMap<>();
+        public TimeoutSettings() {}
 
-        public GameEvent() {}
-
-        public GameEvent(boolean enabled, EffectGroup effects, Map<String, CommandAction> rewards) {
+        public TimeoutSettings(boolean enabled, int duration) {
             this.enabled = enabled;
-            this.effects = effects;
-            this.rewards = rewards;
+            this.duration = duration;
         }
     }
 
@@ -491,8 +658,7 @@ public final class PinataConfig {
                         Map.of(
                                 "totem",
                                 new ParticleEffect("TOTEM_OF_UNDYING", 10, new ParticleOffset(0.5, 1.0, 0.5), 0.1))),
-                new HashMap<>(
-                        Map.of("announce", new CommandAction(100.0, List.of("say <green>A pinata has arrived!")))));
+                new HashMap<>(Map.of("announce", new CommandAction(100.0, List.of("say A pinata has arrived!")))));
 
         @Comment("Triggered when pinata is damaged.")
         public GameEvent hit = new GameEvent(
@@ -524,5 +690,43 @@ public final class PinataConfig {
                 new HashMap<>(Map.of(
                         "everyone_emerald",
                         new CommandAction(100.0, false, false, false, "", List.of("give @a emerald 5")))));
+    }
+
+    @Configuration
+    public static class GameEvent {
+        public boolean enabled = true;
+
+        @Comment("Visual/Audio effects.")
+        public EffectGroup effects = new EffectGroup();
+
+        @Comment("Actions to execute when triggered.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        @Deprecated
+        public Map<String, CommandAction> rewards = null;
+
+        @Deprecated
+        public Map<String, CommandAction> commands = null;
+
+        @PostProcess
+        private void migrate() {
+            if (rewards != null && !rewards.isEmpty()) {
+                actions.putAll(rewards);
+                rewards = null;
+            }
+
+            if (commands != null && !commands.isEmpty()) {
+                actions.putAll(commands);
+                commands = null;
+            }
+        }
+
+        public GameEvent() {}
+
+        public GameEvent(boolean enabled, EffectGroup effects, Map<String, CommandAction> actions) {
+            this.enabled = enabled;
+            this.effects = effects;
+            this.actions = actions;
+        }
     }
 }

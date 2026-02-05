@@ -1,30 +1,27 @@
 package org.maboroshi.partyanimals;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.List;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.maboroshi.partyanimals.api.event.PartyAnimalsReloadEvent;
 import org.maboroshi.partyanimals.command.PartyAnimalsCommand;
 import org.maboroshi.partyanimals.config.ConfigManager;
 import org.maboroshi.partyanimals.handler.ActionHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
-import org.maboroshi.partyanimals.handler.HitCooldownHandler;
-import org.maboroshi.partyanimals.handler.ReflexHandler;
-import org.maboroshi.partyanimals.hook.Placeholders;
+import org.maboroshi.partyanimals.hook.BetterModelHook;
+import org.maboroshi.partyanimals.hook.ModelEngineHook;
+import org.maboroshi.partyanimals.hook.PlaceholderAPIHook;
 import org.maboroshi.partyanimals.listener.PinataListener;
-import org.maboroshi.partyanimals.listener.VoteListener;
 import org.maboroshi.partyanimals.manager.BossBarManager;
 import org.maboroshi.partyanimals.manager.DatabaseManager;
 import org.maboroshi.partyanimals.manager.PinataManager;
-import org.maboroshi.partyanimals.task.VoteReminder;
+import org.maboroshi.partyanimals.manager.VoteManager;
 import org.maboroshi.partyanimals.util.Logger;
 import org.maboroshi.partyanimals.util.MessageUtils;
+import org.maboroshi.partyanimals.util.NamespacedKeys;
 import org.maboroshi.partyanimals.util.UpdateChecker;
 
 public final class PartyAnimals extends JavaPlugin {
@@ -34,20 +31,21 @@ public final class PartyAnimals extends JavaPlugin {
     private Logger log;
     private MessageUtils messageUtils;
     private DatabaseManager databaseManager;
-    private PinataManager pinataManager;
     private BossBarManager bossBarManager;
-    private HitCooldownHandler hitCooldownHandler;
     private EffectHandler effectHandler;
     private ActionHandler actionHandler;
-    private ReflexHandler reflexHandler;
-    private VoteListener voteListener;
-    private ScheduledTask voteReminderTask;
+
+    private PinataManager pinataManager;
+    private VoteManager voteManager;
+
+    private ModelEngineHook modelEngineHook;
+    private BetterModelHook betterModelHook;
 
     @Override
     public void onEnable() {
         plugin = this;
-        this.configManager = new ConfigManager(this, getDataFolder());
         this.log = new Logger(this);
+        this.configManager = new ConfigManager(this, getDataFolder());
 
         try {
             configManager.loadConfig();
@@ -61,21 +59,17 @@ public final class PartyAnimals extends JavaPlugin {
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 28389);
 
+        NamespacedKeys.load(this);
+        setupHooks();
+
         this.messageUtils = new MessageUtils(configManager);
         this.bossBarManager = new BossBarManager(this);
         this.effectHandler = new EffectHandler(log);
         this.actionHandler = new ActionHandler(this);
-        this.reflexHandler = new ReflexHandler(this);
-
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.connect();
 
         setupModules();
-
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            new Placeholders(this).register();
-            log.info("Hooked into PlaceholderAPI.");
-        }
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             PartyAnimalsCommand partyanimalsCommand = new PartyAnimalsCommand(this);
@@ -86,12 +80,28 @@ public final class PartyAnimals extends JavaPlugin {
         new UpdateChecker(this).checkForUpdates();
     }
 
+    private void setupHooks() {
+        if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            new PlaceholderAPIHook(this).register();
+            log.info("Hooked into PlaceholderAPI.");
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("ModelEngine")) {
+            this.modelEngineHook = new ModelEngineHook(this);
+            log.info("Hooked into ModelEngine.");
+        }
+
+        if (getServer().getPluginManager().isPluginEnabled("BetterModel")) {
+            this.betterModelHook = new BetterModelHook(this);
+            log.info("Hooked into BetterModel.");
+        }
+    }
+
     private void setupModules() {
         boolean pinataEnabled = configManager.getMainConfig().modules.pinata.enabled;
         if (pinataEnabled) {
             if (this.pinataManager == null) {
-                this.pinataManager = new PinataManager(this);
-                this.hitCooldownHandler = new HitCooldownHandler(this);
+                this.pinataManager = new PinataManager(this, this.modelEngineHook, this.betterModelHook);
                 getServer().getPluginManager().registerEvents(new PinataListener(this), this);
                 log.info("Pinata module enabled.");
             }
@@ -99,74 +109,33 @@ public final class PartyAnimals extends JavaPlugin {
             if (this.pinataManager != null) {
                 this.pinataManager.cleanup();
                 this.pinataManager = null;
-                this.hitCooldownHandler = null;
                 log.info("Pinata module disabled.");
             }
         }
 
-        boolean voteEnabled = configManager.getMainConfig().modules.vote.enabled;
-        boolean hasNuVotifier = getServer().getPluginManager().isPluginEnabled("Votifier");
-
-        if (voteEnabled && hasNuVotifier) {
-            if (this.voteListener == null) {
-                this.voteListener = new VoteListener(this);
-                getServer().getPluginManager().registerEvents(this.voteListener, this);
-                log.info("Vote module enabled.");
-            }
-            var reminderSettings = configManager.getMainConfig().modules.vote.reminder;
-            if (reminderSettings.enabled && voteReminderTask == null) {
-                long intervalTicks = reminderSettings.interval * 20L;
-                this.voteReminderTask = Bukkit.getGlobalRegionScheduler()
-                        .runAtFixedRate(
-                                this,
-                                (task) -> {
-                                    new VoteReminder(this).run();
-                                },
-                                intervalTicks,
-                                intervalTicks);
-            }
-        } else {
-            if (voteReminderTask != null) {
-                voteReminderTask.cancel();
-                voteReminderTask = null;
-            }
-            if (this.voteListener != null) {
-                HandlerList.unregisterAll(this.voteListener);
-                this.voteListener = null;
-                log.info("Vote module disabled.");
-            }
-
-            if (voteEnabled && !hasNuVotifier) {
-                log.warn("Vote module is enabled, but NuVotifier is not installed! Voting features will not work.");
-            }
+        if (this.voteManager == null) {
+            this.voteManager = new VoteManager(this);
         }
+
+        this.voteManager.enable();
     }
 
     public boolean reload() {
         try {
-            if (pinataManager != null) {
-                pinataManager.cleanup(false);
-            }
-
-            if (databaseManager != null) {
-                databaseManager.disconnect();
-            }
+            if (pinataManager != null) pinataManager.cleanup(false);
+            if (voteManager != null) voteManager.disable();
+            if (databaseManager != null) databaseManager.disconnect();
 
             configManager.loadConfig();
             configManager.loadMessages();
 
-            if (databaseManager != null) {
-                databaseManager.connect();
-            }
+            if (databaseManager != null) databaseManager.connect();
 
             setupModules();
 
-            if (pinataManager != null) {
-                reloadPinatas();
-            }
+            if (pinataManager != null) reloadPinatas();
 
             getServer().getPluginManager().callEvent(new PartyAnimalsReloadEvent());
-
             return true;
         } catch (Exception e) {
             log.warn("Failed to reload configuration: " + e.getMessage());
@@ -175,7 +144,7 @@ public final class PartyAnimals extends JavaPlugin {
     }
 
     private void reloadPinatas() {
-        for (World world : Bukkit.getWorlds()) {
+        for (World world : getServer().getWorlds()) {
             for (LivingEntity entity : world.getLivingEntities()) {
                 if (pinataManager.isPinata(entity)) {
                     pinataManager.activatePinata(entity);
@@ -187,15 +156,10 @@ public final class PartyAnimals extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (pinataManager != null) {
-            pinataManager.cleanup();
-        }
-        if (bossBarManager != null) {
-            bossBarManager.removeAll();
-        }
-        if (databaseManager != null) {
-            databaseManager.disconnect();
-        }
+        if (pinataManager != null) pinataManager.cleanup();
+        if (voteManager != null) voteManager.disable();
+        if (bossBarManager != null) bossBarManager.removeAll();
+        if (databaseManager != null) databaseManager.disconnect();
     }
 
     public static PartyAnimals getPlugin() {
@@ -226,19 +190,11 @@ public final class PartyAnimals extends JavaPlugin {
         return bossBarManager;
     }
 
-    public HitCooldownHandler getHitCooldownHandler() {
-        return hitCooldownHandler;
-    }
-
     public EffectHandler getEffectHandler() {
         return effectHandler;
     }
 
     public ActionHandler getActionHandler() {
         return actionHandler;
-    }
-
-    public ReflexHandler getReflexHandler() {
-        return reflexHandler;
     }
 }

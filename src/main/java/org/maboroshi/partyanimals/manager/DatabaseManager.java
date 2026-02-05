@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -97,7 +98,7 @@ public class DatabaseManager {
                 + "username VARCHAR(16) NOT NULL, "
                 + "amount INTEGER NOT NULL DEFAULT 1, "
                 + "service VARCHAR(64) NOT NULL, "
-                + "timestamp LONG NOT NULL"
+                + "timestamp BIGINT NOT NULL"
                 + ");";
 
         String createRewardsTable = "CREATE TABLE IF NOT EXISTS "
@@ -126,11 +127,25 @@ public class DatabaseManager {
             statement.execute(createRewardsTable);
             statement.execute(createServerDataTable);
             statement.execute(createIndex);
+
+            migrateDatabase(connection);
+
             log.info(
                     "Database tables initialized (" + votesTable + ", " + rewardsTable + ", " + serverDataTable + ").");
         } catch (SQLException e) {
             log.error("Failed to create database tables: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void migrateDatabase(Connection connection) {
+        if (isSQLite()) return;
+
+        try (Statement statement = connection.createStatement()) {
+            String alterSql = "ALTER TABLE " + votesTable + " MODIFY COLUMN timestamp BIGINT NOT NULL;";
+            statement.execute(alterSql);
+        } catch (SQLException e) {
+            log.debug("Migration check skipped: " + e.getMessage());
         }
     }
 
@@ -167,11 +182,11 @@ public class DatabaseManager {
             connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
             connection.setAutoCommit(false);
 
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
-            cal.set(java.util.Calendar.MINUTE, 0);
-            cal.set(java.util.Calendar.SECOND, 0);
-            cal.set(java.util.Calendar.MILLISECOND, 0);
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
             long startOfDay = cal.getTimeInMillis();
 
             int votesToday = 0;

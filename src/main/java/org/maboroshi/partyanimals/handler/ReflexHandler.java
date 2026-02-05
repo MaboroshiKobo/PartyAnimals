@@ -8,21 +8,30 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
+import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataVariant;
+import org.maboroshi.partyanimals.hook.ModelEngineHook;
+import org.maboroshi.partyanimals.manager.PinataManager;
+import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class ReflexHandler {
     private final PartyAnimals plugin;
+    private final PinataManager pinataManager;
     private final EffectHandler effectHandler;
     private final ActionHandler actionHandler;
+    private final ModelEngineHook modelEngineHook;
 
-    public ReflexHandler(PartyAnimals plugin) {
+    public ReflexHandler(PartyAnimals plugin, PinataManager pinataManager, ModelEngineHook modelEngineHook) {
         this.plugin = plugin;
+        this.pinataManager = pinataManager;
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
+        this.modelEngineHook = modelEngineHook;
     }
 
     public void onDamage(LivingEntity pinata, Player attacker, PinataConfiguration config) {
@@ -30,6 +39,7 @@ public class ReflexHandler {
 
         var shockwave = config.behavior.reflexes.shockwave;
         if (shockwave.enabled && shouldTrigger(shockwave.chance)) {
+            pinataManager.playAnimation(pinata, shockwave.animation);
             effectHandler.playEffects(shockwave.effects, pinata.getLocation(), false);
             pinata.getNearbyEntities(shockwave.radius, shockwave.radius, shockwave.radius)
                     .forEach(entity -> {
@@ -48,14 +58,15 @@ public class ReflexHandler {
                             player.setVelocity(direction);
                         }
                     });
-            if (!shockwave.commands.isEmpty()) {
-                actionHandler.process(attacker, shockwave.commands.values(), cmd -> plugin.getMessageUtils()
+            if (!shockwave.actions.isEmpty()) {
+                actionHandler.process(attacker, shockwave.actions.values(), cmd -> plugin.getMessageUtils()
                         .parsePinataPlaceholders(pinata, cmd));
             }
         }
 
         var morph = config.behavior.reflexes.morph;
         if (morph.enabled && shouldTrigger(morph.chance)) {
+            pinataManager.playAnimation(pinata, morph.animation);
             effectHandler.playEffects(morph.effects, pinata.getLocation(), false);
             if (morph.type.equalsIgnoreCase("AGE")) {
                 if (pinata instanceof Ageable ageable) {
@@ -74,35 +85,45 @@ public class ReflexHandler {
             } else if (morph.type.equalsIgnoreCase("SCALE")) {
                 var scaleAttribute = pinata.getAttribute(Attribute.SCALE);
                 if (scaleAttribute != null) {
-                    var originalScale = scaleAttribute.getBaseValue();
-                    double min = Math.min(morph.scale.min, morph.scale.max);
-                    double max = Math.max(morph.scale.min, morph.scale.max);
-                    double newScale = ThreadLocalRandom.current().nextDouble(min, max);
+                    double minMorph = Math.min(morph.scale.min, morph.scale.max);
+                    double maxMorph = Math.max(morph.scale.min, morph.scale.max);
+                    double morphScale = (minMorph == maxMorph)
+                            ? minMorph
+                            : ThreadLocalRandom.current().nextDouble(minMorph, maxMorph);
 
-                    scaleAttribute.setBaseValue(newScale);
+                    scaleAttribute.setBaseValue(morphScale);
+                    if (modelEngineHook != null) modelEngineHook.setScale(pinata, morphScale);
 
                     pinata.getScheduler()
                             .runDelayed(
                                     plugin,
                                     (task) -> {
                                         if (pinata.isValid()) {
+                                            String variantId = pinata.getPersistentDataContainer()
+                                                    .get(NamespacedKeys.PINATA_VARIANT, PersistentDataType.STRING);
+                                            PinataVariant variant = config.appearance.variants.get(variantId);
+
+                                            double originalScale = (variant != null) ? variant.scale.max : 1.0;
+
                                             scaleAttribute.setBaseValue(originalScale);
+                                            if (modelEngineHook != null)
+                                                modelEngineHook.setScale(pinata, originalScale);
                                         }
                                     },
                                     null,
                                     morph.duration);
                 }
-            } else {
-                plugin.getPluginLogger().warn("Unknown morph type: " + morph.type);
             }
-            if (!morph.commands.isEmpty()) {
-                actionHandler.process(attacker, morph.commands.values(), cmd -> plugin.getMessageUtils()
+
+            if (!morph.actions.isEmpty()) {
+                actionHandler.process(attacker, morph.actions.values(), cmd -> plugin.getMessageUtils()
                         .parsePinataPlaceholders(pinata, cmd));
             }
         }
 
         var blink = config.behavior.reflexes.blink;
         if (blink.enabled && shouldTrigger(blink.chance)) {
+            pinataManager.playAnimation(pinata, blink.animation);
             effectHandler.playEffects(blink.effects, pinata.getLocation(), false);
 
             Location location = pinata.getLocation();
@@ -113,11 +134,14 @@ public class ReflexHandler {
             if (target != null) {
                 target.setYaw(location.getYaw());
                 target.setPitch(location.getPitch());
-                pinata.teleport(target);
-                if (!blink.commands.isEmpty()) {
-                    actionHandler.process(attacker, blink.commands.values(), cmd -> plugin.getMessageUtils()
-                            .parsePinataPlaceholders(pinata, cmd));
-                }
+                pinata.teleportAsync(target).thenAccept(success -> {
+                    if (success) {
+                        if (!blink.actions.isEmpty()) {
+                            actionHandler.process(attacker, blink.actions.values(), cmd -> plugin.getMessageUtils()
+                                    .parsePinataPlaceholders(pinata, cmd));
+                        }
+                    }
+                });
             }
         }
 
@@ -130,9 +154,10 @@ public class ReflexHandler {
                 return;
             }
             effectHandler.playEffects(leap.effects, pinata.getLocation(), false);
+            pinataManager.playAnimation(pinata, leap.animation);
             pinata.setVelocity(new Vector(0, leap.strength, 0));
-            if (!leap.commands.isEmpty()) {
-                actionHandler.process(attacker, leap.commands.values(), cmd -> plugin.getMessageUtils()
+            if (!leap.actions.isEmpty()) {
+                actionHandler.process(attacker, leap.actions.values(), cmd -> plugin.getMessageUtils()
                         .parsePinataPlaceholders(pinata, cmd));
             }
         }
@@ -140,9 +165,10 @@ public class ReflexHandler {
         var sugarRush = config.behavior.reflexes.sugarRush;
         if (sugarRush.enabled && shouldTrigger(sugarRush.chance)) {
             effectHandler.playEffects(sugarRush.effects, pinata.getLocation(), false);
+            pinataManager.playAnimation(pinata, sugarRush.animation);
             pinata.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, sugarRush.duration, sugarRush.amplifier));
-            if (!sugarRush.commands.isEmpty()) {
-                actionHandler.process(attacker, sugarRush.commands.values(), cmd -> plugin.getMessageUtils()
+            if (!sugarRush.actions.isEmpty()) {
+                actionHandler.process(attacker, sugarRush.actions.values(), cmd -> plugin.getMessageUtils()
                         .parsePinataPlaceholders(pinata, cmd));
             }
         }
@@ -150,10 +176,11 @@ public class ReflexHandler {
         var dazzle = config.behavior.reflexes.dazzle;
         if (dazzle.enabled && shouldTrigger(dazzle.chance)) {
             effectHandler.playEffects(dazzle.effects, attacker.getEyeLocation(), false);
+            pinataManager.playAnimation(pinata, dazzle.animation);
             attacker.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, dazzle.duration, 0));
             attacker.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, dazzle.duration, 0));
-            if (!dazzle.commands.isEmpty()) {
-                actionHandler.process(attacker, dazzle.commands.values(), cmd -> plugin.getMessageUtils()
+            if (!dazzle.actions.isEmpty()) {
+                actionHandler.process(attacker, dazzle.actions.values(), cmd -> plugin.getMessageUtils()
                         .parsePinataPlaceholders(pinata, cmd));
             }
         }
