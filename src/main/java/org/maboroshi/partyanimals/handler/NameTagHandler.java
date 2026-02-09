@@ -63,9 +63,6 @@ public class NameTagHandler {
 
         nameTag.setPersistent(false);
 
-        nameTag.setInterpolationDuration(3);
-        nameTag.setTeleportDuration(3);
-
         int totalSeconds = pinataConfig.timer.timeout.duration;
         String initialTimeStr = "∞";
 
@@ -151,8 +148,11 @@ public class NameTagHandler {
                             }
 
                             if (nameTag.getVehicle() == null) {
-                                Location target = livingEntity.getLocation().add(0, livingEntity.getHeight(), 0);
-                                nameTag.teleport(target);
+                                livingEntity.addPassenger(nameTag);
+
+                                if (modelEngineHook != null) {
+                                    modelEngineHook.addPassenger(livingEntity, nameTag, "p_mount");
+                                }
                             }
 
                             if (tickCounter[0]++ % updateInterval == 0) {
