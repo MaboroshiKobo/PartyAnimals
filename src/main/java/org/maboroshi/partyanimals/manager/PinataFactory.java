@@ -100,14 +100,7 @@ public class PinataFactory {
 
         LivingEntity pinata = (LivingEntity) location.getWorld().spawn(spawnLocation, type.getEntityClass(), entity -> {
             if (entity instanceof LivingEntity livingEntity) {
-                configure(
-                        livingEntity,
-                        pinataConfig,
-                        selectedVariant,
-                        selectedVariantId,
-                        templateId,
-                        finalHealth,
-                        finalScale);
+                configureData(livingEntity, selectedVariant, selectedVariantId, templateId, finalHealth);
             }
         });
 
@@ -115,6 +108,8 @@ public class PinataFactory {
             log.warn("Failed to spawn pinata entity.");
             return;
         }
+
+        applyVisuals(pinata, pinataConfig, selectedVariant, finalScale);
 
         var event = new PinataSpawnEvent(pinata, spawnLocation);
         plugin.getServer().getPluginManager().callEvent(event);
@@ -152,15 +147,9 @@ public class PinataFactory {
                         "location", location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
     }
 
-    private void configure(
-            LivingEntity livingEntity,
-            PinataConfiguration pinataConfig,
-            PinataVariant variant,
-            String variantId,
-            String templateId,
-            int health,
-            double scale) {
-        log.debug("Configuring entity " + livingEntity.getUniqueId() + " for template " + templateId);
+    private void configureData(
+            LivingEntity livingEntity, PinataVariant variant, String variantId, String templateId, int health) {
+        log.debug("Configuring entity data " + livingEntity.getUniqueId());
 
         livingEntity
                 .getPersistentDataContainer()
@@ -186,6 +175,21 @@ public class PinataFactory {
         livingEntity.setMaximumAir(100000);
         livingEntity.setRemainingAir(100000);
 
+        if (variant.nbt != null && !variant.nbt.isEmpty() && !variant.nbt.equals("{}")) {
+            try {
+                NBT.modify(livingEntity, nbt -> {
+                    var customNbt = NBT.parseNBT(variant.nbt);
+                    nbt.mergeCompound(customNbt);
+                });
+            } catch (Exception e) {
+                log.warn("Failed to apply NBT to pinata variant: " + variant + ". Error: " + e.getMessage());
+            }
+        }
+    }
+
+    private void applyVisuals(
+            LivingEntity livingEntity, PinataConfiguration pinataConfig, PinataVariant variant, double scale) {
+
         boolean modelApplied = false;
         if (variant.model != null && !variant.model.isEmpty()) {
             log.debug("Applying custom model: " + variant.model);
@@ -196,7 +200,8 @@ public class PinataFactory {
             } else if (betterModelHook != null && betterModelHook.applyModel(livingEntity, variant.model)) {
                 log.debug("BetterModel model applied.");
                 modelApplied = true;
-                livingEntity.getAttribute(Attribute.SCALE).setBaseValue(scale);
+                var scaleAttr = livingEntity.getAttribute(Attribute.SCALE);
+                if (scaleAttr != null) scaleAttr.setBaseValue(scale);
             } else {
                 log.warn("Failed to apply model " + variant.model + " (Hooks missing or returned false)");
             }
@@ -204,7 +209,8 @@ public class PinataFactory {
 
         if (!modelApplied) {
             log.debug("No custom model applied. Setting vanilla scale: " + scale);
-            livingEntity.getAttribute(Attribute.SCALE).setBaseValue(scale);
+            var scaleAttr = livingEntity.getAttribute(Attribute.SCALE);
+            if (scaleAttr != null) scaleAttr.setBaseValue(scale);
         }
 
         livingEntity.setInvisible(modelApplied);
@@ -212,12 +218,10 @@ public class PinataFactory {
         if (livingEntity instanceof Mob mob) mob.setTarget(null);
 
         boolean shouldGlow = pinataConfig.appearance.glowing;
-        log.debug("Glow enabled: " + shouldGlow);
 
         if (shouldGlow) {
             String colorName = pinataConfig.appearance.glowColor;
             NamedTextColor glowColor = NamedTextColor.NAMES.value(colorName.toLowerCase());
-            log.debug("Glow color resolved: " + glowColor);
 
             if (glowColor != null) {
                 Scoreboard mainBoard = Bukkit.getScoreboardManager().getMainScoreboard();
@@ -226,30 +230,20 @@ public class PinataFactory {
                 if (team == null) team = mainBoard.registerNewTeam(teamName);
                 team.color(glowColor);
                 team.addEntry(livingEntity.getUniqueId().toString());
-                log.debug("Added entity to team: " + teamName);
 
                 if (modelApplied) {
                     livingEntity.setGlowing(false);
                     if (modelEngineHook != null) {
-                        log.debug("Delegating glow to ModelEngine hook.");
                         modelEngineHook.setGlowing(livingEntity, true, glowColor);
+                    }
+                    if (betterModelHook != null) {
+                        betterModelHook.setGlowing(livingEntity, true, glowColor);
                     }
                 } else {
                     livingEntity.setGlowing(true);
                 }
             } else {
                 log.warn("Invalid glow color name: " + colorName);
-            }
-        }
-
-        if (variant.nbt != null && !variant.nbt.isEmpty() && !variant.nbt.equals("{}")) {
-            try {
-                NBT.modify(livingEntity, nbt -> {
-                    var customNbt = NBT.parseNBT(variant.nbt);
-                    nbt.mergeCompound(customNbt);
-                });
-            } catch (Exception e) {
-                log.warn("Failed to apply NBT to pinata variant: " + variant + ". Error: " + e.getMessage());
             }
         }
     }
