@@ -377,7 +377,7 @@ public final class PinataConfig {
         public int duration = 60;
 
         @Comment({"Toggle whether to morph into a different age or scale randomly.", "Options: AGE, SCALE"})
-        public String type = "AGE";
+        public String type = "SCALE";
 
         @Comment({
             "Scale settings.",
