@@ -150,13 +150,17 @@ public final class MainConfig {
 
         @PostProcess
         private void migrate() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
+            if (rewards != null) {
+                if (!rewards.isEmpty()) {
+                    actions.putAll(rewards);
+                }
                 rewards = null;
             }
 
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
+            if (commands != null) {
+                if (!commands.isEmpty()) {
+                    actions.putAll(commands);
+                }
                 commands = null;
             }
         }
@@ -181,13 +185,17 @@ public final class MainConfig {
 
         @PostProcess
         private void migrate() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
+            if (rewards != null) {
+                if (!rewards.isEmpty()) {
+                    actions.putAll(rewards);
+                }
                 rewards = null;
             }
 
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
+            if (commands != null) {
+                if (!commands.isEmpty()) {
+                    actions.putAll(commands);
+                }
                 commands = null;
             }
         }
@@ -230,13 +238,17 @@ public final class MainConfig {
 
         @PostProcess
         private void migrate() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
+            if (rewards != null) {
+                if (!rewards.isEmpty()) {
+                    actions.putAll(rewards);
+                }
                 rewards = null;
             }
 
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
+            if (commands != null) {
+                if (!commands.isEmpty()) {
+                    actions.putAll(commands);
+                }
                 commands = null;
             }
         }
@@ -274,13 +286,17 @@ public final class MainConfig {
 
         @PostProcess
         private void migrate() {
-            if (rewards != null && !rewards.isEmpty()) {
-                actions.putAll(rewards);
+            if (rewards != null) {
+                if (!rewards.isEmpty()) {
+                    actions.putAll(rewards);
+                }
                 rewards = null;
             }
 
-            if (commands != null && !commands.isEmpty()) {
-                actions.putAll(commands);
+            if (commands != null) {
+                if (!commands.isEmpty()) {
+                    actions.putAll(commands);
+                }
                 commands = null;
             }
         }
