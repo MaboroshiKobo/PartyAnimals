@@ -22,7 +22,7 @@ dependencies {
     compileOnly("com.zaxxer:HikariCP:7.0.2")
     compileOnly("com.mysql:mysql-connector-j:9.6.0")
     compileOnly("org.mariadb.jdbc:mariadb-java-client:3.5.7")
-    implementation("org.bstats:bstats-bukkit:3.1.0")
+    implementation("org.bstats:bstats-bukkit:3.2.0")
     compileOnly("me.clip:placeholderapi:2.12.2")
     compileOnly("com.github.NuVotifier:NuVotifier:2.7.2")
     compileOnly("de.tr7zw:item-nbt-api:2.15.5")
