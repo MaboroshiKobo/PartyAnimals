@@ -81,7 +81,6 @@ public class DatabaseManager {
         } catch (Exception e) {
             log.error("Failed to connect to database! Please check your config.yml.");
             log.error("Error: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -134,7 +133,6 @@ public class DatabaseManager {
                     "Database tables initialized (" + votesTable + ", " + rewardsTable + ", " + serverDataTable + ").");
         } catch (SQLException e) {
             log.error("Failed to create database tables: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -163,7 +161,6 @@ public class DatabaseManager {
             log.debug("Saved vote for " + username);
         } catch (SQLException e) {
             log.error("Failed to save vote: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -228,12 +225,11 @@ public class DatabaseManager {
 
         } catch (SQLException e) {
             log.error("Failed to process atomic vote: " + e.getMessage());
-            e.printStackTrace();
             if (connection != null) {
                 try {
                     connection.rollback();
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    log.warn("Rollback failed after vote transaction error: " + ex.getMessage());
                 }
             }
             return VoteResult.FAIL_IGNORED;
@@ -243,7 +239,7 @@ public class DatabaseManager {
                     connection.setAutoCommit(true);
                     connection.close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    log.warn("Failed to reset close SQL connection: " + e.getMessage());
                 }
             }
         }
@@ -301,7 +297,6 @@ public class DatabaseManager {
             log.info("Queued reward for " + uuid);
         } catch (SQLException e) {
             log.error("Failed to queue reward: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -329,7 +324,6 @@ public class DatabaseManager {
             }
         } catch (SQLException e) {
             log.error("Failed to retrieve rewards: " + e.getMessage());
-            e.printStackTrace();
         }
         return commands;
     }
@@ -342,7 +336,8 @@ public class DatabaseManager {
             if (rs.next()) {
                 return Integer.parseInt(rs.getString("value"));
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            log.error("Failed to get community goal progress: " + e.getMessage());
         }
         return 0;
     }
@@ -370,7 +365,6 @@ public class DatabaseManager {
             }
         } catch (SQLException e) {
             log.error("Failed to atomic increment community goal: " + e.getMessage());
-            e.printStackTrace();
         }
         return 0;
     }
@@ -404,7 +398,6 @@ public class DatabaseManager {
             }
         } catch (SQLException e) {
             log.error("Failed to get votes since timestamp: " + e.getMessage());
-            e.printStackTrace();
         }
         return 0;
     }
@@ -428,7 +421,6 @@ public class DatabaseManager {
             }
         } catch (SQLException e) {
             log.error("Failed to get votes between timestamps: " + e.getMessage());
-            e.printStackTrace();
         }
         return 0;
     }
