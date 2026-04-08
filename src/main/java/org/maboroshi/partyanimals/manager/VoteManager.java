@@ -12,12 +12,14 @@ import org.maboroshi.partyanimals.util.Logger;
 public class VoteManager {
     private final PartyAnimals plugin;
     private final Logger log;
+    private final VoteReminder voteReminder;
     private VoteListener voteListener;
     private ScheduledTask voteReminderTask;
 
     public VoteManager(PartyAnimals plugin) {
         this.plugin = plugin;
         this.log = plugin.getPluginLogger();
+        this.voteReminder = new VoteReminder(plugin);
     }
 
     public void enable() {
@@ -54,10 +56,15 @@ public class VoteManager {
 
     private void startReminder() {
         MainConfig.VoteReminderSettings settings = plugin.getConfiguration().getMainConfig().modules.vote.reminder;
-        if (settings.enabled && voteReminderTask == null) {
-            long intervalTicks = settings.interval * 20L;
-            this.voteReminderTask = Bukkit.getGlobalRegionScheduler()
-                    .runAtFixedRate(plugin, (task) -> new VoteReminder(plugin).run(), intervalTicks, intervalTicks);
+        if (!settings.enabled || voteReminderTask != null) return;
+
+        if (settings.interval <= 0) {
+            log.warn("Vote reminder is enabled but interval is <= 0. Skipping reminder task.");
+            return;
         }
+
+        long intervalTicks = settings.interval * 20L;
+        this.voteReminderTask = Bukkit.getGlobalRegionScheduler()
+                .runAtFixedRate(plugin, task -> voteReminder.run(), intervalTicks, intervalTicks);
     }
 }
