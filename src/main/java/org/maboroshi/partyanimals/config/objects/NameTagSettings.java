@@ -32,6 +32,9 @@ public class NameTagSettings {
     @Comment({"How the text rotates relative to the player.", "Options: FIXED, VERTICAL, HORIZONTAL, CENTER."})
     public Display.Billboard billboard = Display.Billboard.VERTICAL;
 
+    @Comment("ModelEngine NAMETAG bone id to use when a model is attached.")
+    public String modelEngineBoneId = "name";
+
     @Comment("Visible through walls.")
     public boolean seeThrough = true;
 
@@ -46,6 +49,7 @@ public class NameTagSettings {
     public NameTagSettings(
             boolean enabled,
             String type,
+            String modelEngineBoneId,
             List<String> text,
             TextDisplay.TextAlignment textAlignment,
             BackgroundSettings background,
@@ -56,6 +60,7 @@ public class NameTagSettings {
             TransformSettings transformation) {
         this.enabled = enabled;
         this.type = type;
+        this.modelEngineBoneId = modelEngineBoneId;
         this.text = text;
         this.textAlignment = textAlignment;
         this.background = background;

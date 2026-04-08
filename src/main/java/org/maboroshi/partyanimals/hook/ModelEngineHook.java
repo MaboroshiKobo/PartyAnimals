@@ -4,9 +4,9 @@ import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import com.ticxo.modelengine.api.model.bone.BoneBehaviorTypes;
-import com.ticxo.modelengine.api.model.bone.type.Mount;
+import com.ticxo.modelengine.api.model.bone.type.NameTag;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.util.Logger;
@@ -70,19 +70,35 @@ public class ModelEngineHook {
         }
     }
 
-    public void addPassenger(LivingEntity pinata, Entity passenger, String boneId) {
-        ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
-        if (modeledEntity == null) return;
+    public boolean hasModeledEntity(LivingEntity pinata) {
+        return ModelEngineAPI.getModeledEntity(pinata.getUniqueId()) != null;
+    }
 
-        for (ActiveModel model : modeledEntity.getModels().values()) {
-            model.getBone(boneId).ifPresent(bone -> {
-                bone.getBoneBehavior(BoneBehaviorTypes.MOUNT).ifPresent(behavior -> {
-                    if (behavior instanceof Mount mount) {
-                        mount.addPassenger(passenger);
-                    }
-                });
-            });
-            return;
+    public boolean configureNameTag(LivingEntity pinata, String boneId, Consumer<NameTag> consumer) {
+        ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
+        if (modeledEntity == null) {
+            log.debug("NAMETAG skipped: no modeled entity for " + pinata.getUniqueId());
+            return false;
         }
+
+        for (var modelEntry : modeledEntity.getModels().entrySet()) {
+            ActiveModel model = modelEntry.getValue();
+            var boneOpt = model.getBone(boneId);
+            if (boneOpt.isEmpty()) {
+                continue;
+            }
+
+            var behaviorOpt = boneOpt.get().getBoneBehavior(BoneBehaviorTypes.NAMETAG);
+            if (behaviorOpt.isEmpty()) {
+                continue;
+            }
+
+            NameTag nameTag = (NameTag) behaviorOpt.get();
+            consumer.accept(nameTag);
+            return true;
+        }
+
+        log.warn("No valid NAMETAG bone found for entity " + pinata.getUniqueId() + " using id: " + boneId);
+        return false;
     }
 }

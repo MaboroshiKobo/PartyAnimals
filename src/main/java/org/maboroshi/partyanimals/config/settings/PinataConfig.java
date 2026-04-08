@@ -48,6 +48,7 @@ public final class PinataConfig {
         public NameTagSettings nameTag = new NameTagSettings(
                 true,
                 "TEXT",
+                "name",
                 List.of("<pinata_name>", "<pinata_health> <gray>/</gray> <pinata_max_health> <red>❤</red>", "<timer>"),
                 TextAlignment.CENTER,
                 new BackgroundSettings(false, 64, 0, 0, 0),
