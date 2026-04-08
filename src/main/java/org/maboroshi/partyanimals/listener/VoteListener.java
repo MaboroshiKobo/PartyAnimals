@@ -146,7 +146,7 @@ public class VoteListener implements Listener {
                 Bukkit.getAsyncScheduler().runNow(plugin, (at) -> {
                     for (var action : voteEvent.actions.values()) {
                         if (shouldRun(action)) {
-                            processActionForQueue(uuid, playerName, action);
+                            processActionForQueue(uuid, action);
                             if (action.stopProcessing) break;
                         }
                     }
@@ -163,7 +163,7 @@ public class VoteListener implements Listener {
         return ThreadLocalRandom.current().nextDouble(100.0) <= action.chance;
     }
 
-    private void processActionForQueue(UUID uuid, String playerName, CommandAction action) {
+    private void processActionForQueue(UUID uuid, CommandAction action) {
         if (action.commands.isEmpty()) return;
 
         if (action.pickOneRandom) {
