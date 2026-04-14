@@ -4,7 +4,6 @@ import de.exlll.configlib.Comment;
 import de.exlll.configlib.ConfigLib;
 import de.exlll.configlib.Configuration;
 import de.exlll.configlib.NameFormatters;
-import de.exlll.configlib.PostProcess;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import java.io.File;
@@ -247,24 +246,6 @@ public final class PinataConfig {
         public RoamSettings roam = new RoamSettings();
         public FleeSettings flee = new FleeSettings();
         public FreezeSettings freeze = new FreezeSettings();
-
-        @PostProcess
-        private void migrateLegacyValues() {
-            if (type == null) return;
-
-            switch (type.toUpperCase()) {
-                case "BOTH":
-                case "FLEE":
-                    this.type = "ACTIVE";
-                    break;
-                case "ROAM":
-                    this.type = "PASSIVE";
-                    break;
-                case "NONE":
-                    this.type = "STATIONARY";
-                    break;
-            }
-        }
     }
 
     @Configuration
@@ -346,29 +327,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        @Deprecated
-        public Map<String, CommandAction> rewards = null;
-
-        @Deprecated
-        public Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrate() {
-            if (rewards != null) {
-                if (!rewards.isEmpty()) {
-                    actions.putAll(rewards);
-                }
-                rewards = null;
-            }
-
-            if (commands != null) {
-                if (!commands.isEmpty()) {
-                    actions.putAll(commands);
-                }
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -398,29 +356,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        @Deprecated
-        public Map<String, CommandAction> rewards = null;
-
-        @Deprecated
-        public Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrate() {
-            if (rewards != null) {
-                if (!rewards.isEmpty()) {
-                    actions.putAll(rewards);
-                }
-                rewards = null;
-            }
-
-            if (commands != null) {
-                if (!commands.isEmpty()) {
-                    actions.putAll(commands);
-                }
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -444,29 +379,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        @Deprecated
-        public Map<String, CommandAction> rewards = null;
-
-        @Deprecated
-        public Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrate() {
-            if (rewards != null) {
-                if (!rewards.isEmpty()) {
-                    actions.putAll(rewards);
-                }
-                rewards = null;
-            }
-
-            if (commands != null) {
-                if (!commands.isEmpty()) {
-                    actions.putAll(commands);
-                }
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -487,29 +399,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        @Deprecated
-        public Map<String, CommandAction> rewards = null;
-
-        @Deprecated
-        public Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrate() {
-            if (rewards != null) {
-                if (!rewards.isEmpty()) {
-                    actions.putAll(rewards);
-                }
-                rewards = null;
-            }
-
-            if (commands != null) {
-                if (!commands.isEmpty()) {
-                    actions.putAll(commands);
-                }
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -533,29 +422,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        @Deprecated
-        public Map<String, CommandAction> rewards = null;
-
-        @Deprecated
-        public Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrate() {
-            if (rewards != null) {
-                if (!rewards.isEmpty()) {
-                    actions.putAll(rewards);
-                }
-                rewards = null;
-            }
-
-            if (commands != null) {
-                if (!commands.isEmpty()) {
-                    actions.putAll(commands);
-                }
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -578,29 +444,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        @Deprecated
-        public Map<String, CommandAction> rewards = null;
-
-        @Deprecated
-        public Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrate() {
-            if (rewards != null) {
-                if (!rewards.isEmpty()) {
-                    actions.putAll(rewards);
-                }
-                rewards = null;
-            }
-
-            if (commands != null) {
-                if (!commands.isEmpty()) {
-                    actions.putAll(commands);
-                }
-                commands = null;
-            }
-        }
     }
 
     @Configuration
@@ -692,7 +535,7 @@ public final class PinataConfig {
                         Map.of("crit-sound", new SoundEffect("entity.player.attack.crit", 1f, 1f)),
                         Map.of("crit-particle", new ParticleEffect("CRIT", 5, new ParticleOffset(0.3, 1.0, 0.3), 0.0))),
                 new HashMap<>(Map.of(
-                        "vip_reward",
+                        "vip-reward",
                         new CommandAction(
                                 50.0, false, false, false, "partyanimals.vip", List.of("give <player> diamond 1")))));
 
@@ -713,7 +556,7 @@ public final class PinataConfig {
                                 "explosion-particle",
                                 new ParticleEffect("EXPLOSION", 5, new ParticleOffset(0.0, 0.0, 0.0), 0.0))),
                 new HashMap<>(Map.of(
-                        "everyone_emerald",
+                        "everyone-emerald",
                         new CommandAction(100.0, false, false, false, "", List.of("give @a emerald 5")))));
     }
 
@@ -726,29 +569,6 @@ public final class PinataConfig {
 
         @Comment("Actions to execute when triggered.")
         public Map<String, CommandAction> actions = new HashMap<>();
-
-        @Deprecated
-        public Map<String, CommandAction> rewards = null;
-
-        @Deprecated
-        public Map<String, CommandAction> commands = null;
-
-        @PostProcess
-        private void migrate() {
-            if (rewards != null) {
-                if (!rewards.isEmpty()) {
-                    actions.putAll(rewards);
-                }
-                rewards = null;
-            }
-
-            if (commands != null) {
-                if (!commands.isEmpty()) {
-                    actions.putAll(commands);
-                }
-                commands = null;
-            }
-        }
 
         public GameEvent() {}
 
