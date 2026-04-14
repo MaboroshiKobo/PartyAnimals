@@ -201,11 +201,11 @@ public final class MainConfig {
 
         @Comment("Visual/Audio effects.")
         public EffectGroup effects = new EffectGroup(
-                new HashMap<>(Map.of("limit-reached", new SoundEffect("entity.villager.no", 1f, 1f))), new HashMap<>());
+                new HashMap<>(Map.of("excess-vote", new SoundEffect("entity.villager.no", 1f, 1f))), new HashMap<>());
 
-        @Comment("Actions to execute when the limit is reached (e.g. warn the player).")
+        @Comment("Actions to execute when excess votes are received.")
         public Map<String, CommandAction> actions = new HashMap<>(Map.of(
-                "limit-reached",
-                new CommandAction(100.0, List.of("msg <player> You have reached your daily vote reward limit!"))));
+                "excess-vote",
+                new CommandAction(100.0, List.of("msg <player> You have already reached your daily vote limit!"))));
     }
 }
