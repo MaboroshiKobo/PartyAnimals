@@ -110,6 +110,7 @@ public class VoteListener implements Listener {
                     Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
                         Player player = Bukkit.getPlayer(playerName);
                         if (player != null) {
+                            effectHandler.playEffects(limitSettings.effects, player.getLocation(), false);
                             actionHandler.process(player, limitSettings.actions.values());
                         }
                     });
