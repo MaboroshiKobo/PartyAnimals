@@ -16,12 +16,10 @@ public class PinataRoamGoal implements Goal<Mob> {
     private final PartyAnimals plugin;
     private final Mob mob;
     private final GoalKey<Mob> key;
-    private final Location anchor;
 
     public PinataRoamGoal(PartyAnimals plugin, Mob mob) {
         this.plugin = plugin;
         this.mob = mob;
-        this.anchor = mob.getLocation().clone();
         this.key = GoalKey.of(Mob.class, new NamespacedKey(plugin, "pinata_roam"));
     }
 
@@ -49,9 +47,10 @@ public class PinataRoamGoal implements Goal<Mob> {
         double x = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeX;
         double z = (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rangeZ;
 
-        int targetX = anchor.getBlockX() + (int) x;
-        int targetZ = anchor.getBlockZ() + (int) z;
-        int currentY = mob.getLocation().getBlockY();
+        Location currentLoc = mob.getLocation();
+        int targetX = currentLoc.getBlockX() + (int) x;
+        int targetZ = currentLoc.getBlockZ() + (int) z;
+        int currentY = currentLoc.getBlockY();
 
         Block validTargetBlock = null;
 
