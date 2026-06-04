@@ -4,7 +4,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-import org.maboroshi.partyanimals.config.objects.effects.*;
+import org.maboroshi.partyanimals.config.objects.effects.EffectGroup;
+import org.maboroshi.partyanimals.config.objects.effects.ParticleEffect;
+import org.maboroshi.partyanimals.config.objects.effects.SoundEffect;
 import org.maboroshi.partyanimals.util.Logger;
 
 public class EffectHandler {

@@ -16,8 +16,14 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay.TextAlignment;
 import org.maboroshi.partyanimals.config.objects.CommandAction;
 import org.maboroshi.partyanimals.config.objects.NameTagSettings;
-import org.maboroshi.partyanimals.config.objects.NameTagSettings.*;
-import org.maboroshi.partyanimals.config.objects.effects.*;
+import org.maboroshi.partyanimals.config.objects.NameTagSettings.BackgroundSettings;
+import org.maboroshi.partyanimals.config.objects.NameTagSettings.TextShadowSettings;
+import org.maboroshi.partyanimals.config.objects.NameTagSettings.TransformSettings;
+import org.maboroshi.partyanimals.config.objects.NameTagSettings.TranslationSettings;
+import org.maboroshi.partyanimals.config.objects.effects.EffectGroup;
+import org.maboroshi.partyanimals.config.objects.effects.ParticleEffect;
+import org.maboroshi.partyanimals.config.objects.effects.ParticleOffset;
+import org.maboroshi.partyanimals.config.objects.effects.SoundEffect;
 
 public final class PinataConfig {
 
