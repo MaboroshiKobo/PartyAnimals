@@ -57,8 +57,6 @@ public final class PartyAnimals extends JavaPlugin {
             return;
         }
 
-        setupHooks();
-
         this.log = new Logger(this, messageUtils);
         this.bossBarManager = new BossBarManager(this);
         this.effectHandler = new EffectHandler(log);
@@ -66,6 +64,7 @@ public final class PartyAnimals extends JavaPlugin {
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.connect();
 
+        setupHooks();
         setupModules();
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
