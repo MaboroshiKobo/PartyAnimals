@@ -38,6 +38,7 @@ tasks.named('shadowJar') {
 }
 
 build.dependsOn shadowJar
+build.dependsOn spotlessApply
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
@@ -65,11 +66,11 @@ spotless {
   }
 
   java {
-    target 'src/*/java/**/*.java'
-    palantirJavaFormat('2.90.0')
-    formatAnnotations()
     importOrder()
     removeUnusedImports()
+    forbidWildcardImports()
     cleanthat()
+    palantirJavaFormat('2.91.0')
+    formatAnnotations()
   }
 }
