@@ -1,11 +1,11 @@
 name: PartyAnimals
-version: "2.2.1"
+version: "${version}"
 main: org.maboroshi.partyanimals.PartyAnimals
 loader: org.maboroshi.partyanimals.Loader
 description: A highly customizable Minecraft plugin that spawn pinata entities that players can defeat for configurable, chance-based rewards.
 author: Maboroshi
 website: https://github.com/MaboroshiKobo/PartyAnimals
-api-version: "1.21"
+api-version: "26.1"
 dependencies:
   server:
     PlaceholderAPI:

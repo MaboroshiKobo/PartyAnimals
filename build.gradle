@@ -5,7 +5,23 @@ plugins {
 }
 
 group = 'org.maboroshi'
-version = '2.2.1'
+def baseVersion = '2.3.0'
+
+def getGitHash = { ->
+    if (System.getenv("GITHUB_SHA") != null) {
+        return System.getenv("GITHUB_SHA").take(6)
+    }
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--short=6'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    } catch (Exception ignored) {
+        return "beta"
+    }
+}
 
 repositories {
     mavenCentral()
@@ -28,6 +44,13 @@ dependencies {
     compileOnly("de.tr7zw:item-nbt-api:2.15.7")
     compileOnly("com.ticxo.modelengine:ModelEngine:R4.1.0")
     compileOnly("io.github.toxicity188:bettermodel-bukkit-api:3.1.0")
+}
+
+tasks.register("printVersion") {
+    group = "versioning"
+    doLast {
+        println("VERSION=${version}")
+    }
 }
 
 tasks.named('shadowJar') {

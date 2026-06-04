@@ -15,10 +15,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      artifact-name: ${{ steps.upload.outputs.artifact-id }}
+      resolved-version: ${{ steps.gradle-version.outputs.version }}
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with full history
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v6
@@ -32,11 +34,25 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Extract Project Version
+        id: gradle-version
+        run: |
+          BUILD_FLAGS=""
+          if [ "${{ github.event_name }}" = "release" ]; then
+            BUILD_FLAGS="-Prelease=true"
+          fi
+          VERSION=$(./gradlew printVersion $BUILD_FLAGS | grep "^VERSION=" | cut -d'=' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Build plugin
-        run: ./gradlew build
+        run: |
+          BUILD_FLAGS=""
+          if [ "${{ github.event_name }}" = "release" ]; then
+            BUILD_FLAGS="-Prelease=true"
+          fi
+          ./gradlew build $BUILD_FLAGS
 
       - name: Upload artifact
-        id: upload
         uses: actions/upload-artifact@v7
         with:
           path: build/libs/*.jar
@@ -44,31 +60,52 @@ jobs:
 
   publish:
     needs: build
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: Download artifact
         uses: actions/download-artifact@v8
         with:
           path: build/libs
+
+      - name: Clean previous beta files
+        if: github.event_name != 'release'
+        run: |
+          echo "Fetching current beta assets..."
+          assets=$(gh release view beta --json assets --jq '.assets[].name' 2>/dev/null || echo "")
+          for asset in $assets; do
+            if [[ "$asset" == *.jar ]]; then
+              echo "Deleting old asset: $asset"
+              gh release delete-asset beta "$asset" -y || true
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: build/libs/*.jar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || 'beta' }}
+          name: ${{ github.event_name == 'release' && github.event.release.name || 'Beta Build' }}
+          body: ${{ github.event_name == 'release' && github.event.release.body || github.event.head_commit.message }}
+          prerelease: ${{ github.event_name != 'release' }}
 
       - name: Publish to Modrinth & Hangar
         uses: HSGamer/action-mcreleaser@main
         with:
-          files: build/libs/*.jar
+          files: ${{ github.event_name == 'release' && '' || 'build/libs/*.jar' }}
           platforms: modrinth,hangar
         env:
-          NAME: ${{ github.event.release.tag_name }}
-          VERSION: ${{ github.event.release.tag_name }}
-          DESCRIPTION: ${{ github.event.release.body }}
+          NAME: ${{ needs.build.outputs.resolved-version }}
+          VERSION: ${{ needs.build.outputs.resolved-version }}
+          DESCRIPTION: ${{ github.event.release.body || github.event.head_commit.message }}
           GAME_VERSIONS: "1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6 1.21.7 1.21.8 1.21.9 1.21.10 1.21.11 26.1 26.1.1 26.1.2"
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT: MwXQJvXK
@@ -76,3 +113,4 @@ jobs:
           HANGAR_KEY: ${{ secrets.HANGAR_KEY }}
           HANGAR_PROJECT: partyanimals
           HANGAR_PLATFORM: PAPER
+          HANGAR_CHANNEL: ${{ github.event_name == 'release' && 'Release' || 'Beta' }}
