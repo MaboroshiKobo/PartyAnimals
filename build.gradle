@@ -23,6 +23,9 @@ def getGitHash = { ->
     }
 }
 
+version = project.hasProperty('release') && project.property('release') == 'true' ?
+          baseVersion : "${baseVersion}-${getGitHash()}"
+
 repositories {
     mavenCentral()
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }

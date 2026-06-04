@@ -110,6 +110,7 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT: MwXQJvXK
           MODRINTH_LOADERS: "paper purpur"
+          MODRINTH_VERSION_TYPE: ${{ github.event_name == 'release' && 'release' || 'beta' }}
           HANGAR_KEY: ${{ secrets.HANGAR_KEY }}
           HANGAR_PROJECT: partyanimals
           HANGAR_PLATFORM: PAPER
