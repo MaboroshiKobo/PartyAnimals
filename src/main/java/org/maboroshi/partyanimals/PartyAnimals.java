@@ -44,25 +44,22 @@ public final class PartyAnimals extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        this.log = new Logger(this);
+        NamespacedKeys.load(this);
         this.configManager = new ConfigManager(this, getDataFolder());
 
         try {
             configManager.loadConfig();
             configManager.loadMessages();
+            this.messageUtils = new MessageUtils(this.configManager);
         } catch (Exception e) {
             getLogger().severe("Failed to load configuration: " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        @SuppressWarnings("unused")
-        Metrics metrics = new Metrics(this, 28389);
-
-        NamespacedKeys.load(this);
         setupHooks();
 
-        this.messageUtils = new MessageUtils(configManager);
+        this.log = new Logger(this, messageUtils);
         this.bossBarManager = new BossBarManager(this);
         this.effectHandler = new EffectHandler(log);
         this.actionHandler = new ActionHandler(this);
@@ -76,6 +73,9 @@ public final class PartyAnimals extends JavaPlugin {
             event.registrar()
                     .register(partyanimalsCommand.createCommand("partyanimals"), "Main command", List.of("pa"));
         });
+
+        @SuppressWarnings("unused")
+        Metrics metrics = new Metrics(this, 28389);
 
         new UpdateChecker(this).checkForUpdates();
     }

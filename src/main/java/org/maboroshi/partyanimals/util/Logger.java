@@ -1,15 +1,16 @@
 package org.maboroshi.partyanimals.util;
 
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.ConfigManager;
 
 public class Logger {
     private final PartyAnimals plugin;
+    private final MessageUtils messageUtils;
 
-    public Logger(PartyAnimals plugin) {
+    public Logger(PartyAnimals plugin, MessageUtils messageUtils) {
         this.plugin = plugin;
+        this.messageUtils = messageUtils;
     }
 
     private ConfigManager getConfig() {
@@ -21,7 +22,7 @@ public class Logger {
         String prefix;
         if (config != null && config.getMessageConfig() != null) prefix = config.getMessageConfig().prefix;
         else prefix = "<color:#51CF66><bold>Party Animals</bold> ➟ </color>";
-        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(prefix + colorTag + message));
+        messageUtils.send(Bukkit.getConsoleSender(), prefix + colorTag + message);
     }
 
     public void debug(String message) {
