@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/partyanimals/partyanimals.avif" width="180" alt="PartyAnimals Logo" />
   <h1>PartyAnimals</h1>
-  <p>A modular player engagement plugin for Paper servers designed to reward your community through voting and interactive pinatas.</p>
+  <p>A fun pinata plugin for custom server events and automated vote rewards. Supports custom entity models and unique escape mechanisms. The superior alternative to PinataParty.</p>
 
   <p>
     <img alt="paper" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg">
@@ -16,35 +16,33 @@
   </p>
 
   <p>
-    <a href="https://docs.maboroshi.org/"><img alt="generic" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg"></a>
+    <a href="https://docs.maboroshi.org"><img alt="generic" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg"></a>
     <a href="https://discord.maboroshi.org"><img alt="discord-singular" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-singular_vector.svg"></a>
   </p>
 </div>
 
 ### Features
 
-PartyAnimals strives to increase player retention with a focus on these core functions:
-
-* It spawns interactive **pinata** entities that players can hit to receive configurable rewards. Supports standard vanilla mobs or custom models via **ModelEngine** or **BetterModel**!
-* You can configure their behaviors, allowing pinatas to roam, flee from players, or defend themselves with **reflexes** like *Shockwave* (knockback), *Blink* (teleportation), *Morph* (shapeshifting), and more.
-* It features a complete voting module that integrates with **NuVotifier** to track votes, handle offline queuing, and manage community goals.
-* It includes extensive customization for rewards, messages, and interaction rules, with optional **PlaceholderAPI** support.
+* Spawn pinatas that players can track down and smack for loot. It works with standard vanilla mobs right out of the box, or you can drop in custom 3D models using ModelEngine or BetterModel.
+* They don't just sit there like target dummies; you can configure them to wander around, run away from players, or defend themselves with 'abilities' like Shockwave knockbacks, Blink teleports, shapeshifting Morphs and a couple more!
+* There is a built-in voting module that utilizes NuVotifier. It handles offline reward queuing seamlessly and lets you set up global community goals for the whole server.
+* You get total control over reward tables, chat messages, and interaction rules, with full MiniMessage and PlaceholderAPI support to tie it all into your server's look.
 
 ### Prerequisites
 
-To use this plugin, your server must be running **Paper** on `1.21` or higher, and Java 21 or higher.
+This plugin is designed and officially tested for **Paper** `26.1`+ using **Java 25**. While it might technically run on slightly older Minecraft or Java versions, those aren't officially supported; so if something breaks, you're on your own!
 
-#### Dependencies
+#### Compatibility
 
-These dependencies are optional but highly recommended to unlock full functionality:
+PartyAnimals supports integration with the following plugins to enhance functionality:
 
 * [NuVotifier](https://github.com/NuVotifier/NuVotifier) (Required for voting features)
+* [ModelEngine](https://github.com/Ticxo/ModelEngine) / [BetterModel](https://github.com/Toxicity188/BetterModel) (Custom entity models)
 * [PlaceholderAPI](https://placeholderapi.com/)
-* [ModelEngine](https://github.com/Ticxo/ModelEngine) / [BetterModel](https://github.com/Toxicity188/BetterModel) (For custom entity models)
 
 ### Documentation & Support
 
-For a complete guide on features, commands, and configuration, please visit our [wiki](https://docs.maboroshi.org/). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
+For a complete guide on features, commands, and configuration, please visit our [wiki](https://docs.maboroshi.org). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
 
 ### Statistics
 
@@ -54,7 +52,7 @@ This plugin utilizes [bStats](https://bstats.org/plugin/bukkit/PartyAnimals/2838
 
 ## Building
 
-If you wish to build the project from source, ensure you have a Java 21 environment configured.
+If you wish to build the project from source, ensure you have a Java 25 environment configured.
 
 ```bash
 ./gradlew build
