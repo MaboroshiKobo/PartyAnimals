@@ -2,6 +2,7 @@ package org.maboroshi.partyanimals.handler;
 
 import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -202,7 +203,7 @@ public class ReflexHandler {
         return ThreadLocalRandom.current().nextDouble(100.0) < chance;
     }
 
-    private Location findSafeY(org.bukkit.World world, double x, double z, double startY, int verticalRange) {
+    private Location findSafeY(World world, double x, double z, double startY, int verticalRange) {
         Location target = new Location(world, x, startY, z);
         if (isSafeLocation(target)) return target;
 

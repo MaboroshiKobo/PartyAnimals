@@ -248,7 +248,6 @@ public final class PinataConfig {
             "3. STATIONARY - Never moves, but will look at nearby players.",
         })
         public String type = "ACTIVE";
-
         public RoamSettings roam = new RoamSettings();
         public FleeSettings flee = new FleeSettings();
         public FreezeSettings freeze = new FreezeSettings();
