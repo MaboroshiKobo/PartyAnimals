@@ -19,7 +19,7 @@ def getGitHash = { ->
         }
         return stdout.toString().trim()
     } catch (Exception ignored) {
-        return "beta"
+        return "alpha"
     }
 }
 
@@ -72,6 +72,7 @@ java {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs.add("-parameters")
 }
 
 processResources {
