@@ -7,21 +7,19 @@ import java.sql.SQLException;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.maboroshi.partyanimals.PartyAnimals;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class PinataPartyMigration {
     private final PartyAnimals plugin;
-    private final Logger log;
 
     public PinataPartyMigration(PartyAnimals plugin) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
     }
 
     public void migrate() {
         File legacyFile = new File(plugin.getDataFolder(), "data.yml");
         if (!legacyFile.exists()) {
-            log.error("Migration failed: data.yml not found in plugin folder.");
+            Log.error("Migration failed: data.yml not found in plugin folder.");
             return;
         }
 
@@ -29,11 +27,11 @@ public class PinataPartyMigration {
         ConfigurationSection section = oldData.getConfigurationSection("player-votes");
 
         if (section == null || section.getKeys(false).isEmpty()) {
-            log.warn("Migration: No 'player-votes' section found in data.yml.");
+            Log.warn("Migration: No 'player-votes' section found in data.yml.");
             return;
         }
 
-        log.info("Migration: Starting import of " + section.getKeys(false).size() + " records...");
+        Log.info("Migration: Starting import of " + section.getKeys(false).size() + " records...");
 
         String votesTable = plugin.getConfiguration().getMainConfig().database.tablePrefix + "votes";
         String sql =
@@ -55,13 +53,13 @@ public class PinataPartyMigration {
                 }
                 stmt.executeBatch();
                 conn.commit();
-                log.info("Migration: Successfully imported legacy data.");
+                Log.info("Migration: Successfully imported legacy data.");
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
             }
         } catch (SQLException e) {
-            log.error("Database error during migration: " + e.getMessage());
+            Log.error("Database error during migration: " + e.getMessage());
             return;
         }
 

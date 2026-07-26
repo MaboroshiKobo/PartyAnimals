@@ -7,18 +7,16 @@ import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.MainConfig;
 import org.maboroshi.partyanimals.listener.VoteListener;
 import org.maboroshi.partyanimals.task.VoteReminder;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class VoteManager {
     private final PartyAnimals plugin;
-    private final Logger log;
     private final VoteReminder voteReminder;
     private VoteListener voteListener;
     private ScheduledTask voteReminderTask;
 
     public VoteManager(PartyAnimals plugin) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
         this.voteReminder = new VoteReminder(plugin);
     }
 
@@ -29,14 +27,14 @@ public class VoteManager {
         if (!voteEnabled) return;
 
         if (!hasNuVotifier) {
-            log.warn("Vote module is enabled, but NuVotifier is not installed! Voting features will not work.");
+            Log.warn("Vote module is enabled, but NuVotifier is not installed! Voting features will not work.");
             return;
         }
 
         if (this.voteListener == null) {
             this.voteListener = new VoteListener(plugin);
             Bukkit.getPluginManager().registerEvents(this.voteListener, plugin);
-            log.info("Vote module enabled.");
+            Log.info("Vote module enabled.");
         }
 
         startReminder();
@@ -50,7 +48,7 @@ public class VoteManager {
         if (this.voteListener != null) {
             HandlerList.unregisterAll(this.voteListener);
             this.voteListener = null;
-            log.info("Vote module disabled.");
+            Log.info("Vote module disabled.");
         }
     }
 
@@ -59,7 +57,7 @@ public class VoteManager {
         if (!settings.enabled || voteReminderTask != null) return;
 
         if (settings.interval <= 0) {
-            log.warn("Vote reminder is enabled but interval is <= 0. Skipping reminder task.");
+            Log.warn("Vote reminder is enabled but interval is <= 0. Skipping reminder task.");
             return;
         }
 

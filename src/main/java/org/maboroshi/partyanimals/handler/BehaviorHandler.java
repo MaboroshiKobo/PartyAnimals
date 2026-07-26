@@ -11,15 +11,13 @@ import org.maboroshi.partyanimals.behavior.PinataFloatGoal;
 import org.maboroshi.partyanimals.behavior.PinataFreezeGoal;
 import org.maboroshi.partyanimals.behavior.PinataRoamGoal;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class BehaviorHandler {
     private final PartyAnimals plugin;
-    private final Logger log;
 
     public BehaviorHandler(PartyAnimals plugin) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
     }
 
     public void apply(LivingEntity pinata, PinataConfiguration pinataConfig) {
@@ -38,7 +36,7 @@ public class BehaviorHandler {
             String mode = (rawType != null) ? rawType.toUpperCase() : "ACTIVE";
 
             if (!List.of("ACTIVE", "PASSIVE", "STATIONARY").contains(mode)) {
-                log.warn("Unknown movement type '" + mode + "' for pinata " + mob.getUniqueId()
+                Log.warn("Unknown movement type '" + mode + "' for pinata " + mob.getUniqueId()
                         + ". Defaulting to ACTIVE.");
                 mode = "ACTIVE";
             }

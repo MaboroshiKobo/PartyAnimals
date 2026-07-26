@@ -22,14 +22,13 @@ import org.maboroshi.partyanimals.handler.ActionHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
 import org.maboroshi.partyanimals.hook.BetterModelHook;
 import org.maboroshi.partyanimals.hook.ModelEngineHook;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class PinataFactory {
     private final PartyAnimals plugin;
     private final ConfigManager config;
-    private final Logger log;
     private final MessageUtils messageUtils;
     private final PinataManager pinataManager;
     private final EffectHandler effectHandler;
@@ -44,7 +43,6 @@ public class PinataFactory {
             BetterModelHook betterModelHook) {
         this.plugin = plugin;
         this.config = plugin.getConfiguration();
-        this.log = plugin.getPluginLogger();
         this.messageUtils = plugin.getMessageUtils();
         this.pinataManager = pinataManager;
         this.effectHandler = plugin.getEffectHandler();
@@ -55,17 +53,17 @@ public class PinataFactory {
     }
 
     public void spawn(Location location, String templateId) {
-        log.debug("Attempting to spawn pinata with template: " + templateId + " at " + location);
+        Log.debug("Attempting to spawn pinata with template: " + templateId + " at " + location);
         PinataConfiguration pinataConfig = config.getPinataConfig(templateId);
         if (pinataConfig == null) {
-            log.error("Cannot spawn pinata! Template '" + templateId + "' not found.");
+            Log.error("Cannot spawn pinata! Template '" + templateId + "' not found.");
             return;
         }
 
         Map.Entry<String, PinataVariant> variantEntry = pick(pinataConfig.appearance.variants);
         String variantId = variantEntry.getKey();
         PinataVariant variant = variantEntry.getValue();
-        log.debug("Selected variant: " + variantId);
+        Log.debug("Selected variant: " + variantId);
 
         String chosenType;
         if (variant.types == null || variant.types.isEmpty()) {
@@ -77,7 +75,7 @@ public class PinataFactory {
         try {
             type = EntityType.valueOf(chosenType);
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid entity type '" + chosenType + "' in template " + templateId + ". Defaulting to LLAMA.");
+            Log.warn("Invalid entity type '" + chosenType + "' in template " + templateId + ". Defaulting to LLAMA.");
             type = EntityType.LLAMA;
         }
 
@@ -105,7 +103,7 @@ public class PinataFactory {
         });
 
         if (pinata == null) {
-            log.warn("Failed to spawn pinata entity.");
+            Log.warn("Failed to spawn pinata entity.");
             return;
         }
 
@@ -115,7 +113,7 @@ public class PinataFactory {
         plugin.getServer().getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
-            log.debug("Pinata spawn event was cancelled by an API event; removing entity.");
+            Log.debug("Pinata spawn event was cancelled by an API event; removing entity.");
             pinata.remove();
             return;
         }
@@ -136,7 +134,7 @@ public class PinataFactory {
             return messageUtils.parsePinataPlaceholders(pinata, cmd);
         });
 
-        log.debug("Pinata spawned successfully. Entity ID: " + pinata.getEntityId() + " UUID: " + pinata.getUniqueId());
+        Log.debug("Pinata spawned successfully. Entity ID: " + pinata.getEntityId() + " UUID: " + pinata.getUniqueId());
 
         String spawnMessage = config.getMessageConfig().pinata.events.spawnedNaturally;
         messageUtils.send(
@@ -149,7 +147,7 @@ public class PinataFactory {
 
     private void configureData(
             LivingEntity livingEntity, PinataVariant variant, String variantId, String templateId, int health) {
-        log.debug("Configuring entity data " + livingEntity.getUniqueId());
+        Log.debug("Configuring entity data " + livingEntity.getUniqueId());
 
         livingEntity
                 .getPersistentDataContainer()
@@ -182,7 +180,7 @@ public class PinataFactory {
                     nbt.mergeCompound(customNbt);
                 });
             } catch (Exception e) {
-                log.warn("Failed to apply NBT to pinata variant: " + variant + ". Error: " + e.getMessage());
+                Log.warn("Failed to apply NBT to pinata variant: " + variant + ". Error: " + e.getMessage());
             }
         }
     }
@@ -192,23 +190,23 @@ public class PinataFactory {
 
         boolean modelApplied = false;
         if (variant.model != null && !variant.model.isEmpty()) {
-            log.debug("Applying custom model: " + variant.model);
+            Log.debug("Applying custom model: " + variant.model);
             if (modelEngineHook != null && modelEngineHook.applyModel(livingEntity, variant.model)) {
-                log.debug("ModelEngine model applied.");
+                Log.debug("ModelEngine model applied.");
                 modelApplied = true;
                 modelEngineHook.setScale(livingEntity, scale);
             } else if (betterModelHook != null && betterModelHook.applyModel(livingEntity, variant.model)) {
-                log.debug("BetterModel model applied.");
+                Log.debug("BetterModel model applied.");
                 modelApplied = true;
                 var scaleAttr = livingEntity.getAttribute(Attribute.SCALE);
                 if (scaleAttr != null) scaleAttr.setBaseValue(scale);
             } else {
-                log.warn("Failed to apply model " + variant.model + " (Hooks missing or returned false)");
+                Log.warn("Failed to apply model " + variant.model + " (Hooks missing or returned false)");
             }
         }
 
         if (!modelApplied) {
-            log.debug("No custom model applied. Setting vanilla scale: " + scale);
+            Log.debug("No custom model applied. Setting vanilla scale: " + scale);
             var scaleAttr = livingEntity.getAttribute(Attribute.SCALE);
             if (scaleAttr != null) scaleAttr.setBaseValue(scale);
         }
@@ -243,7 +241,7 @@ public class PinataFactory {
                     livingEntity.setGlowing(true);
                 }
             } else {
-                log.warn("Invalid glow color name: " + colorName);
+                Log.warn("Invalid glow color name: " + colorName);
             }
         }
     }

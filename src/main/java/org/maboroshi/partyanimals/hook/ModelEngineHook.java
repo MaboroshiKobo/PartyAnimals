@@ -9,21 +9,19 @@ import java.util.function.Consumer;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.LivingEntity;
 import org.maboroshi.partyanimals.PartyAnimals;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class ModelEngineHook {
-    private final Logger log;
 
     public ModelEngineHook(PartyAnimals plugin) {
-        this.log = plugin.getPluginLogger();
     }
 
     public boolean applyModel(LivingEntity pinata, String modelId) {
-        log.debug("Applying ModelEngine model: " + modelId + " to entity: " + pinata.getUniqueId());
+        Log.debug("Applying ModelEngine model: " + modelId + " to entity: " + pinata.getUniqueId());
         ModeledEntity modeledEntity = ModelEngineAPI.getOrCreateModeledEntity(pinata);
         ActiveModel activeModel = ModelEngineAPI.createActiveModel(modelId);
         if (activeModel == null) {
-            log.warn("Failed to create ActiveModel for: " + modelId);
+            Log.warn("Failed to create ActiveModel for: " + modelId);
             return false;
         }
         modeledEntity.addModel(activeModel, false);
@@ -33,10 +31,10 @@ public class ModelEngineHook {
     public void playAnimation(LivingEntity pinata, String animationId) {
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
         if (modeledEntity == null) {
-            log.debug("Skipping animation " + animationId + ": No ModeledEntity found for " + pinata.getUniqueId());
+            Log.debug("Skipping animation " + animationId + ": No ModeledEntity found for " + pinata.getUniqueId());
             return;
         }
-        log.debug("Playing animation: " + animationId + " for entity: " + pinata.getUniqueId());
+        Log.debug("Playing animation: " + animationId + " for entity: " + pinata.getUniqueId());
         for (ActiveModel model : modeledEntity.getModels().values()) {
             model.getAnimationHandler().playAnimation(animationId, 0, 0, 1, false);
         }
@@ -45,10 +43,10 @@ public class ModelEngineHook {
     public void setScale(LivingEntity pinata, double scale) {
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
         if (modeledEntity == null) {
-            log.debug("Skipping setScale: No ModeledEntity found for " + pinata.getUniqueId());
+            Log.debug("Skipping setScale: No ModeledEntity found for " + pinata.getUniqueId());
             return;
         }
-        log.debug("Setting scale to: " + scale + " for entity: " + pinata.getUniqueId());
+        Log.debug("Setting scale to: " + scale + " for entity: " + pinata.getUniqueId());
         for (ActiveModel model : modeledEntity.getModels().values()) {
             model.setScale(scale);
         }
@@ -57,12 +55,12 @@ public class ModelEngineHook {
     public void setGlowing(LivingEntity pinata, boolean glowing, NamedTextColor color) {
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
         if (modeledEntity == null) {
-            log.debug("Skipping setGlowing: No ModeledEntity found for " + pinata.getUniqueId());
+            Log.debug("Skipping setGlowing: No ModeledEntity found for " + pinata.getUniqueId());
             return;
         }
 
         int rgb = color.value();
-        log.debug("Setting glowing: " + glowing + " (Color: " + rgb + ") for entity: " + pinata.getUniqueId());
+        Log.debug("Setting glowing: " + glowing + " (Color: " + rgb + ") for entity: " + pinata.getUniqueId());
 
         for (ActiveModel model : modeledEntity.getModels().values()) {
             model.setGlowing(glowing);
@@ -77,7 +75,7 @@ public class ModelEngineHook {
     public boolean configureNameTag(LivingEntity pinata, String boneId, Consumer<NameTag> consumer) {
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
         if (modeledEntity == null) {
-            log.debug("NAMETAG skipped: no modeled entity for " + pinata.getUniqueId());
+            Log.debug("NAMETAG skipped: no modeled entity for " + pinata.getUniqueId());
             return false;
         }
 
@@ -98,7 +96,7 @@ public class ModelEngineHook {
             return true;
         }
 
-        log.warn("No valid NAMETAG bone found for entity " + pinata.getUniqueId() + " using id: " + boneId);
+        Log.warn("No valid NAMETAG bone found for entity " + pinata.getUniqueId() + " using id: " + boneId);
         return false;
     }
 }

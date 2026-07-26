@@ -24,13 +24,12 @@ import org.maboroshi.partyanimals.handler.NameTagHandler;
 import org.maboroshi.partyanimals.handler.ReflexHandler;
 import org.maboroshi.partyanimals.hook.BetterModelHook;
 import org.maboroshi.partyanimals.hook.ModelEngineHook;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class PinataManager {
     private final PartyAnimals plugin;
-    private final Logger log;
     private final ConfigManager config;
     private final BossBarManager bossBarManager;
     private final MessageUtils messageUtils;
@@ -49,7 +48,6 @@ public class PinataManager {
 
     public PinataManager(PartyAnimals plugin, ModelEngineHook modelEngineHook, BetterModelHook betterModelHook) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
         this.config = plugin.getConfiguration();
         this.bossBarManager = plugin.getBossBarManager();
         this.messageUtils = plugin.getMessageUtils();
@@ -72,7 +70,7 @@ public class PinataManager {
         PinataConfiguration pinataConfig = config.getPinataConfig(templateId);
 
         if (pinataConfig == null) {
-            log.warn("Tried to start countdown for invalid pinata template: " + templateId);
+            Log.warn("Tried to start countdown for invalid pinata template: " + templateId);
             return;
         }
 
@@ -124,7 +122,7 @@ public class PinataManager {
     }
 
     public void cleanup(boolean killEntities) {
-        log.debug("Running PinataManager cleanup (Kill entities: " + killEntities + ")...");
+        Log.debug("Running PinataManager cleanup (Kill entities: " + killEntities + ")...");
         bossBarManager.removeAll();
 
         for (LivingEntity entity : List.copyOf(activePinatas.values())) {
@@ -200,7 +198,7 @@ public class PinataManager {
         long remainingTicks = remainingMillis / 50;
 
         if (remainingTicks <= 0) {
-            log.debug("Restoring pinata but timeout passed. Removing.");
+            Log.debug("Restoring pinata but timeout passed. Removing.");
             safelyRemovePinata(pinata);
             return;
         }

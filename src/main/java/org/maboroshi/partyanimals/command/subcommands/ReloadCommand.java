@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.ConfigManager;
+import org.maboroshi.partyanimals.util.Log;
 import org.maboroshi.partyanimals.util.MessageUtils;
 
 public class ReloadCommand {
@@ -25,10 +26,10 @@ public class ReloadCommand {
                 .executes(ctx -> {
                     var sender = ctx.getSource().getSender();
                     if (plugin.reload()) {
-                        plugin.getPluginLogger().info("Configuration reloaded by " + sender.getName());
+                        Log.info("Configuration reloaded by " + sender.getName());
                         messageUtils.send(sender, config.getMessageConfig().general.reloadSuccess);
                     } else {
-                        plugin.getPluginLogger().warn("Failed to reload configuration by " + sender.getName());
+                        Log.warn("Failed to reload configuration by " + sender.getName());
                         messageUtils.send(sender, config.getMessageConfig().general.reloadFail);
                     }
                     return Command.SINGLE_SUCCESS;

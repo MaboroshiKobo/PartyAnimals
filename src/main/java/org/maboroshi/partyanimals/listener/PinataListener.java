@@ -24,13 +24,12 @@ import org.maboroshi.partyanimals.handler.HitCooldownHandler;
 import org.maboroshi.partyanimals.handler.ReflexHandler;
 import org.maboroshi.partyanimals.manager.BossBarManager;
 import org.maboroshi.partyanimals.manager.PinataManager;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class PinataListener implements Listener {
     private final PartyAnimals plugin;
-    private final Logger log;
     private final ConfigManager config;
     private final MessageUtils messageUtils;
     private final PinataManager pinataManager;
@@ -42,7 +41,6 @@ public class PinataListener implements Listener {
 
     public PinataListener(PartyAnimals plugin) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
         this.config = plugin.getConfiguration();
         this.messageUtils = plugin.getMessageUtils();
         this.pinataManager = plugin.getPinataManager();
@@ -63,7 +61,7 @@ public class PinataListener implements Listener {
                         plugin,
                         (task) -> {
                             if (pinata.isValid()) {
-                                log.debug("Restoring pinata state: " + pinata.getUniqueId());
+                                Log.debug("Restoring pinata state: " + pinata.getUniqueId());
                                 pinataManager.activatePinata(pinata);
                             }
                         },
@@ -74,7 +72,7 @@ public class PinataListener implements Listener {
     public void onPinataInteract(PlayerInteractEntityEvent event) {
         if (event.getRightClicked() instanceof LivingEntity pinata) {
             if (pinataManager.isPinata(pinata)) {
-                log.debug("Player attempted to interact with a pinata: " + pinata);
+                Log.debug("Player attempted to interact with a pinata: " + pinata);
                 event.setCancelled(true);
             }
         }
@@ -87,7 +85,7 @@ public class PinataListener implements Listener {
         if (!(event.getEntity() instanceof LivingEntity pinata) || !pinataManager.isPinata(pinata)) return;
 
         if (!(event.getDamager() instanceof Player player)) {
-            log.debug("Non-player entity attempted to damage pinata: " + pinata);
+            Log.debug("Non-player entity attempted to damage pinata: " + pinata);
             event.setCancelled(true);
             return;
         }
@@ -95,19 +93,19 @@ public class PinataListener implements Listener {
         PinataConfiguration pinataConfig = pinataManager.getPinataConfig(pinata);
 
         if (!checkPermission(player, pinataConfig)) {
-            log.debug("Player " + player.getName() + " does not have permission to hit pinatas.");
+            Log.debug("Player " + player.getName() + " does not have permission to hit pinatas.");
             event.setCancelled(true);
             return;
         }
 
         if (!isItemAllowed(player, pinataConfig.interaction.allowedItems)) {
-            log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " with disallowed item.");
+            Log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " with disallowed item.");
             event.setCancelled(true);
             return;
         }
 
         if (hitCooldownHandler.isOnCooldown(player, pinata)) {
-            log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " but is on cooldown.");
+            Log.debug("Player " + player.getName() + " attempted to hit pinata " + pinata + " but is on cooldown.");
             event.setCancelled(true);
             return;
         }
@@ -129,7 +127,7 @@ public class PinataListener implements Listener {
                 .getOrDefault(NamespacedKeys.PINATA_HEALTH, PersistentDataType.INTEGER, 1);
         currentHits--;
 
-        log.debug("Pinata "
+        Log.debug("Pinata "
                 + pinata
                 + " (UUID: "
                 + pinata.getUniqueId()
@@ -149,7 +147,7 @@ public class PinataListener implements Listener {
                 pinata.playHurtAnimation(0);
             }
 
-            log.debug("Processing hit commands for player: " + player.getName());
+            Log.debug("Processing hit commands for player: " + player.getName());
             actionHandler.process(
                     player,
                     pinataConfig.events.hit.actions.values(),
@@ -172,7 +170,7 @@ public class PinataListener implements Listener {
 
         if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK
                 && event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE) {
-            log.debug("Pinata "
+            Log.debug("Pinata "
                     + pinata
                     + " (UUID: "
                     + pinata.getUniqueId()
@@ -228,7 +226,7 @@ public class PinataListener implements Listener {
     }
 
     private void handlePinataDeath(LivingEntity pinata, Player player, PinataConfiguration pinataConfig) {
-        log.debug("Handling pinata death for pinata: "
+        Log.debug("Handling pinata death for pinata: "
                 + pinata
                 + " (UUID: "
                 + pinata.getUniqueId()
@@ -240,7 +238,7 @@ public class PinataListener implements Listener {
 
         effectHandler.playEffects(pinataConfig.events.death.effects, pinata.getLocation(), false);
 
-        log.debug("Processing last hit commands...");
+        Log.debug("Processing last hit commands...");
         actionHandler.process(
                 player,
                 pinataConfig.events.lastHit.actions.values(),
@@ -249,7 +247,7 @@ public class PinataListener implements Listener {
         String lastHitMessage = config.getMessageConfig().pinata.gameplay.lastHit;
         messageUtils.send(player, lastHitMessage, messageUtils.tag("player", player.getName()));
 
-        log.debug("Processing death commands...");
+        Log.debug("Processing death commands...");
         actionHandler.process(
                 player,
                 pinataConfig.events.death.actions.values(),

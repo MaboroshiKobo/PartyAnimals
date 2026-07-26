@@ -7,16 +7,9 @@ import org.bukkit.entity.Player;
 import org.maboroshi.partyanimals.config.objects.effects.EffectGroup;
 import org.maboroshi.partyanimals.config.objects.effects.ParticleEffect;
 import org.maboroshi.partyanimals.config.objects.effects.SoundEffect;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class EffectHandler {
-
-    private final Logger log;
-
-    public EffectHandler(Logger log) {
-        this.log = log;
-    }
-
     public void playEffects(EffectGroup group, Location location, boolean globalSound) {
         if (group == null) return;
 
@@ -49,7 +42,7 @@ public class EffectHandler {
                 }
             }
         } catch (Exception e) {
-            log.debug("Failed to play sound: " + sound.type);
+            Log.debug("Failed to play sound: " + sound.type);
         }
     }
 
@@ -75,7 +68,7 @@ public class EffectHandler {
                     .spawnParticle(
                             particle, location.clone().add(0, 1.0, 0), particleData.count, offX, offY, offZ, speed);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid particle type in config: " + particleType);
+            Log.error("Invalid particle type in config: " + particleType);
         }
     }
 }

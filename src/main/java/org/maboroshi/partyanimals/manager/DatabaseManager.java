@@ -17,11 +17,10 @@ import org.bukkit.entity.Player;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.MainConfig.DatabaseSettings;
 import org.maboroshi.partyanimals.config.settings.MainConfig.PoolSettings;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class DatabaseManager {
     private final PartyAnimals plugin;
-    private final Logger log;
     private HikariDataSource dataSource;
 
     private String votesTable;
@@ -30,7 +29,6 @@ public class DatabaseManager {
 
     public DatabaseManager(PartyAnimals plugin) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
     }
 
     public void connect() {
@@ -53,7 +51,7 @@ public class DatabaseManager {
             config.setJdbcUrl("jdbc:mariadb://" + settings.host + ":" + settings.port + "/" + settings.database);
             config.setUsername(settings.username);
             config.setPassword(settings.password);
-            log.info("Connecting to MariaDB database...");
+            Log.info("Connecting to MariaDB database...");
 
         } else if (type.equals("mysql")) {
             config.setDriverClassName("com.mysql.cj.jdbc.Driver");
@@ -66,21 +64,21 @@ public class DatabaseManager {
                     + "?useSSL=false&autoReconnect=true");
             config.setUsername(settings.username);
             config.setPassword(settings.password);
-            log.info("Connecting to MySQL database...");
+            Log.info("Connecting to MySQL database...");
 
         } else {
             config.setDriverClassName("org.sqlite.JDBC");
             config.setJdbcUrl("jdbc:sqlite:" + new File(plugin.getDataFolder(), "database.db").getAbsolutePath());
-            log.info("Connecting to SQLite database...");
+            Log.info("Connecting to SQLite database...");
         }
 
         try {
             this.dataSource = new HikariDataSource(config);
             initializeTables();
-            log.info("Successfully connected to the database.");
+            Log.info("Successfully connected to the database.");
         } catch (Exception e) {
-            log.error("Failed to connect to database! Please check your config.yml.");
-            log.error("Error: " + e.getMessage());
+            Log.error("Failed to connect to database! Please check your config.yml.");
+            Log.error("Error: " + e.getMessage());
         }
     }
 
@@ -129,10 +127,10 @@ public class DatabaseManager {
 
             migrateDatabase(connection);
 
-            log.info(
+            Log.info(
                     "Database tables initialized (" + votesTable + ", " + rewardsTable + ", " + serverDataTable + ").");
         } catch (SQLException e) {
-            log.error("Failed to create database tables: " + e.getMessage());
+            Log.error("Failed to create database tables: " + e.getMessage());
         }
     }
 
@@ -143,7 +141,7 @@ public class DatabaseManager {
             String alterSql = "ALTER TABLE " + votesTable + " MODIFY COLUMN timestamp BIGINT NOT NULL;";
             statement.execute(alterSql);
         } catch (SQLException e) {
-            log.debug("Migration check skipped: " + e.getMessage());
+            Log.debug("Migration check skipped: " + e.getMessage());
         }
     }
 
@@ -158,9 +156,9 @@ public class DatabaseManager {
             statement.setInt(4, amount);
             statement.setLong(5, System.currentTimeMillis());
             statement.executeUpdate();
-            log.debug("Saved vote for " + username);
+            Log.debug("Saved vote for " + username);
         } catch (SQLException e) {
-            log.error("Failed to save vote: " + e.getMessage());
+            Log.error("Failed to save vote: " + e.getMessage());
         }
     }
 
@@ -224,12 +222,12 @@ public class DatabaseManager {
             return result;
 
         } catch (SQLException e) {
-            log.error("Failed to process atomic vote: " + e.getMessage());
+            Log.error("Failed to process atomic vote: " + e.getMessage());
             if (connection != null) {
                 try {
                     connection.rollback();
                 } catch (SQLException ex) {
-                    log.warn("Rollback failed after vote transaction error: " + ex.getMessage());
+                    Log.warn("Rollback failed after vote transaction error: " + ex.getMessage());
                 }
             }
             return VoteResult.FAIL_IGNORED;
@@ -239,7 +237,7 @@ public class DatabaseManager {
                     connection.setAutoCommit(true);
                     connection.close();
                 } catch (SQLException e) {
-                    log.warn("Failed to reset close SQL connection: " + e.getMessage());
+                    Log.warn("Failed to reset close SQL connection: " + e.getMessage());
                 }
             }
         }
@@ -256,7 +254,7 @@ public class DatabaseManager {
                 return resultSet.getInt(1);
             }
         } catch (SQLException e) {
-            log.error("Failed to get votes: " + e.getMessage());
+            Log.error("Failed to get votes: " + e.getMessage());
         }
         return 0;
     }
@@ -272,7 +270,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Database fallback lookup failed for: " + playerName);
+            Log.error("Database fallback lookup failed for: " + playerName);
         }
 
         Player onlinePlayer = Bukkit.getPlayerExact(playerName);
@@ -294,9 +292,9 @@ public class DatabaseManager {
             statement.setString(1, uuid.toString());
             statement.setString(2, command);
             statement.executeUpdate();
-            log.info("Queued reward for " + uuid);
+            Log.info("Queued reward for " + uuid);
         } catch (SQLException e) {
-            log.error("Failed to queue reward: " + e.getMessage());
+            Log.error("Failed to queue reward: " + e.getMessage());
         }
     }
 
@@ -323,7 +321,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Failed to retrieve rewards: " + e.getMessage());
+            Log.error("Failed to retrieve rewards: " + e.getMessage());
         }
         return commands;
     }
@@ -337,7 +335,7 @@ public class DatabaseManager {
                 return Integer.parseInt(rs.getString("value"));
             }
         } catch (SQLException e) {
-            log.error("Failed to get community goal progress: " + e.getMessage());
+            Log.error("Failed to get community goal progress: " + e.getMessage());
         }
         return 0;
     }
@@ -364,7 +362,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Failed to atomic increment community goal: " + e.getMessage());
+            Log.error("Failed to atomic increment community goal: " + e.getMessage());
         }
         return 0;
     }
@@ -376,7 +374,7 @@ public class DatabaseManager {
             statement.setString(1, String.valueOf(value));
             statement.executeUpdate();
         } catch (SQLException e) {
-            log.error("Failed to update community goal: " + e.getMessage());
+            Log.error("Failed to update community goal: " + e.getMessage());
         }
     }
 
@@ -397,7 +395,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Failed to get votes since timestamp: " + e.getMessage());
+            Log.error("Failed to get votes since timestamp: " + e.getMessage());
         }
         return 0;
     }
@@ -420,7 +418,7 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            log.error("Failed to get votes between timestamps: " + e.getMessage());
+            Log.error("Failed to get votes between timestamps: " + e.getMessage());
         }
         return 0;
     }
@@ -428,7 +426,7 @@ public class DatabaseManager {
     public void disconnect() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
-            log.info("Database connection pool closed.");
+            Log.info("Database connection pool closed.");
         }
     }
 

@@ -19,12 +19,11 @@ import org.maboroshi.partyanimals.config.settings.MainConfig.VoteEvent;
 import org.maboroshi.partyanimals.handler.ActionHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
 import org.maboroshi.partyanimals.manager.DatabaseManager;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class VoteListener implements Listener {
     private final PartyAnimals plugin;
     private final ConfigManager config;
-    private final Logger log;
     private final EffectHandler effectHandler;
     private final ActionHandler actionHandler;
     private final DatabaseManager databaseManager;
@@ -34,7 +33,6 @@ public class VoteListener implements Listener {
     public VoteListener(PartyAnimals plugin) {
         this.plugin = plugin;
         this.config = plugin.getConfiguration();
-        this.log = plugin.getPluginLogger();
         this.effectHandler = plugin.getEffectHandler();
         this.actionHandler = plugin.getActionHandler();
         this.databaseManager = plugin.getDatabaseManager();
@@ -56,7 +54,7 @@ public class VoteListener implements Listener {
                         .run(
                                 plugin,
                                 (scheduledTask) -> {
-                                    log.debug("Delivering " + commands.size() + " offline rewards to "
+                                    Log.debug("Delivering " + commands.size() + " offline rewards to "
                                             + player.getName());
                                     for (String cmd : commands) {
                                         String finalCmd = cmd.replace("<player>", player.getName())
@@ -106,7 +104,7 @@ public class VoteListener implements Listener {
                 }
 
                 if (result == DatabaseManager.VoteResult.SUCCESS_NO_REWARD) {
-                    log.debug(playerName + " limit reached (Vote saved, Reward skipped).");
+                    Log.debug(playerName + " limit reached (Vote saved, Reward skipped).");
                     Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
                         Player player = Bukkit.getPlayer(playerName);
                         if (player != null) {

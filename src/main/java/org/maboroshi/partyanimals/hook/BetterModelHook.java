@@ -8,17 +8,15 @@ import kr.toxicity.model.api.tracker.TrackerUpdateAction;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.LivingEntity;
 import org.maboroshi.partyanimals.PartyAnimals;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 
 public class BetterModelHook {
-    private final Logger log;
 
     public BetterModelHook(PartyAnimals plugin) {
-        this.log = plugin.getPluginLogger();
     }
 
     public boolean applyModel(LivingEntity pinata, String modelId) {
-        log.debug("Applying BetterModel model: " + modelId + " to entity: " + pinata.getUniqueId());
+        Log.debug("Applying BetterModel model: " + modelId + " to entity: " + pinata.getUniqueId());
 
         return BetterModel.model(modelId)
                 .map(blueprint -> {
@@ -27,19 +25,19 @@ public class BetterModelHook {
                         tracker.forceUpdate(true);
                         return true;
                     } else {
-                        log.warn("Failed to create EntityTracker for: " + modelId + " (Entity might not be ready)");
+                        Log.warn("Failed to create EntityTracker for: " + modelId + " (Entity might not be ready)");
                         return false;
                     }
                 })
                 .orElseGet(() -> {
-                    log.warn("Failed to find BetterModel blueprint for: " + modelId);
+                    Log.warn("Failed to find BetterModel blueprint for: " + modelId);
                     return false;
                 });
     }
 
     public void setGlowing(LivingEntity pinata, boolean glowing, NamedTextColor color) {
         int rgb = (color != null) ? color.value() : 0xFFFFFF;
-        log.debug("Setting glowing: " + glowing + " (Color: " + rgb + ") for entity: " + pinata.getUniqueId());
+        Log.debug("Setting glowing: " + glowing + " (Color: " + rgb + ") for entity: " + pinata.getUniqueId());
 
         BetterModel.registry(BukkitAdapter.adapt(pinata))
                 .ifPresentOrElse(
@@ -54,7 +52,7 @@ public class BetterModelHook {
                             });
                         },
                         () -> {
-                            log.debug("Skipping setGlowing: No Registry found for " + pinata.getUniqueId());
+                            Log.debug("Skipping setGlowing: No Registry found for " + pinata.getUniqueId());
                         });
     }
 
@@ -62,13 +60,13 @@ public class BetterModelHook {
         BetterModel.registry(BukkitAdapter.adapt(pinata))
                 .ifPresentOrElse(
                         registry -> {
-                            log.debug("Playing animation: " + animationId + " for entity: " + pinata.getUniqueId());
+                            Log.debug("Playing animation: " + animationId + " for entity: " + pinata.getUniqueId());
                             registry.trackers().forEach(tracker -> {
                                 tracker.animate(animationId, AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
                             });
                         },
                         () -> {
-                            log.debug("Skipping animation " + animationId + ": No Registry found for "
+                            Log.debug("Skipping animation " + animationId + ": No Registry found for "
                                     + pinata.getUniqueId());
                         });
     }

@@ -19,7 +19,7 @@ import org.maboroshi.partyanimals.manager.BossBarManager;
 import org.maboroshi.partyanimals.manager.DatabaseManager;
 import org.maboroshi.partyanimals.manager.PinataManager;
 import org.maboroshi.partyanimals.manager.VoteManager;
-import org.maboroshi.partyanimals.util.Logger;
+import org.maboroshi.partyanimals.util.Log;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
 
@@ -27,7 +27,6 @@ public final class PartyAnimals extends JavaPlugin {
     private static PartyAnimals plugin;
 
     private ConfigManager configManager;
-    private Logger log;
     private MessageUtils messageUtils;
     private DatabaseManager databaseManager;
     private BossBarManager bossBarManager;
@@ -56,9 +55,8 @@ public final class PartyAnimals extends JavaPlugin {
             return;
         }
 
-        this.log = new Logger(this, messageUtils);
         this.bossBarManager = new BossBarManager(this);
-        this.effectHandler = new EffectHandler(log);
+        this.effectHandler = new EffectHandler();
         this.actionHandler = new ActionHandler(this);
         this.databaseManager = new DatabaseManager(this);
         this.databaseManager.connect();
@@ -79,17 +77,17 @@ public final class PartyAnimals extends JavaPlugin {
     private void setupHooks() {
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new PlaceholderAPIHook(this).register();
-            log.info("Hooked into PlaceholderAPI.");
+            Log.info("Hooked into PlaceholderAPI.");
         }
 
         if (getServer().getPluginManager().isPluginEnabled("ModelEngine")) {
             this.modelEngineHook = new ModelEngineHook(this);
-            log.info("Hooked into ModelEngine.");
+            Log.info("Hooked into ModelEngine.");
         }
 
         if (getServer().getPluginManager().isPluginEnabled("BetterModel")) {
             this.betterModelHook = new BetterModelHook(this);
-            log.info("Hooked into BetterModel.");
+            Log.info("Hooked into BetterModel.");
         }
     }
 
@@ -99,13 +97,13 @@ public final class PartyAnimals extends JavaPlugin {
             if (this.pinataManager == null) {
                 this.pinataManager = new PinataManager(this, this.modelEngineHook, this.betterModelHook);
                 getServer().getPluginManager().registerEvents(new PinataListener(this), this);
-                log.info("Pinata module enabled.");
+                Log.info("Pinata module enabled.");
             }
         } else {
             if (this.pinataManager != null) {
                 this.pinataManager.cleanup();
                 this.pinataManager = null;
-                log.info("Pinata module disabled.");
+                Log.info("Pinata module disabled.");
             }
         }
 
@@ -134,7 +132,7 @@ public final class PartyAnimals extends JavaPlugin {
             getServer().getPluginManager().callEvent(new PartyAnimalsReloadEvent());
             return true;
         } catch (Exception e) {
-            log.warn("Failed to reload configuration: " + e.getMessage());
+            Log.warn("Failed to reload configuration: " + e.getMessage());
             return false;
         }
     }
@@ -147,7 +145,7 @@ public final class PartyAnimals extends JavaPlugin {
                 }
             }
         }
-        log.info("Reloaded pinata entities and tasks.");
+        Log.info("Reloaded pinata entities and tasks.");
     }
 
     @Override
@@ -160,10 +158,6 @@ public final class PartyAnimals extends JavaPlugin {
 
     public static PartyAnimals getPlugin() {
         return plugin;
-    }
-
-    public Logger getPluginLogger() {
-        return log;
     }
 
     public ConfigManager getConfiguration() {
