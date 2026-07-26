@@ -36,7 +36,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     compileOnly("de.exlll:configlib-paper:4.8.1")
     compileOnly("com.zaxxer:HikariCP:7.1.0")
     compileOnly("com.mysql:mysql-connector-j:9.7.0")
@@ -96,7 +96,7 @@ spotless {
     removeUnusedImports()
     forbidWildcardImports()
     cleanthat()
-    palantirJavaFormat('2.91.0')
+    palantirJavaFormat('2.96.0')
     formatAnnotations()
   }
 }

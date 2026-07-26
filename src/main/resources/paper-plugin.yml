@@ -1,11 +1,14 @@
 name: PartyAnimals
-version: "${version}"
+version: ${version}
 main: org.maboroshi.partyanimals.PartyAnimals
 loader: org.maboroshi.partyanimals.Loader
 description: A fun pinata plugin for custom server events and automated vote rewards. Supports custom entity models and unique escape mechanisms.
 author: Maboroshi
 website: https://github.com/MaboroshiKobo/PartyAnimals
-api-version: "26.1"
+api-version: 26.1
+modrinth-project-id: partyanimals
+hangar-project-slug: partyanimals
+github-repo: MaboroshiKobo/PartyAnimals
 dependencies:
   server:
     PlaceholderAPI:

@@ -22,7 +22,6 @@ import org.maboroshi.partyanimals.manager.VoteManager;
 import org.maboroshi.partyanimals.util.Logger;
 import org.maboroshi.partyanimals.util.MessageUtils;
 import org.maboroshi.partyanimals.util.NamespacedKeys;
-import org.maboroshi.partyanimals.util.UpdateChecker;
 
 public final class PartyAnimals extends JavaPlugin {
     private static PartyAnimals plugin;
@@ -75,8 +74,6 @@ public final class PartyAnimals extends JavaPlugin {
 
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 28389);
-
-        new UpdateChecker(this).checkForUpdates();
     }
 
     private void setupHooks() {
