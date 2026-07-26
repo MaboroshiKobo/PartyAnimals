@@ -2,9 +2,9 @@ name: Build & Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
   release:
     types: [published]
 
@@ -73,29 +73,30 @@ jobs:
         with:
           path: build/libs
 
-      - name: Clean previous beta files
-        if: github.event_name != 'release'
-        run: |
-          echo "Fetching current beta assets..."
-          assets=$(gh release view beta --json assets --jq '.assets[].name' 2>/dev/null || echo "")
-          for asset in $assets; do
-            if [[ "$asset" == *.jar ]]; then
-              echo "Deleting old asset: $asset"
-              gh release delete-asset beta "$asset" -y || true
-            fi
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload to GitHub Release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: build/libs/*.jar
-          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || 'beta' }}
-          name: ${{ github.event_name == 'release' && github.event.release.name || 'Beta Build' }}
-          body: ${{ github.event_name == 'release' && github.event.release.body || github.event.head_commit.message }}
-          prerelease: ${{ github.event_name != 'release' }}
+          tag_name: ${{ github.event.release.tag_name }}
+          name: ${{ github.event.release.name }}
+          body: ${{ github.event.release.body }}
+
+      - name: Prepare Description
+        id: desc
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "text<<EOF" >> $GITHUB_OUTPUT
+            echo "$RELEASE_BODY" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            FIRST_LINE=$(echo "$COMMIT_MSG" | head -n 1)
+            echo "text=$FIRST_LINE" >> $GITHUB_OUTPUT
+          fi
 
       - name: Publish to Modrinth & Hangar
         uses: HSGamer/action-mcreleaser@main
@@ -105,8 +106,8 @@ jobs:
         env:
           NAME: ${{ needs.build.outputs.resolved-version }}
           VERSION: ${{ needs.build.outputs.resolved-version }}
-          DESCRIPTION: ${{ github.event.release.body || github.event.head_commit.message }}
-          GAME_VERSIONS: "1.21 1.21.1 1.21.2 1.21.3 1.21.4 1.21.5 1.21.6 1.21.7 1.21.8 1.21.9 1.21.10 1.21.11 26.1 26.1.1 26.1.2"
+          DESCRIPTION: ${{ steps.desc.outputs.text }}
+          GAME_VERSIONS: 26.1 26.1.1 26.1.2 26.2
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT: MwXQJvXK
           MODRINTH_LOADERS: "paper purpur"

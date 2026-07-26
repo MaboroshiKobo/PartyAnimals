@@ -8,14 +8,9 @@ import com.ticxo.modelengine.api.model.bone.type.NameTag;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.LivingEntity;
-import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.util.Log;
 
 public class ModelEngineHook {
-
-    public ModelEngineHook(PartyAnimals plugin) {
-    }
-
     public boolean applyModel(LivingEntity pinata, String modelId) {
         Log.debug("Applying ModelEngine model: " + modelId + " to entity: " + pinata.getUniqueId());
         ModeledEntity modeledEntity = ModelEngineAPI.getOrCreateModeledEntity(pinata);

@@ -7,14 +7,9 @@ import kr.toxicity.model.api.tracker.EntityTracker;
 import kr.toxicity.model.api.tracker.TrackerUpdateAction;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.LivingEntity;
-import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.util.Log;
 
 public class BetterModelHook {
-
-    public BetterModelHook(PartyAnimals plugin) {
-    }
-
     public boolean applyModel(LivingEntity pinata, String modelId) {
         Log.debug("Applying BetterModel model: " + modelId + " to entity: " + pinata.getUniqueId());
 

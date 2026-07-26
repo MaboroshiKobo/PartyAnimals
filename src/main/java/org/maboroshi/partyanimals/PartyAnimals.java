@@ -81,12 +81,12 @@ public final class PartyAnimals extends JavaPlugin {
         }
 
         if (getServer().getPluginManager().isPluginEnabled("ModelEngine")) {
-            this.modelEngineHook = new ModelEngineHook(this);
+            this.modelEngineHook = new ModelEngineHook();
             Log.info("Hooked into ModelEngine.");
         }
 
         if (getServer().getPluginManager().isPluginEnabled("BetterModel")) {
-            this.betterModelHook = new BetterModelHook(this);
+            this.betterModelHook = new BetterModelHook();
             Log.info("Hooked into BetterModel.");
         }
     }
