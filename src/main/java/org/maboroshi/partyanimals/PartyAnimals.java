@@ -45,6 +45,12 @@ public final class PartyAnimals extends JavaPlugin {
         NamespacedKeys.load(this);
         this.configManager = new ConfigManager(this, getDataFolder());
 
+        Log.init(
+                getComponentLogger(),
+                () -> configManager != null
+                        && configManager.getMainConfig() != null
+                        && configManager.getMainConfig().debug);
+
         try {
             configManager.loadConfig();
             configManager.loadMessages();
