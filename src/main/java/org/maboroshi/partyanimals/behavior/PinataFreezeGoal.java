@@ -49,6 +49,7 @@ public class PinataFreezeGoal implements Goal<Mob> {
     @Override
     public boolean shouldStayActive() {
         if (watcher == null || !watcher.isValid()) return false;
+        if (watcher.getWorld() != mob.getWorld()) return false;
         if (watcher.getGameMode() != GameMode.SURVIVAL && watcher.getGameMode() != GameMode.ADVENTURE) return false;
 
         PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
