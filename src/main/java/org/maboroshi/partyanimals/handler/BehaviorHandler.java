@@ -1,6 +1,7 @@
 package org.maboroshi.partyanimals.handler;
 
-import java.util.List;
+import java.util.Set;
+
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
@@ -15,6 +16,7 @@ import org.maboroshi.partyanimals.util.Log;
 
 public class BehaviorHandler {
     private final PartyAnimals plugin;
+    private static final Set<String> MOVEMENT_TYPES = Set.of("ACTIVE", "PASSIVE", "STATIONARY");
 
     public BehaviorHandler(PartyAnimals plugin) {
         this.plugin = plugin;
@@ -35,7 +37,7 @@ public class BehaviorHandler {
             String rawType = pinataConfig.behavior.movement.type;
             String mode = (rawType != null) ? rawType.toUpperCase() : "ACTIVE";
 
-            if (!List.of("ACTIVE", "PASSIVE", "STATIONARY").contains(mode)) {
+            if (!MOVEMENT_TYPES.contains(mode)) {
                 Log.warn("Unknown movement type '" + mode + "' for pinata " + mob.getUniqueId()
                         + ". Defaulting to ACTIVE.");
                 mode = "ACTIVE";
