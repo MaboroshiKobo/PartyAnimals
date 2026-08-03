@@ -11,9 +11,11 @@ import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.objects.CommandAction;
 
 public class ActionHandler {
+    private final PartyAnimals plugin;
     private final boolean hasPAPI;
 
     public ActionHandler(PartyAnimals plugin) {
+        this.plugin = plugin;
         this.hasPAPI = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
     }
 
@@ -27,6 +29,7 @@ public class ActionHandler {
 
         for (CommandAction action : commands) {
             if (!action.global && action.permission != null && !action.permission.isEmpty()) {
+                if (player == null) continue;
                 Player onlinePlayer = player.getPlayer();
                 if (onlinePlayer != null && !onlinePlayer.hasPermission(action.permission)) {
                     continue;
@@ -85,8 +88,6 @@ public class ActionHandler {
 
         final String finalCommand = parsed;
         Bukkit.getGlobalRegionScheduler()
-                .execute(
-                        PartyAnimals.getPlugin(),
-                        () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand));
+                .execute(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand));
     }
 }
