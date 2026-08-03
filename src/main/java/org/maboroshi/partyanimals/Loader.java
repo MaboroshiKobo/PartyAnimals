@@ -16,7 +16,7 @@ public class Loader implements PluginLoader {
         resolver.addDependency(new Dependency(new DefaultArtifact("com.zaxxer:HikariCP:7.1.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("com.mysql:mysql-connector-j:9.7.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("org.mariadb.jdbc:mariadb-java-client:3.5.9"), null));
-        resolver.addDependency(new Dependency(new DefaultArtifact("de.tr7zw:item-nbt-api:2.15.7"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("de.tr7zw:item-nbt-api:2.16.0"), null));
 
         resolver.addRepository(
                 new RemoteRepository.Builder("paper", "default", "https://repo.papermc.io/repository/maven-public/")
