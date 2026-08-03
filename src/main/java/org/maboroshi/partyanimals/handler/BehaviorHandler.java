@@ -1,7 +1,6 @@
 package org.maboroshi.partyanimals.handler;
 
 import java.util.Set;
-
 import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
