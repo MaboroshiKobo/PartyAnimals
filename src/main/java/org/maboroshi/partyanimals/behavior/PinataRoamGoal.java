@@ -54,27 +54,37 @@ public class PinataRoamGoal implements Goal<Mob> {
 
         Block validTargetBlock = null;
 
-        for (int dy = rangeY; dy >= -rangeY; dy--) {
-            Block candidate = mob.getWorld().getBlockAt(targetX, currentY + dy, targetZ);
-            Block above = candidate.getRelative(0, 1, 0);
-            Block twoAbove = candidate.getRelative(0, 2, 0);
-
-            if (candidate.getType().isSolid()
-                    && !candidate.isLiquid()
-                    && above.isPassable()
-                    && !above.isLiquid()
-                    && twoAbove.isPassable()) {
-                validTargetBlock = candidate;
+        for (int offset = 0; offset <= rangeY; offset++) {
+            Block candidateAbove = mob.getWorld().getBlockAt(targetX, currentY + offset, targetZ);
+            if (isValidGround(candidateAbove)) {
+                validTargetBlock = candidateAbove;
                 break;
+            }
+
+            if (offset > 0) {
+                Block candidateBelow = mob.getWorld().getBlockAt(targetX, currentY - offset, targetZ);
+                if (isValidGround(candidateBelow)) {
+                    validTargetBlock = candidateBelow;
+                    break;
+                }
             }
         }
 
         if (validTargetBlock != null) {
             Location target = validTargetBlock.getLocation().add(0.5, 1.1, 0.5);
-            if (target.getBlock().isPassable()) {
-                mob.getPathfinder().moveTo(target, speed);
-            }
+            mob.getPathfinder().moveTo(target, speed);
         }
+    }
+
+    private boolean isValidGround(Block candidate) {
+        Block above = candidate.getRelative(0, 1, 0);
+        Block twoAbove = candidate.getRelative(0, 2, 0);
+
+        return candidate.getType().isSolid()
+                && !candidate.isLiquid()
+                && above.isPassable()
+                && !above.isLiquid()
+                && twoAbove.isPassable();
     }
 
     @Override
