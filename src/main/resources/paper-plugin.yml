@@ -6,6 +6,7 @@ description: A fun pinata plugin for custom server events and automated vote rew
 author: Maboroshi
 website: https://github.com/MaboroshiKobo/PartyAnimals
 api-version: 26.1
+folia-supported: true
 modrinth-project-id: partyanimals
 hangar-project-slug: partyanimals
 github-repo: MaboroshiKobo/PartyAnimals
