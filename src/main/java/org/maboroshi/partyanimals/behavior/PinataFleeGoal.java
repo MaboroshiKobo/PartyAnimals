@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -16,8 +17,8 @@ import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfigurati
 public class PinataFleeGoal implements Goal<Mob> {
     private final PartyAnimals plugin;
     private final Mob mob;
-    private Player targetPlayer;
     private final GoalKey<Mob> key;
+    private Player targetPlayer;
     private int pauseCooldown = 0;
 
     public PinataFleeGoal(PartyAnimals plugin, Mob mob) {
@@ -30,7 +31,6 @@ public class PinataFleeGoal implements Goal<Mob> {
     public boolean shouldActivate() {
         targetPlayer = null;
         PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
-
         double triggerSq = Math.pow(config.behavior.movement.flee.triggerRadius, 2);
 
         for (Player p : mob.getWorld().getPlayers()) {
@@ -48,6 +48,7 @@ public class PinataFleeGoal implements Goal<Mob> {
     @Override
     public boolean shouldStayActive() {
         if (targetPlayer == null || !targetPlayer.isValid()) return false;
+        if (targetPlayer.getWorld() != mob.getWorld()) return false;
 
         PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
         double safetySq = Math.pow(config.behavior.movement.flee.safetyRadius, 2);
@@ -76,34 +77,64 @@ public class PinataFleeGoal implements Goal<Mob> {
         }
     }
 
+    @Override
+    public void stop() {
+        targetPlayer = null;
+        pauseCooldown = 0;
+    }
+
     private void runAway() {
-        if (targetPlayer == null) return;
+        if (targetPlayer == null || !targetPlayer.isValid() || targetPlayer.getWorld() != mob.getWorld()) return;
 
         PinataConfiguration config = plugin.getPinataManager().getPinataConfig(mob);
         double speed = config.behavior.movement.flee.speed;
 
-        Vector direction =
-                mob.getLocation().toVector().subtract(targetPlayer.getLocation().toVector());
-        if (direction.lengthSquared() < 0.01) direction = new Vector(1, 0, 0);
-        else direction.normalize();
+        Location mobLoc = mob.getLocation();
+        Vector direction = mobLoc.toVector().subtract(targetPlayer.getLocation().toVector());
+        direction.setY(0);
+
+        if (direction.lengthSquared() < 0.01) {
+            direction = new Vector(1, 0, 0);
+        } else {
+            direction.normalize();
+        }
 
         double distance = 4 + (Math.random() * 3);
-        Location targetLoc = mob.getLocation().add(direction.multiply(distance));
-        targetLoc.setY(mob.getLocation().getY());
+        int targetX = mobLoc.getBlockX() + (int) (direction.getX() * distance);
+        int targetZ = mobLoc.getBlockZ() + (int) (direction.getZ() * distance);
+        int currentY = mobLoc.getBlockY();
 
-        if (isSafeLocation(targetLoc)) {
+        Block safeGround = null;
+        for (int dy = 0; dy <= 3; dy++) {
+            Block above = mob.getWorld().getBlockAt(targetX, currentY + dy, targetZ);
+            if (isValidGround(above)) {
+                safeGround = above;
+                break;
+            }
+            if (dy > 0) {
+                Block below = mob.getWorld().getBlockAt(targetX, currentY - dy, targetZ);
+                if (isValidGround(below)) {
+                    safeGround = below;
+                    break;
+                }
+            }
+        }
+
+        if (safeGround != null) {
+            Location targetLoc = safeGround.getLocation().add(0.5, 1.1, 0.5);
             mob.getPathfinder().moveTo(targetLoc, speed);
         }
     }
 
-    private boolean isSafeLocation(Location location) {
-        if (!location.getBlock().isPassable()) return false;
-        double currentHeight = mob.getHeight();
-        int blocksToCheck = (int) Math.ceil(currentHeight);
-        for (int i = 1; i < blocksToCheck; i++) {
-            if (!location.clone().add(0, i, 0).getBlock().isPassable()) return false;
-        }
-        return true;
+    private boolean isValidGround(Block candidate) {
+        Block above = candidate.getRelative(0, 1, 0);
+        Block twoAbove = candidate.getRelative(0, 2, 0);
+
+        return candidate.getType().isSolid()
+                && !candidate.isLiquid()
+                && above.isPassable()
+                && !above.isLiquid()
+                && twoAbove.isPassable();
     }
 
     @Override
