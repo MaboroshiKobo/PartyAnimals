@@ -154,12 +154,6 @@ public class ReflexHandler {
 
         var leap = config.behavior.reflexes.leap;
         if (leap.enabled && shouldTrigger(leap.chance)) {
-            double blinkDistance = config.behavior.reflexes.blink.distance;
-            double thresholdSq = blinkDistance * blinkDistance;
-            thresholdSq = Math.max(thresholdSq, 25.0);
-            if (pinata.getLocation().distanceSquared(attacker.getLocation()) > thresholdSq) {
-                return;
-            }
             effectHandler.playEffects(leap.effects, pinata.getLocation(), false);
             pinataManager.playAnimation(pinata, leap.animation);
             pinata.setVelocity(new Vector(0, leap.strength, 0));
