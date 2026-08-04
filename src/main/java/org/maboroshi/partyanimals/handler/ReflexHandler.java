@@ -9,16 +9,13 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
-import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataVariant;
 import org.maboroshi.partyanimals.hook.ModelEngineHook;
 import org.maboroshi.partyanimals.manager.PinataManager;
-import org.maboroshi.partyanimals.util.NamespacedKeys;
 
 public class ReflexHandler {
     private final PartyAnimals plugin;
@@ -88,29 +85,23 @@ public class ReflexHandler {
             } else if (morph.type.equalsIgnoreCase("SCALE")) {
                 var scaleAttribute = pinata.getAttribute(Attribute.SCALE);
                 if (scaleAttribute != null) {
+                    double initialScale = scaleAttribute.getBaseValue();
                     double minMorph = Math.min(morph.scale.min, morph.scale.max);
                     double maxMorph = Math.max(morph.scale.min, morph.scale.max);
                     double morphScale = (minMorph == maxMorph)
                             ? minMorph
                             : ThreadLocalRandom.current().nextDouble(minMorph, maxMorph);
-
                     scaleAttribute.setBaseValue(morphScale);
                     if (modelEngineHook != null) modelEngineHook.setScale(pinata, morphScale);
-
                     pinata.getScheduler()
                             .runDelayed(
                                     plugin,
                                     (task) -> {
                                         if (pinata.isValid()) {
-                                            String variantId = pinata.getPersistentDataContainer()
-                                                    .get(NamespacedKeys.PINATA_VARIANT, PersistentDataType.STRING);
-                                            PinataVariant variant = config.appearance.variants.get(variantId);
-
-                                            double originalScale = (variant != null) ? variant.scale.max : 1.0;
-
-                                            scaleAttribute.setBaseValue(originalScale);
-                                            if (modelEngineHook != null)
-                                                modelEngineHook.setScale(pinata, originalScale);
+                                            scaleAttribute.setBaseValue(initialScale);
+                                            if (modelEngineHook != null) {
+                                                modelEngineHook.setScale(pinata, initialScale);
+                                            }
                                         }
                                     },
                                     null,
