@@ -7,6 +7,7 @@ import com.ticxo.modelengine.api.model.bone.BoneBehaviorTypes;
 import com.ticxo.modelengine.api.model.bone.type.NameTag;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.maboroshi.partyanimals.util.Log;
 
@@ -44,6 +45,12 @@ public class ModelEngineHook {
         Log.debug("Setting scale to: " + scale + " for entity: " + pinata.getUniqueId());
         for (ActiveModel model : modeledEntity.getModels().values()) {
             model.setScale(scale);
+            model.setHitboxScale(scale);
+        }
+
+        var attribute = pinata.getAttribute(Attribute.SCALE);
+        if (attribute != null) {
+            attribute.setBaseValue(scale);
         }
     }
 
@@ -74,21 +81,12 @@ public class ModelEngineHook {
             return false;
         }
 
-        for (var modelEntry : modeledEntity.getModels().entrySet()) {
-            ActiveModel model = modelEntry.getValue();
-            var boneOpt = model.getBone(boneId);
-            if (boneOpt.isEmpty()) {
-                continue;
+        for (ActiveModel model : modeledEntity.getModels().values()) {
+            var tagOpt = model.getBone(boneId).flatMap(bone -> bone.getBoneBehavior(BoneBehaviorTypes.NAMETAG));
+            if (tagOpt.isPresent()) {
+                consumer.accept((NameTag) tagOpt.get());
+                return true;
             }
-
-            var behaviorOpt = boneOpt.get().getBoneBehavior(BoneBehaviorTypes.NAMETAG);
-            if (behaviorOpt.isEmpty()) {
-                continue;
-            }
-
-            NameTag nameTag = (NameTag) behaviorOpt.get();
-            consumer.accept(nameTag);
-            return true;
         }
 
         Log.warn("No valid NAMETAG bone found for entity " + pinata.getUniqueId() + " using id: " + boneId);
