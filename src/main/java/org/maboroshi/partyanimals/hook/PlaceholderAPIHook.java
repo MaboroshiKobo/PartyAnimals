@@ -1,9 +1,12 @@
 package org.maboroshi.partyanimals.hook;
 
-import java.util.Calendar;
-import java.util.UUID;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
@@ -26,7 +29,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     @Override
     public String getAuthor() {
-        return plugin.getPluginMeta().getAuthors().toString();
+        return String.join(", ", plugin.getPluginMeta().getAuthors());
     }
 
     @Override
@@ -40,7 +43,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
     }
 
     @Override
-    public String onPlaceholderRequest(Player player, @NotNull String params) {
+    public String onRequest(OfflinePlayer offlinePlayer, @NotNull String params) {
         PinataManager pinataManager = plugin.getPinataManager();
 
         if (pinataManager != null && params.startsWith("pinata_")) {
@@ -52,7 +55,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             }
 
             if (params.startsWith("pinata_nearest_")) {
-                if (player == null) return "";
+                if (!(offlinePlayer instanceof Player player)) return "";
 
                 LivingEntity pinata = pinataManager.getNearestPinata(player.getLocation());
                 String subParam = params.substring("pinata_nearest_".length());
@@ -88,51 +91,49 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
             }
         }
 
-        if (player != null) {
+        if (offlinePlayer != null) {
             if (params.equals("votes")) {
-                UUID targetUUID = player.getUniqueId();
-                return String.valueOf(plugin.getDatabaseManager().getVotes(targetUUID));
+                return String.valueOf(plugin.getDatabaseManager().getVotes(offlinePlayer.getUniqueId()));
             }
 
             if (params.startsWith("votes_")) {
                 String fullParam = params.substring("votes_".length()).toLowerCase();
-
                 boolean isPrevious = fullParam.startsWith("previous_");
                 String period = isPrevious ? fullParam.substring("previous_".length()) : fullParam;
 
-                UUID targetUUID = player.getUniqueId();
+                ZonedDateTime now = LocalDate.now().atStartOfDay(ZoneId.systemDefault());
 
-                Calendar cal = Calendar.getInstance();
-                cal.set(Calendar.HOUR_OF_DAY, 0);
-                cal.set(Calendar.MINUTE, 0);
-                cal.set(Calendar.SECOND, 0);
-                cal.set(Calendar.MILLISECOND, 0);
+                ZonedDateTime currentPeriodStart =
+                        switch (period) {
+                            case "daily" -> now;
+                            case "weekly" -> now.with(DayOfWeek.MONDAY);
+                            case "monthly" -> now.withDayOfMonth(1);
+                            case "yearly" -> now.withDayOfYear(1);
+                            default -> null;
+                        };
 
-                switch (period) {
-                    case "daily" -> {}
-                    case "weekly" -> cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-                    case "monthly" -> cal.set(Calendar.DAY_OF_MONTH, 1);
-                    case "yearly" -> cal.set(Calendar.DAY_OF_YEAR, 1);
-                    default -> {
-                        return null;
-                    }
+                if (currentPeriodStart == null) {
+                    return null;
                 }
 
-                long currentPeriodStart = cal.getTimeInMillis();
+                long startMillis = currentPeriodStart.toInstant().toEpochMilli();
 
                 if (isPrevious) {
-                    switch (period) {
-                        case "daily" -> cal.add(Calendar.DAY_OF_MONTH, -1);
-                        case "weekly" -> cal.add(Calendar.WEEK_OF_YEAR, -1);
-                        case "monthly" -> cal.add(Calendar.MONTH, -1);
-                        case "yearly" -> cal.add(Calendar.YEAR, -1);
-                    }
-                    long previousPeriodStart = cal.getTimeInMillis();
+                    ZonedDateTime previousPeriodStart =
+                            switch (period) {
+                                case "daily" -> currentPeriodStart.minusDays(1);
+                                case "weekly" -> currentPeriodStart.minusWeeks(1);
+                                case "monthly" -> currentPeriodStart.minusMonths(1);
+                                case "yearly" -> currentPeriodStart.minusYears(1);
+                                default -> currentPeriodStart;
+                            };
 
+                    long prevMillis = previousPeriodStart.toInstant().toEpochMilli();
                     return String.valueOf(plugin.getDatabaseManager()
-                            .getVotesBetween(targetUUID, previousPeriodStart, currentPeriodStart));
+                            .getVotesBetween(offlinePlayer.getUniqueId(), prevMillis, startMillis));
                 } else {
-                    return String.valueOf(plugin.getDatabaseManager().getVotesSince(targetUUID, currentPeriodStart));
+                    return String.valueOf(
+                            plugin.getDatabaseManager().getVotesSince(offlinePlayer.getUniqueId(), startMillis));
                 }
             }
         }
@@ -146,7 +147,6 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
             int rawTotal = plugin.getDatabaseManager().getCommunityGoalProgress();
             int required = goalConfig.votesRequired;
-
             int visualProgress = (required > 0) ? rawTotal % required : 0;
 
             if (visualProgress == 0 && rawTotal > 0) {
@@ -161,19 +161,13 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     int percent = (int) ((visualProgress / (double) required) * 100);
                     yield percent + "%";
                 }
-
                 case "community_goal_total" -> String.valueOf(rawTotal);
-
                 case "community_goal_remaining" -> {
                     int remaining = required - visualProgress;
                     if (remaining == 0) remaining = required;
                     yield String.valueOf(remaining);
                 }
-
-                case "community_goal_met_count" -> {
-                    yield String.valueOf(required > 0 ? rawTotal / required : 0);
-                }
-
+                case "community_goal_met_count" -> String.valueOf(required > 0 ? rawTotal / required : 0);
                 default -> null;
             };
         }
