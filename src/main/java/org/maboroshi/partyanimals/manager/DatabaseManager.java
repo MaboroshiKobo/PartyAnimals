@@ -8,8 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -22,6 +23,7 @@ import org.maboroshi.partyanimals.util.Log;
 public class DatabaseManager {
     private final PartyAnimals plugin;
     private HikariDataSource dataSource;
+    private boolean sqlite;
 
     private String votesTable;
     private String rewardsTable;
@@ -46,6 +48,8 @@ public class DatabaseManager {
         config.setLeakDetectionThreshold(pool.leakDetectionThreshold);
 
         String type = settings.type.toLowerCase();
+        this.sqlite = !type.equals("mariadb") && !type.equals("mysql");
+
         if (type.equals("mariadb")) {
             config.setDriverClassName("org.mariadb.jdbc.Driver");
             config.setJdbcUrl("jdbc:mariadb://" + settings.host + ":" + settings.port + "/" + settings.database);
@@ -174,15 +178,15 @@ public class DatabaseManager {
         try {
             connection = getConnection();
 
-            connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            if (!isSQLite()) {
+                connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            }
             connection.setAutoCommit(false);
 
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.HOUR_OF_DAY, 0);
-            cal.set(Calendar.MINUTE, 0);
-            cal.set(Calendar.SECOND, 0);
-            cal.set(Calendar.MILLISECOND, 0);
-            long startOfDay = cal.getTimeInMillis();
+            long startOfDay = LocalDate.now()
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
 
             int votesToday = 0;
             String countSql = "SELECT SUM(amount) FROM " + votesTable + " WHERE uuid = ? AND timestamp >= ?;";
@@ -249,9 +253,10 @@ public class DatabaseManager {
         try (Connection connection = getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, uuid.toString());
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
             }
         } catch (SQLException e) {
             Log.error("Failed to get votes: " + e.getMessage());
@@ -303,22 +308,30 @@ public class DatabaseManager {
         String selectSql = "SELECT command FROM " + rewardsTable + " WHERE uuid = ?;";
         String deleteSql = "DELETE FROM " + rewardsTable + " WHERE uuid = ?;";
 
-        try {
-            try (Connection connection = getConnection();
-                    PreparedStatement selectStatement = connection.prepareStatement(selectSql)) {
-                selectStatement.setString(1, uuid.toString());
-                ResultSet resultSet = selectStatement.executeQuery();
-                while (resultSet.next()) {
-                    commands.add(resultSet.getString("command"));
+        try (Connection connection = getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement selectStatement = connection.prepareStatement(selectSql)) {
+                    selectStatement.setString(1, uuid.toString());
+                    try (ResultSet resultSet = selectStatement.executeQuery()) {
+                        while (resultSet.next()) {
+                            commands.add(resultSet.getString("command"));
+                        }
+                    }
                 }
-            }
 
-            if (!commands.isEmpty()) {
-                try (Connection connection = getConnection();
-                        PreparedStatement deleteStatement = connection.prepareStatement(deleteSql)) {
-                    deleteStatement.setString(1, uuid.toString());
-                    deleteStatement.executeUpdate();
+                if (!commands.isEmpty()) {
+                    try (PreparedStatement deleteStatement = connection.prepareStatement(deleteSql)) {
+                        deleteStatement.setString(1, uuid.toString());
+                        deleteStatement.executeUpdate();
+                    }
                 }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
             Log.error("Failed to retrieve rewards: " + e.getMessage());
@@ -329,8 +342,8 @@ public class DatabaseManager {
     public int getCommunityGoalProgress() {
         String sql = "SELECT value FROM " + serverDataTable + " WHERE setting_key = 'community_vote_count';";
         try (Connection connection = getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-            ResultSet rs = statement.executeQuery();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet rs = statement.executeQuery()) {
             if (rs.next()) {
                 return Integer.parseInt(rs.getString("value"));
             }
@@ -355,8 +368,8 @@ public class DatabaseManager {
                 }
             }
 
-            try (PreparedStatement selectStmt = connection.prepareStatement(selectSql)) {
-                ResultSet rs = selectStmt.executeQuery();
+            try (PreparedStatement selectStmt = connection.prepareStatement(selectSql);
+                    ResultSet rs = selectStmt.executeQuery()) {
                 if (rs.next()) {
                     return Integer.parseInt(rs.getString("value"));
                 }
@@ -435,8 +448,6 @@ public class DatabaseManager {
     }
 
     private boolean isSQLite() {
-        if (dataSource == null) return false;
-        String driver = dataSource.getDriverClassName();
-        return driver != null && driver.contains("sqlite");
+        return this.sqlite;
     }
 }
