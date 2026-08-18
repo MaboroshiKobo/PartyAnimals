@@ -99,6 +99,7 @@ public class PinataFactory {
         LivingEntity pinata = (LivingEntity) location.getWorld().spawn(spawnLocation, type.getEntityClass(), entity -> {
             if (entity instanceof LivingEntity livingEntity) {
                 configureData(livingEntity, selectedVariant, selectedVariantId, templateId, finalHealth);
+                pinataManager.saveSpawnLocation(livingEntity, spawnLocation);
             }
         });
 

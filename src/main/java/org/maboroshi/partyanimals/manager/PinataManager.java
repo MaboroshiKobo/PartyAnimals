@@ -276,4 +276,32 @@ public class PinataManager {
     public ReflexHandler getReflexHandler() {
         return reflexHandler;
     }
+
+    public Location getSpawnLocation(LivingEntity pinata) {
+        if (pinata == null) return null;
+
+        var pdc = pinata.getPersistentDataContainer();
+        Double x = pdc.get(NamespacedKeys.PINATA_SPAWN_X, PersistentDataType.DOUBLE);
+        Double y = pdc.get(NamespacedKeys.PINATA_SPAWN_Y, PersistentDataType.DOUBLE);
+        Double z = pdc.get(NamespacedKeys.PINATA_SPAWN_Z, PersistentDataType.DOUBLE);
+        Float yaw = pdc.get(NamespacedKeys.PINATA_SPAWN_YAW, PersistentDataType.FLOAT);
+        Float pitch = pdc.get(NamespacedKeys.PINATA_SPAWN_PITCH, PersistentDataType.FLOAT);
+
+        if (x == null || y == null || z == null) {
+            return null;
+        }
+
+        return new Location(pinata.getWorld(), x, y, z, yaw != null ? yaw : 0f, pitch != null ? pitch : 0f);
+    }
+
+    public void saveSpawnLocation(LivingEntity pinata, Location location) {
+        if (pinata == null || location == null) return;
+
+        var pdc = pinata.getPersistentDataContainer();
+        pdc.set(NamespacedKeys.PINATA_SPAWN_X, PersistentDataType.DOUBLE, location.getX());
+        pdc.set(NamespacedKeys.PINATA_SPAWN_Y, PersistentDataType.DOUBLE, location.getY());
+        pdc.set(NamespacedKeys.PINATA_SPAWN_Z, PersistentDataType.DOUBLE, location.getZ());
+        pdc.set(NamespacedKeys.PINATA_SPAWN_YAW, PersistentDataType.FLOAT, location.getYaw());
+        pdc.set(NamespacedKeys.PINATA_SPAWN_PITCH, PersistentDataType.FLOAT, location.getPitch());
+    }
 }

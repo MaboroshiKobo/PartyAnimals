@@ -1,6 +1,7 @@
 package org.maboroshi.partyanimals.listener;
 
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
 import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.api.event.pinata.PinataDeathEvent;
 import org.maboroshi.partyanimals.api.event.pinata.PinataHitEvent;
@@ -167,6 +169,31 @@ public class PinataListener implements Listener {
     @EventHandler
     public void onPinataDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof LivingEntity pinata) || !pinataManager.isPinata(pinata)) return;
+
+        if (event.getCause() == EntityDamageEvent.DamageCause.VOID) {
+            PinataConfiguration pinataConfig = pinataManager.getPinataConfig(pinata);
+
+            if (pinataConfig == null || !pinataConfig.behavior.voidProtection.enabled) {
+                return;
+            }
+
+            if ("KILL".equalsIgnoreCase(pinataConfig.behavior.voidProtection.action)) {
+                event.setCancelled(false);
+            } else {
+                event.setCancelled(true);
+                Location spawnLoc = pinataManager.getSpawnLocation(pinata);
+                if (spawnLoc == null) {
+                    Log.warn("Could not find saved spawn location for pinata " + pinata.getUniqueId());
+                    return;
+                }
+                pinata.teleportAsync(spawnLoc).thenAccept(success -> {
+                    if (success) {
+                        pinata.setVelocity(new Vector(0, 0, 0));
+                    }
+                });
+            }
+            return;
+        }
 
         if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK
                 && event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE) {

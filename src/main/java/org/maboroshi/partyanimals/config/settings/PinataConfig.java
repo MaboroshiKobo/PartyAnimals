@@ -235,6 +235,9 @@ public final class PinataConfig {
         @Comment("Movement logic settings.")
         public MovementSettings movement = new MovementSettings();
 
+        @Comment("Void protection settings.")
+        public VoidProtectionSettings voidProtection = new VoidProtectionSettings();
+
         @Comment("Defensive reactions to being attacked or stuck.")
         public ReflexSettings reflexes = new ReflexSettings();
     }
@@ -252,6 +255,18 @@ public final class PinataConfig {
         public RoamSettings roam = new RoamSettings();
         public FleeSettings flee = new FleeSettings();
         public FreezeSettings freeze = new FreezeSettings();
+    }
+
+    @Configuration
+    public static class VoidProtectionSettings {
+        public boolean enabled = true;
+
+        @Comment({
+            "Action to take when the pinata falls into the void.",
+            "1. TELEPORT (Teleports the pinata to the spawn point)",
+            "2. KILL (Kills the pinata while triggering the death event)"
+        })
+        public String action = "TELEPORT";
     }
 
     @Configuration
