@@ -1,13 +1,20 @@
 package org.maboroshi.partyanimals;
 
-import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.List;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.incendo.cloud.annotations.AnnotationParser;
+import org.incendo.cloud.execution.ExecutionCoordinator;
+import org.incendo.cloud.paper.PaperCommandManager;
+import org.incendo.cloud.suggestion.Suggestion;
+import org.incendo.cloud.suggestion.SuggestionProvider;
 import org.maboroshi.partyanimals.api.event.PartyAnimalsReloadEvent;
-import org.maboroshi.partyanimals.command.PartyAnimalsCommand;
+import org.maboroshi.partyanimals.command.AdminCommand;
+import org.maboroshi.partyanimals.command.PinataCommand;
+import org.maboroshi.partyanimals.command.VoteCommand;
 import org.maboroshi.partyanimals.config.ConfigManager;
 import org.maboroshi.partyanimals.handler.ActionHandler;
 import org.maboroshi.partyanimals.handler.EffectHandler;
@@ -33,6 +40,7 @@ public final class PartyAnimals extends JavaPlugin {
     private EffectHandler effectHandler;
     private ActionHandler actionHandler;
 
+    private PaperCommandManager<CommandSourceStack> commandManager;
     private PinataManager pinataManager;
     private VoteManager voteManager;
 
@@ -70,11 +78,24 @@ public final class PartyAnimals extends JavaPlugin {
         setupHooks();
         setupModules();
 
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            PartyAnimalsCommand partyanimalsCommand = new PartyAnimalsCommand(this);
-            event.registrar()
-                    .register(partyanimalsCommand.createCommand("partyanimals"), "Main command", List.of("pa"));
-        });
+        getServer().getPluginManager().registerEvents(new PinataListener(this), this);
+
+        this.commandManager = PaperCommandManager.builder()
+                .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
+                .buildOnEnable(this);
+
+        this.commandManager
+                .parserRegistry()
+                .registerSuggestionProvider(
+                        "players", SuggestionProvider.blocking((ctx, input) -> getServer().getOnlinePlayers().stream()
+                                .map(p -> Suggestion.suggestion(p.getName()))
+                                .toList()));
+
+        AnnotationParser<CommandSourceStack> annotationParser =
+                new AnnotationParser<>(commandManager, CommandSourceStack.class);
+
+        List.of(new AdminCommand(this), new PinataCommand(this), new VoteCommand(this))
+                .forEach(annotationParser::parse);
 
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 28389);
@@ -102,7 +123,6 @@ public final class PartyAnimals extends JavaPlugin {
         if (pinataEnabled) {
             if (this.pinataManager == null) {
                 this.pinataManager = new PinataManager(this, this.modelEngineHook, this.betterModelHook);
-                getServer().getPluginManager().registerEvents(new PinataListener(this), this);
                 Log.info("Pinata module enabled.");
             }
         } else {

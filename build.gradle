@@ -37,6 +37,8 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     compileOnly("de.exlll:configlib-paper:4.8.1")
+    compileOnly("org.incendo:cloud-paper:2.0.0")
+    compileOnly("org.incendo:cloud-annotations:2.1.0")
     compileOnly("com.zaxxer:HikariCP:7.1.0")
     compileOnly("com.mysql:mysql-connector-j:26.7.0")
     compileOnly("org.mariadb.jdbc:mariadb-java-client:3.5.10")

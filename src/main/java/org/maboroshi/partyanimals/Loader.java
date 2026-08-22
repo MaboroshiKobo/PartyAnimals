@@ -13,6 +13,8 @@ public class Loader implements PluginLoader {
         MavenLibraryResolver resolver = new MavenLibraryResolver();
 
         resolver.addDependency(new Dependency(new DefaultArtifact("de.exlll:configlib-paper:4.8.1"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("org.incendo:cloud-paper:2.0.0"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("org.incendo:cloud-annotations:2.1.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("com.zaxxer:HikariCP:7.1.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("com.mysql:mysql-connector-j:26.7.0"), null));
         resolver.addDependency(

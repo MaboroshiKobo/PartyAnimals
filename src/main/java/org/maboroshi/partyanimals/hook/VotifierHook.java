@@ -19,7 +19,7 @@ public class VotifierHook {
 
         messageUtils.send(
                 sender,
-                config.getMessageConfig().commands.voteTriggered,
+                config.getMessageConfig().vote.voteTriggered,
                 messageUtils.tag("player", targetName),
                 messageUtils.tag("service", serviceName));
     }

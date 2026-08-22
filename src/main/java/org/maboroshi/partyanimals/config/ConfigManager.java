@@ -11,7 +11,6 @@ import org.maboroshi.partyanimals.PartyAnimals;
 import org.maboroshi.partyanimals.config.settings.MainConfig;
 import org.maboroshi.partyanimals.config.settings.MainConfig.MainConfiguration;
 import org.maboroshi.partyanimals.config.settings.MessageConfig;
-import org.maboroshi.partyanimals.config.settings.MessageConfig.MessageConfiguration;
 import org.maboroshi.partyanimals.config.settings.PinataConfig;
 import org.maboroshi.partyanimals.config.settings.PinataConfig.PinataConfiguration;
 
@@ -21,7 +20,7 @@ public class ConfigManager {
 
     private MainConfiguration mainConfig;
     private Map<String, PinataConfiguration> pinataConfigs;
-    private MessageConfiguration messageConfig;
+    private MessageConfig messageConfig;
 
     private static final YamlConfigurationProperties PROPERTIES = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder()
             .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
@@ -86,7 +85,7 @@ public class ConfigManager {
 
     public void saveMessages() {
         Path path = new File(dataFolder, "messages.yml").toPath();
-        YamlConfigurations.save(path, MessageConfiguration.class, messageConfig, PROPERTIES);
+        YamlConfigurations.save(path, MessageConfig.class, messageConfig, PROPERTIES);
     }
 
     public MainConfiguration getMainConfig() {
@@ -101,7 +100,7 @@ public class ConfigManager {
         return pinataConfigs;
     }
 
-    public MessageConfiguration getMessageConfig() {
+    public MessageConfig getMessageConfig() {
         return messageConfig;
     }
 }
