@@ -2,6 +2,7 @@ package org.maboroshi.partyanimals.listener;
 
 import com.vexsoftware.votifier.model.Vote;
 import com.vexsoftware.votifier.model.VotifierEvent;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -45,9 +46,8 @@ public class VoteListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
         Bukkit.getAsyncScheduler().runNow(plugin, (task) -> {
-            UUID uuid = databaseManager.getPlayerUUID(player.getName());
-            if (uuid == null) return;
             List<String> commands = databaseManager.retrieveRewards(uuid);
             if (!commands.isEmpty()) {
                 player.getScheduler()
@@ -58,9 +58,7 @@ public class VoteListener implements Listener {
                                             + player.getName());
                                     for (String cmd : commands) {
                                         String finalCmd = cmd.replace("<player>", player.getName())
-                                                .replace(
-                                                        "<uuid>",
-                                                        player.getUniqueId().toString());
+                                                .replace("<uuid>", uuid.toString());
                                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
                                     }
                                 },
@@ -95,7 +93,7 @@ public class VoteListener implements Listener {
                     var goalConfig = config.getMainConfig().modules.vote.communityGoal;
                     if (goalConfig.enabled && goalConfig.votesRequired > 0) {
                         int currentTotal = databaseManager.incrementCommunityGoalProgress();
-                        if (currentTotal % goalConfig.votesRequired == 0) {
+                        if (currentTotal > 0 && currentTotal % goalConfig.votesRequired == 0) {
                             Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
                                 actionHandler.process(null, goalConfig.actions.values());
                             });
@@ -104,12 +102,21 @@ public class VoteListener implements Listener {
                 }
 
                 if (result == DatabaseManager.VoteResult.SUCCESS_NO_REWARD) {
-                    Log.debug(playerName + " limit reached (Vote saved, Reward skipped).");
+                    Log.debug(playerName + " limit reached (Vote saved, Excess actions processed).");
                     Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
                         Player player = Bukkit.getPlayer(playerName);
                         if (player != null) {
-                            effectHandler.playEffects(limitSettings.effects, player.getLocation(), false);
-                            actionHandler.process(player, limitSettings.actions.values());
+                            player.getScheduler()
+                                    .run(
+                                            plugin,
+                                            (st) -> {
+                                                effectHandler.playEffects(
+                                                        limitSettings.effects, player.getLocation(), false);
+                                                actionHandler.process(player, limitSettings.actions.values());
+                                            },
+                                            null);
+                        } else {
+                            processOfflineActions(uuid, limitSettings.actions.values());
                         }
                     });
                 } else if (result == DatabaseManager.VoteResult.SUCCESS_REWARD) {
@@ -129,7 +136,8 @@ public class VoteListener implements Listener {
                                             },
                                             null);
                         } else {
-                            processOfflineRewards(uuid, playerName);
+                            VoteEvent voteEvent = config.getMainConfig().modules.vote.events.playerVote;
+                            processOfflineActions(uuid, voteEvent.actions.values());
                         }
                     });
                 }
@@ -137,13 +145,13 @@ public class VoteListener implements Listener {
         });
     }
 
-    private void processOfflineRewards(UUID uuid, String playerName) {
+    private void processOfflineActions(UUID uuid, Collection<CommandAction> actions) {
+        if (actions == null || actions.isEmpty()) return;
         var offlineSettings = config.getMainConfig().modules.vote.offline;
         if (offlineSettings.enabled) {
-            VoteEvent voteEvent = config.getMainConfig().modules.vote.events.playerVote;
             if (offlineSettings.queueRewards) {
                 Bukkit.getAsyncScheduler().runNow(plugin, (at) -> {
-                    for (var action : voteEvent.actions.values()) {
+                    for (var action : actions) {
                         if (shouldRun(action)) {
                             processActionForQueue(uuid, action);
                             if (action.stopProcessing) break;
@@ -152,7 +160,7 @@ public class VoteListener implements Listener {
                 });
             } else {
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-                actionHandler.process(offlinePlayer, voteEvent.actions.values());
+                actionHandler.process(offlinePlayer, actions);
             }
         }
     }
