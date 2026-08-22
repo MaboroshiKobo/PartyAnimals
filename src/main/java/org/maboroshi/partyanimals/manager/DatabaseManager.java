@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.maboroshi.partyanimals.PartyAnimals;
@@ -28,6 +29,8 @@ public class DatabaseManager {
     private String votesTable;
     private String rewardsTable;
     private String serverDataTable;
+
+    private final AtomicInteger cachedCommunityGoal = new AtomicInteger(0);
 
     public DatabaseManager(PartyAnimals plugin) {
         this.plugin = plugin;
@@ -79,6 +82,7 @@ public class DatabaseManager {
         try {
             this.dataSource = new HikariDataSource(config);
             initializeTables();
+            loadCachedData();
             Log.info("Successfully connected to the database.");
         } catch (Exception e) {
             Log.error("Failed to connect to database! Please check your config.yml.");
@@ -135,6 +139,19 @@ public class DatabaseManager {
                     "Database tables initialized (" + votesTable + ", " + rewardsTable + ", " + serverDataTable + ").");
         } catch (SQLException e) {
             Log.error("Failed to create database tables: " + e.getMessage());
+        }
+    }
+
+    private void loadCachedData() {
+        String sql = "SELECT value FROM " + serverDataTable + " WHERE setting_key = 'community_vote_count';";
+        try (Connection connection = getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet rs = statement.executeQuery()) {
+            if (rs.next()) {
+                cachedCommunityGoal.set(Integer.parseInt(rs.getString("value")));
+            }
+        } catch (SQLException | NumberFormatException e) {
+            Log.error("Failed to load initial community goal cache: " + e.getMessage());
         }
     }
 
@@ -340,17 +357,7 @@ public class DatabaseManager {
     }
 
     public int getCommunityGoalProgress() {
-        String sql = "SELECT value FROM " + serverDataTable + " WHERE setting_key = 'community_vote_count';";
-        try (Connection connection = getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet rs = statement.executeQuery()) {
-            if (rs.next()) {
-                return Integer.parseInt(rs.getString("value"));
-            }
-        } catch (SQLException e) {
-            Log.error("Failed to get community goal progress: " + e.getMessage());
-        }
-        return 0;
+        return cachedCommunityGoal.get();
     }
 
     public int incrementCommunityGoalProgress() {
@@ -364,6 +371,7 @@ public class DatabaseManager {
 
                 if (rowsAffected == 0) {
                     setCommunityGoalProgress(1);
+                    cachedCommunityGoal.set(1);
                     return 1;
                 }
             }
@@ -371,13 +379,15 @@ public class DatabaseManager {
             try (PreparedStatement selectStmt = connection.prepareStatement(selectSql);
                     ResultSet rs = selectStmt.executeQuery()) {
                 if (rs.next()) {
-                    return Integer.parseInt(rs.getString("value"));
+                    int val = Integer.parseInt(rs.getString("value"));
+                    cachedCommunityGoal.set(val);
+                    return val;
                 }
             }
         } catch (SQLException e) {
             Log.error("Failed to atomic increment community goal: " + e.getMessage());
         }
-        return 0;
+        return cachedCommunityGoal.incrementAndGet();
     }
 
     private void setCommunityGoalProgress(int value) {
@@ -386,6 +396,7 @@ public class DatabaseManager {
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, String.valueOf(value));
             statement.executeUpdate();
+            cachedCommunityGoal.set(value);
         } catch (SQLException e) {
             Log.error("Failed to update community goal: " + e.getMessage());
         }
