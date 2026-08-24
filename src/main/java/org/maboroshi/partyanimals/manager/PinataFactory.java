@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Mob;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scoreboard.Scoreboard;
@@ -52,7 +53,7 @@ public class PinataFactory {
         this.betterModelHook = betterModelHook;
     }
 
-    public void spawn(Location location, String templateId) {
+    public void spawn(Location location, String templateId, String passengerProfile) {
         Log.debug("Attempting to spawn pinata with template: " + templateId + " at " + location);
         PinataConfiguration pinataConfig = config.getPinataConfig(templateId);
         if (pinataConfig == null) {
@@ -110,12 +111,16 @@ public class PinataFactory {
 
         applyVisuals(pinata, pinataConfig, selectedVariant, finalScale);
 
+        if (passengerProfile != null && !passengerProfile.isEmpty()) {
+            spawnMannequinPassenger(pinata, spawnLocation, passengerProfile, pinataConfig);
+        }
+
         var event = new PinataSpawnEvent(pinata, spawnLocation);
         plugin.getServer().getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
             Log.debug("Pinata spawn event was cancelled by an API event; removing entity.");
-            pinata.remove();
+            pinataManager.safelyRemovePinata(pinata);
             return;
         }
 
@@ -262,5 +267,62 @@ public class PinataFactory {
         }
 
         return variants.entrySet().iterator().next();
+    }
+
+    private void spawnMannequinPassenger(
+            LivingEntity pinata, Location location, String profileName, PinataConfiguration pinataConfig) {
+        Mannequin mannequin =
+                (Mannequin) location.getWorld().spawn(location, EntityType.MANNEQUIN.getEntityClass(), entity -> {
+                    if (entity instanceof Mannequin man) {
+                        man.getPersistentDataContainer()
+                                .set(NamespacedKeys.PINATA_PASSENGER, PersistentDataType.BOOLEAN, true);
+                        man.getPersistentDataContainer()
+                                .set(
+                                        NamespacedKeys.PINATA_VEHICLE_UUID,
+                                        PersistentDataType.STRING,
+                                        pinata.getUniqueId().toString());
+                        man.setImmovable(false);
+                        man.setSilent(true);
+                        man.setInvulnerable(false);
+                        man.setRemoveWhenFarAway(false);
+                        man.setDescription(null);
+
+                        var playerProfile = Bukkit.createProfile(profileName);
+                        var profile =
+                                io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile(playerProfile);
+                        man.setProfile(profile);
+                        man.setSkinParts(com.destroystokyo.paper.SkinParts.allParts());
+                    }
+                });
+
+        if (mannequin != null) {
+            pinata.getPersistentDataContainer()
+                    .set(
+                            NamespacedKeys.PINATA_PASSENGER,
+                            PersistentDataType.STRING,
+                            mannequin.getUniqueId().toString());
+
+            boolean mounted = false;
+            if (modelEngineHook != null && modelEngineHook.hasModeledEntity(pinata)) {
+                mounted = modelEngineHook.mountPassenger(pinata, mannequin);
+            }
+            if (!mounted) {
+                pinata.addPassenger(mannequin);
+            }
+
+            if (pinataConfig.appearance.glowing) {
+                String colorName = pinataConfig.appearance.glowColor;
+                NamedTextColor glowColor = NamedTextColor.NAMES.value(colorName.toLowerCase());
+                if (glowColor != null) {
+                    Scoreboard mainBoard = Bukkit.getScoreboardManager().getMainScoreboard();
+                    String teamName = "PA_" + glowColor.toString().toUpperCase();
+                    Team team = mainBoard.getTeam(teamName);
+                    if (team == null) team = mainBoard.registerNewTeam(teamName);
+                    team.color(glowColor);
+                    team.addEntry(mannequin.getUniqueId().toString());
+                    mannequin.setGlowing(true);
+                }
+            }
+        }
     }
 }

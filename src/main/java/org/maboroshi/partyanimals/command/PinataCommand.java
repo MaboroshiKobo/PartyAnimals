@@ -41,19 +41,20 @@ public class PinataCommand {
         return List.of();
     }
 
-    @Command("partyanimals pinata start [template] [location]")
-    @Command("pa pinata start [template] [location]")
+    @Command("partyanimals pinata start [template] [location] [passenger]")
+    @Command("pa pinata start [template] [location] [passenger]")
     @Permission("partyanimals.pinata.start")
     public void onStart(
             CommandSourceStack source,
             @Argument(value = "template", suggestions = "pinataTemplates") String templateId,
-            @Argument(value = "location", suggestions = "spawnPoints") String locationName) {
+            @Argument(value = "location", suggestions = "spawnPoints") String locationName,
+            @Argument(value = "passenger", suggestions = "players") String passengerProfile) {
 
         String selectedTemplate = (templateId != null && !templateId.isEmpty()) ? templateId : "default";
         Location location = resolveLocation(source, locationName, selectedTemplate, "start");
         if (location == null) return;
 
-        plugin.getPinataManager().startCountdown(location, selectedTemplate);
+        plugin.getPinataManager().startCountdown(location, selectedTemplate, passengerProfile);
 
         messageUtils.send(
                 source.getSender(),
@@ -62,19 +63,20 @@ public class PinataCommand {
                         "location", location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
     }
 
-    @Command("partyanimals pinata spawn [template] [location]")
-    @Command("pa pinata spawn [template] [location]")
+    @Command("partyanimals pinata spawn [template] [location] [passenger]")
+    @Command("pa pinata spawn [template] [location] [passenger]")
     @Permission("partyanimals.pinata.spawn")
     public void onSpawn(
             CommandSourceStack source,
             @Argument(value = "template", suggestions = "pinataTemplates") String templateId,
-            @Argument(value = "location", suggestions = "spawnPoints") String locationName) {
+            @Argument(value = "location", suggestions = "spawnPoints") String locationName,
+            @Argument(value = "passenger", suggestions = "players") String passengerProfile) {
 
         String selectedTemplate = (templateId != null && !templateId.isEmpty()) ? templateId : "default";
         Location location = resolveLocation(source, locationName, selectedTemplate, "spawn");
         if (location == null) return;
 
-        plugin.getPinataManager().spawnPinata(location, selectedTemplate);
+        plugin.getPinataManager().spawnPinata(location, selectedTemplate, passengerProfile);
 
         messageUtils.send(
                 source.getSender(),

@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scoreboard.Scoreboard;
@@ -62,11 +63,11 @@ public class PinataManager {
         this.reflexHandler = new ReflexHandler(plugin, this, modelEngineHook);
     }
 
-    public void spawnPinata(Location location, String templateId) {
-        pinataFactory.spawn(location, templateId);
+    public void spawnPinata(Location location, String templateId, String passengerProfile) {
+        pinataFactory.spawn(location, templateId, passengerProfile);
     }
 
-    public void startCountdown(Location location, String templateId) {
+    public void startCountdown(Location location, String templateId, String passengerProfile) {
         PinataConfiguration pinataConfig = config.getPinataConfig(templateId);
 
         if (pinataConfig == null) {
@@ -74,7 +75,34 @@ public class PinataManager {
             return;
         }
 
-        countdownHandler.start(location, pinataConfig, templateId, (loc, id) -> spawnPinata(loc, id));
+        countdownHandler.start(
+                location, pinataConfig, templateId, passengerProfile, (loc, id, prof) -> spawnPinata(loc, id, prof));
+    }
+
+    public boolean isPinataPassenger(LivingEntity entity) {
+        return entity != null
+                && entity.getPersistentDataContainer().has(NamespacedKeys.PINATA_PASSENGER, PersistentDataType.BOOLEAN);
+    }
+
+    public LivingEntity getPinataVehicle(LivingEntity passenger) {
+        if (!isPinataPassenger(passenger)) return null;
+        Entity vehicle = passenger.getVehicle();
+        if (vehicle instanceof LivingEntity livingVehicle && isPinata(livingVehicle)) {
+            return livingVehicle;
+        }
+        String uuidStr = passenger
+                .getPersistentDataContainer()
+                .get(NamespacedKeys.PINATA_VEHICLE_UUID, PersistentDataType.STRING);
+        if (uuidStr != null) {
+            try {
+                Entity ent = Bukkit.getEntity(UUID.fromString(uuidStr));
+                if (ent instanceof LivingEntity livingEnt && isPinata(livingEnt)) {
+                    return livingEnt;
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return null;
     }
 
     public void activatePinata(LivingEntity pinata) {
@@ -86,6 +114,7 @@ public class PinataManager {
         behaviorHandler.apply(pinata, pinataConfig);
         bossBarManager.startTracking(pinata, pinataConfig);
         startTimeoutTask(pinata);
+        schedulePassengerSync(pinata);
 
         if (pinataConfig.appearance.nameTag.enabled) {
             boolean tagFound = false;
@@ -139,8 +168,26 @@ public class PinataManager {
     }
 
     public void safelyRemovePinata(LivingEntity pinata) {
+        if (modelEngineHook != null) {
+            modelEngineHook.dismountAll(pinata);
+        }
+
+        String passengerUuidStr =
+                pinata.getPersistentDataContainer().get(NamespacedKeys.PINATA_PASSENGER, PersistentDataType.STRING);
+        if (passengerUuidStr != null) {
+            try {
+                Entity passenger = Bukkit.getEntity(UUID.fromString(passengerUuidStr));
+                if (passenger != null && passenger.isValid()) {
+                    cleanupGlowTeam(passenger);
+                    passenger.remove();
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
         if (pinata.getPassengers() != null) {
             for (Entity passenger : new ArrayList<>(pinata.getPassengers())) {
+                cleanupGlowTeam(passenger);
                 passenger.remove();
             }
         }
@@ -172,11 +219,12 @@ public class PinataManager {
         if (task != null) task.cancel();
     }
 
-    private void cleanupGlowTeam(LivingEntity pinata) {
+    private void cleanupGlowTeam(Entity entity) {
+        if (entity == null) return;
         Scoreboard mainBoard = Bukkit.getScoreboardManager().getMainScoreboard();
-        Team team = mainBoard.getEntryTeam(pinata.getUniqueId().toString());
+        Team team = mainBoard.getEntryTeam(entity.getUniqueId().toString());
         if (team != null && team.getName().startsWith("PA_")) {
-            team.removeEntry(pinata.getUniqueId().toString());
+            team.removeEntry(entity.getUniqueId().toString());
         }
     }
 
@@ -303,5 +351,44 @@ public class PinataManager {
         pdc.set(NamespacedKeys.PINATA_SPAWN_Z, PersistentDataType.DOUBLE, location.getZ());
         pdc.set(NamespacedKeys.PINATA_SPAWN_YAW, PersistentDataType.FLOAT, location.getYaw());
         pdc.set(NamespacedKeys.PINATA_SPAWN_PITCH, PersistentDataType.FLOAT, location.getPitch());
+    }
+
+    private void schedulePassengerSync(LivingEntity pinata) {
+        pinata.getScheduler()
+                .runAtFixedRate(
+                        plugin,
+                        task -> {
+                            if (!pinata.isValid() || pinata.isDead()) {
+                                task.cancel();
+                                return;
+                            }
+
+                            String passengerUuidStr = pinata.getPersistentDataContainer()
+                                    .get(NamespacedKeys.PINATA_PASSENGER, PersistentDataType.STRING);
+                            if (passengerUuidStr != null) {
+                                try {
+                                    Entity passenger = Bukkit.getEntity(UUID.fromString(passengerUuidStr));
+                                    if (passenger instanceof Mannequin mannequin && passenger.isValid()) {
+                                        mannequin.setRotation(pinata.getYaw(), pinata.getPitch());
+                                        mannequin.setBodyYaw(pinata.getBodyYaw());
+                                        return;
+                                    }
+                                } catch (IllegalArgumentException ignored) {
+                                }
+                            }
+
+                            List<Entity> passengers = pinata.getPassengers();
+                            if (passengers != null && !passengers.isEmpty()) {
+                                for (Entity passenger : passengers) {
+                                    if (passenger instanceof Mannequin mannequin) {
+                                        mannequin.setRotation(pinata.getYaw(), pinata.getPitch());
+                                        mannequin.setBodyYaw(pinata.getBodyYaw());
+                                    }
+                                }
+                            }
+                        },
+                        () -> {},
+                        1L,
+                        1L);
     }
 }

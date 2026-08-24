@@ -18,6 +18,8 @@ public final class NamespacedKeys {
     public static NamespacedKey PINATA_SPAWN_YAW;
     public static NamespacedKey PINATA_SPAWN_PITCH;
     public static NamespacedKey PINATA_HIT_COOLDOWN;
+    public static NamespacedKey PINATA_PASSENGER;
+    public static NamespacedKey PINATA_VEHICLE_UUID;
 
     private NamespacedKeys() {}
 
@@ -36,5 +38,7 @@ public final class NamespacedKeys {
         PINATA_SPAWN_YAW = new NamespacedKey(plugin, "pinata_spawn_yaw");
         PINATA_SPAWN_PITCH = new NamespacedKey(plugin, "pinata_spawn_pitch");
         PINATA_HIT_COOLDOWN = new NamespacedKey(plugin, "pinata_hit_cooldown");
+        PINATA_PASSENGER = new NamespacedKey(plugin, "pinata_passenger");
+        PINATA_VEHICLE_UUID = new NamespacedKey(plugin, "pinata_vehicle_uuid");
     }
 }

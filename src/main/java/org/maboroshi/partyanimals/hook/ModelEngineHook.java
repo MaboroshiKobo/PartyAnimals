@@ -5,9 +5,11 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import com.ticxo.modelengine.api.model.bone.BoneBehaviorTypes;
 import com.ticxo.modelengine.api.model.bone.type.NameTag;
+import com.ticxo.modelengine.api.mount.controller.MountControllerSupplier;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.maboroshi.partyanimals.util.Log;
 
@@ -91,5 +93,71 @@ public class ModelEngineHook {
 
         Log.warn("No valid NAMETAG bone found for entity " + pinata.getUniqueId() + " using id: " + boneId);
         return false;
+    }
+
+    public boolean mountPassenger(LivingEntity pinata, Entity passenger) {
+        ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
+        if (modeledEntity == null) {
+            Log.debug("MEG mount failed: No ModeledEntity found for " + pinata.getUniqueId());
+            return false;
+        }
+
+        for (ActiveModel model : modeledEntity.getModels().values()) {
+            var mountManagerOpt = model.getMountManager();
+            if (mountManagerOpt.isEmpty()) {
+                Log.debug("MEG mount failed: No MountManager present on model "
+                        + model.getBlueprint().getName());
+                continue;
+            }
+
+            var mountManager = mountManagerOpt.get();
+            Log.debug("Available MEG seats: " + mountManager.getSeats().keySet());
+
+            if (mountManager.getSeats().isEmpty() && mountManager.getDriverBone() == null) {
+                Log.debug("MEG mount failed: No seats registered on model.");
+                return false;
+            }
+
+            mountManager.setCanDrive(false);
+            mountManager.setCanRide(true);
+
+            MountControllerSupplier supplier =
+                    ModelEngineAPI.getMountControllerTypeRegistry().getDefault();
+            if (supplier == null) {
+                Log.warn("No default MountControllerSupplier found in ModelEngine registry.");
+                return false;
+            }
+
+            if (mountManager.getSeat("seat").isPresent() && mountManager.mountPassenger("seat", passenger, supplier)) {
+                Log.debug("Successfully mounted to 'seat'.");
+                return true;
+            }
+            if (mountManager.getSeat("p_seat").isPresent()
+                    && mountManager.mountPassenger("p_seat", passenger, supplier)) {
+                Log.debug("Successfully mounted to 'p_seat'.");
+                return true;
+            }
+            if (mountManager.getSeat("p_mount").isPresent()
+                    && mountManager.mountPassenger("p_mount", passenger, supplier)) {
+                Log.debug("Successfully mounted to 'p_mount'.");
+                return true;
+            }
+            if (mountManager.mountAvailable(passenger, supplier)) {
+                Log.debug("Successfully mounted to first available seat.");
+                return true;
+            }
+        }
+
+        Log.debug("MEG mounting failed; falling back to vanilla passenger.");
+        return false;
+    }
+
+    public void dismountAll(LivingEntity pinata) {
+        ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(pinata.getUniqueId());
+        if (modeledEntity == null) return;
+
+        for (ActiveModel model : modeledEntity.getModels().values()) {
+            model.getMountManager().ifPresent(mountManager -> mountManager.dismountAll());
+        }
     }
 }

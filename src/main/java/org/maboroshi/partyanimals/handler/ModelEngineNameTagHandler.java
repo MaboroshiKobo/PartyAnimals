@@ -31,7 +31,7 @@ public class ModelEngineNameTagHandler {
 
         String modelEngineBoneId = pinataConfig.appearance.nameTag.modelEngineBoneId;
         boolean configured = modelEngineHook.configureNameTag(pinata, modelEngineBoneId, nameTag -> {
-            applyNameTagStyle(nameTag, pinataConfig);
+            applyNameTagStyle(nameTag, pinata, pinataConfig);
             updateNameTagText(nameTag, pinata, pinataConfig);
         });
         if (!configured) return false;
@@ -64,7 +64,7 @@ public class ModelEngineNameTagHandler {
                         updateInterval);
     }
 
-    private void applyNameTagStyle(NameTag nameTag, PinataConfiguration pinataConfig) {
+    private void applyNameTagStyle(NameTag nameTag, LivingEntity pinata, PinataConfiguration pinataConfig) {
         nameTag.setVisible(true);
         nameTag.setTextOpacity((byte) 255);
         nameTag.setAlignment(pinataConfig.appearance.nameTag.textAlignment);
@@ -75,6 +75,22 @@ public class ModelEngineNameTagHandler {
                 (float) pinataConfig.appearance.nameTag.transformation.scale.x,
                 (float) pinataConfig.appearance.nameTag.transformation.scale.y,
                 (float) pinataConfig.appearance.nameTag.transformation.scale.z));
+
+        float passengerYOffset = 0.0f;
+        if (pinata.getPassengers() != null) {
+            for (org.bukkit.entity.Entity passenger : pinata.getPassengers()) {
+                if (passenger instanceof org.bukkit.entity.Mannequin) {
+                    passengerYOffset = 1.0f;
+                    break;
+                }
+            }
+        }
+
+        float transX = (float) pinataConfig.appearance.nameTag.transformation.translation.x;
+        float transY = (float) pinataConfig.appearance.nameTag.transformation.translation.y + passengerYOffset;
+        float transZ = (float) pinataConfig.appearance.nameTag.transformation.translation.z;
+
+        nameTag.setPosition(new Vector3f(transX, transY, transZ));
 
         if (pinataConfig.appearance.nameTag.background.enabled) {
             nameTag.setUseDefaultBackgroundColor(false);

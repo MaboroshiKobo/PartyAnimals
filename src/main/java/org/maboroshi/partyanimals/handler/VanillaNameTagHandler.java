@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
@@ -77,12 +78,22 @@ public class VanillaNameTagHandler {
         nameTag.setBillboard(pinataConfig.appearance.nameTag.billboard);
         nameTag.setSeeThrough(pinataConfig.appearance.nameTag.seeThrough);
 
+        float passengerYOffset = 0.0f;
+        if (pinata.getPassengers() != null) {
+            for (Entity passenger : pinata.getPassengers()) {
+                if (passenger instanceof Mannequin) {
+                    passengerYOffset = 1.0f;
+                    break;
+                }
+            }
+        }
+
         Transformation nameTransform = nameTag.getTransformation();
         float scaleX = (float) pinataConfig.appearance.nameTag.transformation.scale.x;
         float scaleY = (float) pinataConfig.appearance.nameTag.transformation.scale.y;
         float scaleZ = (float) pinataConfig.appearance.nameTag.transformation.scale.z;
         float transX = (float) pinataConfig.appearance.nameTag.transformation.translation.x;
-        float transY = (float) pinataConfig.appearance.nameTag.transformation.translation.y;
+        float transY = (float) pinataConfig.appearance.nameTag.transformation.translation.y + passengerYOffset;
         float transZ = (float) pinataConfig.appearance.nameTag.transformation.translation.z;
 
         nameTransform.getTranslation().set(transX, transY, transZ);
