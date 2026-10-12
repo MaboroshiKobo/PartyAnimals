@@ -99,7 +99,7 @@ jobs:
           fi
 
       - name: Publish to Modrinth & Hangar
-        uses: HSGamer/action-mcreleaser@main
+        uses: HSGamer/MCReleaser@master
         with:
           files: build/libs/*.jar
           platforms: modrinth,hangar
@@ -107,7 +107,7 @@ jobs:
           NAME: ${{ needs.build.outputs.resolved-version }}
           VERSION: ${{ needs.build.outputs.resolved-version }}
           DESCRIPTION: ${{ steps.desc.outputs.text }}
-          GAME_VERSIONS: 26.1 26.1.1 26.1.2 26.2
+          GAME_VERSIONS: 26.1 26.1.1 26.1.2 26.2 26.3
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           MODRINTH_PROJECT: MwXQJvXK
           MODRINTH_LOADERS: paper purpur
