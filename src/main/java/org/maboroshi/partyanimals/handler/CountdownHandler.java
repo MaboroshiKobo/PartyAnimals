@@ -4,7 +4,6 @@ import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.maboroshi.partyanimals.PartyAnimals;
@@ -23,15 +22,21 @@ public class CountdownHandler {
         this.effectHandler = plugin.getEffectHandler();
     }
 
+    @FunctionalInterface
+    public interface CountdownCallback {
+        void onComplete(Location location, String templateId, String passengerProfile);
+    }
+
     public void start(
             Location location,
             PinataConfiguration pinataConfig,
             String templateId,
-            BiConsumer<Location, String> onComplete) {
+            String passengerProfile,
+            CountdownCallback onComplete) {
         double countdownSeconds = pinataConfig.timer.countdown.duration;
 
         if (countdownSeconds <= 0) {
-            onComplete.accept(location, templateId);
+            onComplete.onComplete(location, templateId, passengerProfile);
             return;
         }
 
@@ -58,7 +63,7 @@ public class CountdownHandler {
                                 activeCountdowns.remove(task);
                                 task.cancel();
 
-                                onComplete.accept(location, templateId);
+                                onComplete.onComplete(location, templateId, passengerProfile);
                                 return;
                             }
 

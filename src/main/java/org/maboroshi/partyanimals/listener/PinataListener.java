@@ -10,6 +10,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.persistence.PersistentDataType;
@@ -71,10 +73,25 @@ public class PinataListener implements Listener {
     }
 
     @EventHandler
+    public void onDismount(EntityDismountEvent event) {
+        if (event.getEntity() instanceof LivingEntity livingEntity && pinataManager.isPinataPassenger(livingEntity)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     public void onPinataInteract(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked() instanceof LivingEntity pinata) {
-            if (pinataManager.isPinata(pinata)) {
-                Log.debug("Player attempted to interact with a pinata: " + pinata);
+        if (event.getRightClicked() instanceof LivingEntity livingEntity) {
+            if (pinataManager.isPinata(livingEntity) || pinataManager.isPinataPassenger(livingEntity)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPinataInteractAt(PlayerInteractAtEntityEvent event) {
+        if (event.getRightClicked() instanceof LivingEntity livingEntity) {
+            if (pinataManager.isPinata(livingEntity) || pinataManager.isPinataPassenger(livingEntity)) {
                 event.setCancelled(true);
             }
         }
@@ -84,7 +101,20 @@ public class PinataListener implements Listener {
     public void onPinataHit(EntityDamageByEntityEvent event) {
         if (plugin.getPinataManager() == null) return;
 
-        if (!(event.getEntity() instanceof LivingEntity pinata) || !pinataManager.isPinata(pinata)) return;
+        LivingEntity pinata;
+        if (event.getEntity() instanceof LivingEntity livingEntity) {
+            if (pinataManager.isPinata(livingEntity)) {
+                pinata = livingEntity;
+            } else if (pinataManager.isPinataPassenger(livingEntity)) {
+                pinata = pinataManager.getPinataVehicle(livingEntity);
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
+
+        if (pinata == null || !pinata.isValid()) return;
 
         if (!(event.getDamager() instanceof Player player)) {
             Log.debug("Non-player entity attempted to damage pinata: " + pinata);
@@ -147,6 +177,13 @@ public class PinataListener implements Listener {
 
             if (pinataConfig.appearance.damageFlash) {
                 pinata.playHurtAnimation(0);
+                if (pinata.getPassengers() != null) {
+                    for (org.bukkit.entity.Entity passenger : pinata.getPassengers()) {
+                        if (passenger instanceof LivingEntity livingPassenger) {
+                            livingPassenger.playHurtAnimation(0);
+                        }
+                    }
+                }
             }
 
             Log.debug("Processing hit commands for player: " + player.getName());
@@ -166,7 +203,17 @@ public class PinataListener implements Listener {
 
     @EventHandler
     public void onPinataDamage(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof LivingEntity pinata) || !pinataManager.isPinata(pinata)) return;
+        if (!(event.getEntity() instanceof LivingEntity livingEntity)) return;
+
+        LivingEntity pinata;
+        if (pinataManager.isPinata(livingEntity)) {
+            pinata = livingEntity;
+        } else if (pinataManager.isPinataPassenger(livingEntity)) {
+            event.setCancelled(true);
+            return;
+        } else {
+            return;
+        }
 
         if (event.getCause() == EntityDamageEvent.DamageCause.VOID) {
             PinataConfiguration pinataConfig = pinataManager.getPinataConfig(pinata);
