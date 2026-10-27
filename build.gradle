@@ -35,7 +35,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
     compileOnly("de.exlll:configlib-paper:4.8.1")
     compileOnly("org.incendo:cloud-paper:2.0.1")
     compileOnly("org.incendo:cloud-annotations:2.1.0")
